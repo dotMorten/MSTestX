@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TestAppRunner"
+             x:Class="TestAppRunner.MainPage">
+    <ContentPage.Resources>
+        <local:OutcomeConverter x:Key="outcomeConverter" />
+    </ContentPage.Resources>
+    <StackLayout>
+        <!-- Place new controls here -->
+        <Button Clicked="Button_Clicked" Text="Run tests" />
+        <Label Text="Welcome to Xamarin.Forms!" x:Name="status"
+           HorizontalOptions="Center"
+           />
+        <ListView x:Name="list" ItemsSource="{Binding Tests}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout>
+                            <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" FontAttributes="Bold" />
+                            <Label Text="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+
+</ContentPage>

@@ -1,0 +1,3 @@
+[submodule "testfx"]
+	path = testfx
+	url = https://github.com/Microsoft/testfx
