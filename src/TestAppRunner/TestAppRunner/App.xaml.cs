@@ -11,7 +11,7 @@ namespace TestAppRunner
 		{
 			InitializeComponent();
 
-            MainPage = new NavigationPage(new Views.TestRunPage());// new MainPage();
+            MainPage = new NavigationPage(new Views.GroupTestsPage());
 		}
 
 		protected override void OnStart ()

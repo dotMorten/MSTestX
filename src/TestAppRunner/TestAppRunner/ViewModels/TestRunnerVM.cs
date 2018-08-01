@@ -52,9 +52,11 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(Status));
         }
 
+        private string _grouping;
         internal void UpdateGroup(string grouping)
         {
-            if(tests != null)
+            _grouping = grouping;
+            if (tests != null)
             {
                 if (grouping == "Category")
                     _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)));
@@ -122,26 +124,18 @@ namespace TestAppRunner.ViewModels
         public double Progress => Tests == null || Tests.Count() == 0 ? 0 : 1 - (NotRunTests / (double)Tests.Count());
 
         public IEnumerable<TestResultVM> Tests => tests?.Values;
-        List<TestResultGroup> _GroupedTests;
+        private List<TestResultGroup> _GroupedTests;
+
         public List<TestResultGroup> GroupedTests
         {
             get
             {
                 if(_GroupedTests == null && tests != null)
                 {
-                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)));
+                    UpdateGroup(_grouping);
                 }
                 return _GroupedTests;
             }
-        }
-
-        public class TestResultGroup : List<TestResultVM>
-        {
-            public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests)
-            {
-                Group = group;
-            }
-            public string Group { get; }
         }
 
         void ITestExecutionRecorder.RecordResult(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testResult)

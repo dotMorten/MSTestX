@@ -2,22 +2,25 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
-             Title="{Binding Group}"
-             x:Class="TestAppRunner.Views.TestRunPage">
+             Title="{Binding TestStatus}"
+             x:Class="TestAppRunner.Views.GroupTestsPage">
     <ContentPage.Resources>
         <local:OutcomeConverter x:Key="outcomeConverter" />
     </ContentPage.Resources>
     
     <ContentPage.Content>       
         <StackLayout>
-            <Label Text="{Binding TestStatus}" Margin="20,20,0,0" />
-            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}">
+            <ProgressBar x:Name="progress" Progress="{Binding Progress}" />
+            <Label Text="{Binding Status}" />
+            <!--<Label Text="{Binding TestStatus}" />-->
+            <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" Title="Group by:" />
+            <ListView x:Name="list" ItemsSource="{Binding GroupedTests, Mode=OneWay}" ItemSelected="list_ItemSelected">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
-                            <StackLayout HorizontalOptions="StartAndExpand" Margin="20,0,0,0" Orientation="Horizontal">
-                                <local:OutcomeIcon Result="{Binding Result}" Grid.RowSpan="2" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="20"/>
-                                <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center"/>
+                            <StackLayout Padding="20,0">
+                                <Label Text="{Binding Group}" FontAttributes="Bold" />
+                                <Label Text="{Binding TestStatus}" />
                             </StackLayout>
                         </ViewCell>
                     </DataTemplate>

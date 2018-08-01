@@ -28,11 +28,18 @@ namespace UnitTests
         }
 
         [TestMethod]
-        [Ignore]
         [TestCategory("Synchronous tests")]
+        [TestCategory("Failing Tests")]
         public void TestFail()
         {
             Assert.IsTrue(false);
+        }
+
+        [TestMethod]
+        [Ignore]
+        [TestCategory("Synchronous tests")]
+        public void TestSkipped()
+        {
         }
 
         [TestMethod]
@@ -45,6 +52,7 @@ namespace UnitTests
 
         [TestMethod]
         [TestCategory("Asynchronous tests")]
+        [TestCategory("Failing Tests")]
         public async Task TestFailAsync()
         {
             await Task.Delay(100);
