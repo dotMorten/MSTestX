@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TestAppRunner.Views"
+             x:Class="TestAppRunner.Views.TestRunPage">
+    <ContentPage.Resources>
+        <local:OutcomeConverter x:Key="outcomeConverter" />
+    </ContentPage.Resources>
+    
+    <ContentPage.Content>       
+        <StackLayout>
+            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
+            <ProgressBar x:Name="progress" Progress="{Binding Progress}" />
+            <Label Text="{Binding Status}" />
+            <Label Text="{Binding TestStatus}" />
+            <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" />
+            <ListView x:Name="list" ItemsSource="{Binding GroupedTests, Mode=OneWay}" ItemSelected="list_ItemSelected"
+                      IsGroupingEnabled="True" GroupShortNameBinding="{Binding Group}">
+                <ListView.GroupHeaderTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <Grid BackgroundColor="CornflowerBlue">
+                                <Label Text="{Binding Group}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" />
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.GroupHeaderTemplate>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <Grid HorizontalOptions="StartAndExpand">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" FontAttributes="Bold" />
+                                <Label Text="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Grid.Column="1"  />
+                                <Label Text="{Binding Result.ErrorMessage}" Grid.Row="1" />
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -10,7 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace TestAppRunner
 {
-    public class TestSettings : IRunSettings
+    internal class TestSettings : IRunSettings
     {
         public string SettingsXml => null;
 
@@ -20,7 +21,7 @@ namespace TestAppRunner
         }
     }
 
-    public class TestRunner : IDiscoveryContext, IRunContext, IFrameworkHandle
+    internal class TestRunner : IDiscoveryContext, IRunContext, IFrameworkHandle
     {
         private ITestExecutionRecorder recorder;
         private TestCaseDiscoverySink sink;
@@ -39,19 +40,25 @@ namespace TestAppRunner
 
         public IEnumerable<TestCase> Tests => sink.Tests;
 
-        internal void Run()
+        internal Task Run(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
+            return Run(sink.Tests, cancellationToken);
+        }
+
+        internal Task Run(IEnumerable<TestCase> tests, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            if (IsRunning)
+                throw new InvalidOperationException("Test run already running");
             token = new TestRunCancellationToken();
-            System.Threading.Tasks.Task.Run(() => {
-                new TestExecutionManager().RunTests(sink.Tests, this, this, token);
+            if (cancellationToken.CanBeCanceled)
+                cancellationToken.Register(() => token.Cancel());
+            return System.Threading.Tasks.Task.Run(() => {
+                new TestExecutionManager().RunTests(tests, this, this, token);
+                token = null;
             });
         }
 
-        public void Cancel()
-        {
-            token.Cancel();
-            token = null;
-        }
+        public bool IsRunning => token != null;
 
         internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
         {
@@ -116,7 +123,10 @@ namespace TestAppRunner
 
         void ITestExecutionRecorder.RecordStart(TestCase testCase) => recorder?.RecordStart(testCase);
 
-        void ITestExecutionRecorder.RecordEnd(TestCase testCase, TestOutcome outcome) => recorder?.RecordEnd(testCase, outcome);
+        void ITestExecutionRecorder.RecordEnd(TestCase testCase, TestOutcome outcome)
+        {
+            recorder?.RecordEnd(testCase, outcome);
+        }
 
         void ITestExecutionRecorder.RecordAttachments(IList<AttachmentSet> attachmentSets) => recorder?.RecordAttachments(attachmentSets);
 

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text;
 using Xamarin.Forms;
 
-namespace TestAppRunner
+namespace TestAppRunner.Views
 {
     public class OutcomeConverter : IValueConverter
     {
@@ -18,13 +18,33 @@ namespace TestAppRunner
                 {
                     if(v.ErrorStackTrace == null && v.ErrorMessage.Contains("timeout"))
                     {
+                        if (targetType == typeof(Color))
+                            return Color.OrangeRed;
                         return "Timed out";
                     }
+                    if (targetType == typeof(Color))
+                        return Color.Red;
+                }
+                if(v.Outcome == TestOutcome.Passed)
+                {
+                    if (targetType == typeof(Color))
+                        return Color.Green;
+                    return "Passed";
+                }
+                if (v.Outcome == TestOutcome.Skipped)
+                {
+                    if (targetType == typeof(Color))
+                        return Color.Orange;
+                    return "Skipped";
                 }
                 return v.Outcome.ToString();
             }
             if (v == null)
+            {
+                if (targetType == typeof(Color))
+                    return Color.Gray;
                 return "Not Executed";
+            }
             return value;
         }
 

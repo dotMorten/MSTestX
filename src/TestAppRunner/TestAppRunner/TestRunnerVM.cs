@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace TestAppRunner
@@ -25,32 +27,127 @@ namespace TestAppRunner
 
     public class TestRunnerVM : VMBase, ITestExecutionRecorder
     {
-        private TestRunner testRunner;
-        private Dictionary<Guid, TestResultVM> tests = new Dictionary<Guid, TestResultVM>();
+        private static TestRunner testRunner;
+        private static Dictionary<Guid, TestResultVM> alltests;
+        private Dictionary<Guid, TestResultVM> tests;
 
         public TestRunnerVM()
         {
-            var refs = this.GetType().Assembly.GetReferencedAssemblies().Select(c => c.Name).ToArray();
-            refs = System.Reflection.Assembly.GetExecutingAssembly().GetReferencedAssemblies().Select(c => c.Name).ToArray();
-            var refs2 = AppDomain.CurrentDomain.GetAssemblies().Where(c=>!c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
-            testRunner = new TestRunner(refs2, new TestSettings(), this);
-            foreach (var item in testRunner.Tests)
+            LoadTests();
+        }
+
+        private async void LoadTests()
+        {
+            Status = "Loading tests...";
+            OnPropertyChanged(nameof(Status));
+            if (testRunner == null)
             {
-                tests[item.Id] = new TestResultVM() { Test = item };
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var tests = new Dictionary<Guid, TestResultVM>();
+                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
+                    testRunner = new TestRunner(references, new TestSettings(), this);
+                    foreach (var item in testRunner.Tests)
+                    {
+                        tests[item.Id] = new TestResultVM() { Test = item };
+                    }
+                    alltests = this.tests = tests;
+                });
+            }
+            OnPropertyChanged(nameof(Tests));
+            OnPropertyChanged(nameof(GroupedTests));
+            OnPropertyChanged(nameof(TestStatus));
+            Status = $"{tests.Count} tests found.";
+            OnPropertyChanged(nameof(Status));
+        }
+
+        internal void UpdateGroup(string grouping)
+        {
+            if(tests != null)
+            {
+                if (grouping == "Category")
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)));
+                else if (grouping == "Outcome")
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Outcome).Select((g, t) => new TestResultGroup(g.Key.ToString(), g)));
+                else if (grouping == "Namespace")
+                {
+                    Func<string, string> getNamespace = (s) => s.Substring(0, s.LastIndexOf("."));
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => getNamespace(t.Test.FullyQualifiedName)).Select((g, t) => new TestResultGroup(g.Key, g)));
+                }
+                OnPropertyChanged(nameof(GroupedTests));
             }
         }
 
-        public void Run()
-        {
-            testRunner.Run();
-        }
+        public string Status { get; private set; }
+
+        public string TestStatus => $"{PassedTests} passed. {FailedTests} failed. {SkippedTests} skipped. {NotRunTests} not run";
+
+        private CancellationTokenSource tcs;
 
         public void Cancel()
         {
-            testRunner.Cancel();
+            tcs?.Cancel();
+            tcs = null;
         }
 
-        public IEnumerable<TestResultVM> Tests => tests.Values;
+        public async void Run()
+        {
+            var t = tcs = new CancellationTokenSource();
+            Status = $"Running tests...";
+            OnPropertyChanged(nameof(Status));
+            foreach (var item in testRunner.Tests)
+            {
+                tests[item.Id].Result = null;
+                tests[item.Id].OnPropertyChanged(nameof(TestResultVM.Result));
+            }
+            var task = testRunner.Run(testRunner.Tests, t.Token);
+            OnPropertyChanged(nameof(IsRunning));
+            try
+            {
+                await task;
+                if(t.IsCancellationRequested)
+                    Status = $"Test run canceled.";
+                else
+                    Status = $"Test run completed.";
+            }
+            catch (System.Exception ex)
+            {
+                Status = $"Test run failed to run: {ex.Message}";
+            }
+            OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(Status));
+        }
+
+        public bool IsRunning => testRunner.IsRunning;
+        public int PassedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
+        public int FailedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Failed).Count() ?? 0;
+        public int SkippedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Skipped).Count() ?? 0;
+        public int NotRunTests => Tests?.Where(t => t.Result == null).Count() ?? 0;
+
+        public double Progress => Tests == null || Tests.Count() == 0 ? 0 : 1 - (NotRunTests / (double)Tests.Count());
+
+        public IEnumerable<TestResultVM> Tests => tests?.Values;
+        List<TestResultGroup> _GroupedTests;
+        public List<TestResultGroup> GroupedTests
+        {
+            get
+            {
+                if(_GroupedTests == null && tests != null)
+                {
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)));
+                }
+                return _GroupedTests;
+            }
+        }
+
+        public class TestResultGroup : List<TestResultVM>
+        {
+            public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests)
+            {
+                Group = group;
+            }
+            public string Group { get; }
+        }
 
         void ITestExecutionRecorder.RecordResult(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testResult)
         {
@@ -66,15 +163,23 @@ namespace TestAppRunner
             }
             test.OnPropertyChanged(nameof(TestResultVM.Result));
             test.OnPropertyChanged(nameof(TestResultVM.Outcome));
-            test.OnPropertyChanged(nameof(TestResultVM.Status));
-            System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()}");
+            OnPropertyChanged(nameof(Progress));
+            OnPropertyChanged(nameof(TestStatus));
+
+            System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()} {testResult.ErrorMessage}");
+
+            //var s = new System.Runtime.Serialization.DataContractSerializer(testResult.GetType());
+            //using (var ms = new System.IO.MemoryStream())
+            //{
+            //    s.WriteObject(ms, testResult);
+            //    var xml = System.Text.Encoding.Default.GetString(ms.ToArray());
+            //}
         }
 
         void ITestExecutionRecorder.RecordStart(TestCase testCase)
         {
             tests[testCase.Id].Outcome = UnitTestOutcome.InProgress;
             tests[testCase.Id].OnPropertyChanged(nameof(TestResultVM.Outcome));
-            tests[testCase.Id].OnPropertyChanged(nameof(TestResultVM.Status));
         }
 
         void ITestExecutionRecorder.RecordEnd(TestCase testCase, TestOutcome outcome)
@@ -83,11 +188,11 @@ namespace TestAppRunner
 
         void ITestExecutionRecorder.RecordAttachments(IList<AttachmentSet> attachmentSets)
         {
-
         }
 
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
+            System.Diagnostics.Debug.WriteLine($"{testMessageLevel} - {message}");
         }
     }
 
@@ -96,8 +201,25 @@ namespace TestAppRunner
         public TestCase Test { get; set; }
         public Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult Result { get; set; }
         public UnitTestOutcome Outcome { get; set; } = UnitTestOutcome.Unknown;
-
         public override string ToString() => Test.FullyQualifiedName;
-        public string Status => Outcome.ToString();
+
+        public string Category
+        {
+            get
+            {
+                var c = Test.Properties.Where(p => p.Id == "MSTestDiscoverer.TestCategory").FirstOrDefault();
+                if (c != null)
+                    return (Test.GetPropertyValue(c) as string[])?.FirstOrDefault();
+                return null;
+            }
+        }
+        public string Duration
+        {
+            get
+            {
+                if (Result == null) return null;
+                return Result.Duration.ToString("g");
+            }
+        }
     }
 }

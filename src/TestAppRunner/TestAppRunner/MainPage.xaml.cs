@@ -7,19 +7,11 @@ using Xamarin.Forms;
 
 namespace TestAppRunner
 {
-	public partial class MainPage : ContentPage
+	public partial class MainPage : TabbedPage
 	{
-        TestRunnerVM vm;
         public MainPage()
 		{
 			InitializeComponent();
-            this.BindingContext = vm = new TestRunnerVM();
-            //list.ItemsSource = vm.Tests;
 		}
-
-        private void Button_Clicked(object sender, EventArgs e)
-        {
-            vm.Run();
-        }
     }
 }

@@ -4,18 +4,7 @@
     <TargetFramework>netstandard1.4</TargetFramework>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
-    <!--<AssemblyOriginatorKeyFile>..\..\testfx\scripts\build\key.snk</AssemblyOriginatorKeyFile>-->
-    <!--<SignAssembly>true</SignAssembly>
-    <DelaySign>true</DelaySign>-->
   </PropertyGroup>
-
-  <!--<ItemGroup>
-    <None Include="..\..\testfx\scripts\build\key.snk">
-      --><!-- Do not have this show up in Solution Explorer in VS --><!--
-      <InProject>false</InProject>
-    </None>
-  </ItemGroup>-->
-
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.8.0" />

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TestAppRunner.Views.ItemDetailPage"
+             xmlns:local="clr-namespace:TestAppRunner.Views"
+             Title="{Binding Test.DisplayName}"
+             >
+    <ContentPage.Resources>
+        <local:OutcomeConverter x:Key="outcomeConverter" />
+    </ContentPage.Resources>
+    <ContentPage.Content>
+        <StackLayout>
+            <Grid BackgroundColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Padding="20">
+                <Label Text="{Binding Test.FullyQualifiedName}" FontSize="18" LineBreakMode="WordWrap" 
+                    VerticalOptions="Center" TextColor="White" FontAttributes="Bold" />
+            </Grid>
+
+            <ScrollView>
+                <StackLayout>
+                    <Label Text="{Binding Outcome}" FontSize="16" FontAttributes="Bold" />
+                    <StackLayout Orientation="Horizontal">
+                        <Label Text="Category: "/>
+                        <Label Text="{Binding Category}" TextColor="White" />
+                    </StackLayout>
+                    <StackLayout Orientation="Horizontal">
+                        <Label Text="Duration: "/>
+                        <Label Text="{Binding Duration}" />
+                    </StackLayout>
+                    <Label Text="Error: "/>
+                    <Label Text="{Binding Result.ErrorMessage}" FontAttributes="Bold" LineBreakMode="WordWrap" />
+                    <Label Text="{Binding Result.ErrorStackTrace}" LineBreakMode="WordWrap" />
+                </StackLayout>
+            </ScrollView>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
