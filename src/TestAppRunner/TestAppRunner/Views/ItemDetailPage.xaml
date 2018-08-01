@@ -9,13 +9,18 @@
         <local:OutcomeConverter x:Key="outcomeConverter" />
     </ContentPage.Resources>
     <ContentPage.Content>
-        <StackLayout>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             <Grid BackgroundColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Padding="20">
                 <Label Text="{Binding Test.FullyQualifiedName}" FontSize="18" LineBreakMode="WordWrap" 
                     VerticalOptions="Center" TextColor="White" FontAttributes="Bold" />
             </Grid>
 
-            <ScrollView>
+            <ScrollView Grid.Row="1">
                 <StackLayout>
                     <Label Text="{Binding Outcome}" FontSize="16" FontAttributes="Bold" />
                     <StackLayout Orientation="Horizontal">
@@ -31,6 +36,9 @@
                     <Label Text="{Binding Result.ErrorStackTrace}" LineBreakMode="WordWrap" />
                 </StackLayout>
             </ScrollView>
-        </StackLayout>
+
+            <Button Text="Run Test" Grid.Row="2"
+                    Clicked="Button_Clicked" />
+        </Grid>
     </ContentPage.Content>
 </ContentPage>

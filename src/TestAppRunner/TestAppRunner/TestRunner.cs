@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -11,16 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace TestAppRunner
 {
-    internal class TestSettings : IRunSettings
-    {
-        public string SettingsXml => null;
-
-        public ISettingsProvider GetSettings(string settingsName)
-        {
-            return null;
-        }
-    }
-
     internal class TestRunner : IDiscoveryContext, IRunContext, IFrameworkHandle
     {
         private ITestExecutionRecorder recorder;
@@ -33,7 +21,6 @@ namespace TestAppRunner
             sink = new TestCaseDiscoverySink();
             new MSTestDiscoverer().DiscoverTests(sources, this, this, sink);
             this.recorder = recorder;
-
         }
 
         public IRunSettings RunSettings { get; }
@@ -60,34 +47,6 @@ namespace TestAppRunner
 
         public bool IsRunning => token != null;
 
-        internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="TestCaseDiscoverySink"/> class.
-            /// </summary>
-            public TestCaseDiscoverySink()
-            {
-                this.Tests = new Collection<TestCase>();
-            }
-
-            /// <summary>
-            /// Gets the tests.
-            /// </summary>
-            public ICollection<TestCase> Tests { get; private set; }
-
-            /// <summary>
-            /// Sends the test case.
-            /// </summary>
-            /// <param name="discoveredTest"> The discovered test. </param>
-            void ITestCaseDiscoverySink.SendTestCase(TestCase discoveredTest)
-            {
-                if (discoveredTest != null)
-                {
-                    this.Tests.Add(discoveredTest);
-                }
-            }
-        }
-
         #region IRunContext
 
         public bool KeepAlive => true;
@@ -112,7 +71,6 @@ namespace TestAppRunner
         #region IFrameworkHandle
 
         bool IFrameworkHandle.EnableShutdownAfterTestRun { get; set; }
-
 
         int IFrameworkHandle.LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)
         {

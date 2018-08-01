@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MSTestX.Adapter\MSTestX.Adapter.csproj" />
-    <ProjectReference Include="..\..\UnitTests\UnitTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

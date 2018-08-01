@@ -10,20 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 
-namespace TestAppRunner
+namespace TestAppRunner.ViewModels
 {
-    public abstract class VMBase : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged(string propertyName)
-        {
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            });
-        }
-    }
 
     public class TestRunnerVM : VMBase, ITestExecutionRecorder
     {
@@ -31,7 +19,10 @@ namespace TestAppRunner
         private static Dictionary<Guid, TestResultVM> alltests;
         private Dictionary<Guid, TestResultVM> tests;
 
-        public TestRunnerVM()
+        static TestRunnerVM _Instance;
+        public static TestRunnerVM Instance => _Instance ?? (_Instance = new TestRunnerVM());
+
+        private TestRunnerVM()
         {
             LoadTests();
         }
@@ -89,18 +80,22 @@ namespace TestAppRunner
             tcs?.Cancel();
             tcs = null;
         }
+        public void Run()
+        {
+            Run(testRunner.Tests);
+        }
 
-        public async void Run()
+        public async void Run(IEnumerable<TestCase> testCollection)
         {
             var t = tcs = new CancellationTokenSource();
             Status = $"Running tests...";
             OnPropertyChanged(nameof(Status));
-            foreach (var item in testRunner.Tests)
+            foreach (var item in testCollection)
             {
                 tests[item.Id].Result = null;
                 tests[item.Id].OnPropertyChanged(nameof(TestResultVM.Result));
             }
-            var task = testRunner.Run(testRunner.Tests, t.Token);
+            var task = testRunner.Run(testCollection, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
             {
@@ -163,6 +158,7 @@ namespace TestAppRunner
             }
             test.OnPropertyChanged(nameof(TestResultVM.Result));
             test.OnPropertyChanged(nameof(TestResultVM.Outcome));
+            test.OnPropertyChanged(nameof(TestResultVM.Duration));
             OnPropertyChanged(nameof(Progress));
             OnPropertyChanged(nameof(TestStatus));
 
@@ -193,33 +189,6 @@ namespace TestAppRunner
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
             System.Diagnostics.Debug.WriteLine($"{testMessageLevel} - {message}");
-        }
-    }
-
-    public class TestResultVM : VMBase
-    {
-        public TestCase Test { get; set; }
-        public Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult Result { get; set; }
-        public UnitTestOutcome Outcome { get; set; } = UnitTestOutcome.Unknown;
-        public override string ToString() => Test.FullyQualifiedName;
-
-        public string Category
-        {
-            get
-            {
-                var c = Test.Properties.Where(p => p.Id == "MSTestDiscoverer.TestCategory").FirstOrDefault();
-                if (c != null)
-                    return (Test.GetPropertyValue(c) as string[])?.FirstOrDefault();
-                return null;
-            }
-        }
-        public string Duration
-        {
-            get
-            {
-                if (Result == null) return null;
-                return Result.Duration.ToString("g");
-            }
         }
     }
 }

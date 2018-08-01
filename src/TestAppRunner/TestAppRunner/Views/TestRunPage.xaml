@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
+             Title="{Binding TestStatus}"
              x:Class="TestAppRunner.Views.TestRunPage">
     <ContentPage.Resources>
         <local:OutcomeConverter x:Key="outcomeConverter" />
@@ -12,14 +13,14 @@
             <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
             <ProgressBar x:Name="progress" Progress="{Binding Progress}" />
             <Label Text="{Binding Status}" />
-            <Label Text="{Binding TestStatus}" />
-            <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" />
+            <!--<Label Text="{Binding TestStatus}" />-->
+            <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" Title="Group by:" />
             <ListView x:Name="list" ItemsSource="{Binding GroupedTests, Mode=OneWay}" ItemSelected="list_ItemSelected"
                       IsGroupingEnabled="True" GroupShortNameBinding="{Binding Group}">
                 <ListView.GroupHeaderTemplate>
                     <DataTemplate>
                         <ViewCell>
-                            <Grid BackgroundColor="CornflowerBlue">
+                            <Grid BackgroundColor="CornflowerBlue" Padding="20,0" HeightRequest="15">
                                 <Label Text="{Binding Group}" TextColor="White" FontAttributes="Bold" VerticalOptions="Center" />
                             </Grid>
                         </ViewCell>
@@ -28,7 +29,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
-                            <Grid HorizontalOptions="StartAndExpand">
+                            <Grid HorizontalOptions="StartAndExpand" Margin="20,0,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
                                     <RowDefinition />

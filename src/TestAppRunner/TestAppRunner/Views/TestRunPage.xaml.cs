@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using TestAppRunner.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -12,23 +12,20 @@ namespace TestAppRunner.Views
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class TestRunPage : ContentPage
     {
-        private static TestRunnerVM vm;
         public TestRunPage ()
 		{
 			InitializeComponent ();
-            if(vm == null)
-                vm = new TestRunnerVM();
-            this.BindingContext = vm;
+            this.BindingContext = TestRunnerVM.Instance;
 
             picker.ItemsSource = new string[] { "Category", "Namespace", "Outcome" };
             picker.SelectedIndex = 0;
         }
         private void Button_Clicked(object sender, EventArgs e)
         {
-            if (vm.IsRunning)
-                vm.Cancel();
+            if (TestRunnerVM.Instance.IsRunning)
+                TestRunnerVM.Instance.Cancel();
             else
-                vm.Run();
+                TestRunnerVM.Instance.Run();
         }
 
         private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
@@ -45,7 +42,7 @@ namespace TestAppRunner.Views
 
         private void picker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            vm.UpdateGroup(((string[])picker.ItemsSource)[picker.SelectedIndex]);
+            TestRunnerVM.Instance.UpdateGroup(((string[])picker.ItemsSource)[picker.SelectedIndex]);
         }
     }
 }
