@@ -14,10 +14,10 @@ This isn't "just another test framework". This is all based on the Microsoft MST
 
 1. Create a new blank Xamarin.Forms Project targeting iOS and Android (shared or .NET Standard)
 2. Add a Nuget reference to [`MSTestX.UnitTestRunner`](https://www.nuget.org/packages/MSTestX.UnitTestRunner)
-3. Delete MainPage.xaml and App.xaml.cs
+3. Delete `MainPage.xaml` and `App.xaml`
 4. In Android's MainActivity.cs file change the `LoadApplication(new App())` call to `LoadApplication(new TestAppRunner.App());`
 5. In iOS' AppDelegate.cs file, make the same change to the `LoadApplication` call
-6. In the common project add a new class with the following content:
+6. In the common project add a unit test class with the following content:
 
 ```cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
