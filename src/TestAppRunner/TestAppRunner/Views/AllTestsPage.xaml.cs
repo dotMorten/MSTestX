@@ -12,9 +12,9 @@ namespace TestAppRunner.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public partial class GroupTestsPage : ContentPage
+    public partial class AllTestsPage : ContentPage
     {
-        internal GroupTestsPage()
+        internal AllTestsPage()
 		{
 			InitializeComponent ();
             this.BindingContext = TestRunnerVM.Instance;
@@ -36,7 +36,7 @@ namespace TestAppRunner.Views
             if (item == null)
                 return;
 
-            await Navigation.PushAsync(new TestRunPage(item));
+            await Navigation.PushAsync(new GroupByClassTestsPage(item));
 
             // Manually deselect item.
             (sender as ListView).SelectedItem = null;

@@ -13,7 +13,7 @@ namespace TestAppRunner.ViewModels
         public TestResult Result { get; set; }
 
         public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome { get; set; } = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown;
-        
+
         public string Category
         {
             get
@@ -32,6 +32,11 @@ namespace TestAppRunner.ViewModels
                 return Result.Duration.ToString("g");
             }
         }
+
+        public string ClassName => Test.FullyQualifiedName.Substring(0, Test.FullyQualifiedName.LastIndexOf("."));
+
+        public string Namespace => ClassName.Substring(0, ClassName.LastIndexOf("."));
+
         public override string ToString() => Test.FullyQualifiedName;
     }
 }

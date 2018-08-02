@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
              Title="{Binding TestStatus}"
-             x:Class="TestAppRunner.Views.GroupTestsPage">
+             x:Class="TestAppRunner.Views.AllTestsPage">
     <ContentPage.Resources>
         <local:OutcomeConverter x:Key="outcomeConverter" />
     </ContentPage.Resources>

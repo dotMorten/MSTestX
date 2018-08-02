@@ -66,10 +66,7 @@ namespace TestAppRunner.ViewModels
                 else if (grouping == "Outcome")
                     _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Outcome).Select((g, t) => new TestResultGroup(g.Key.ToString(), g)));
                 else if (grouping == "Namespace")
-                {
-                    Func<string, string> getNamespace = (s) => s.Substring(0, s.LastIndexOf("."));
-                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => getNamespace(t.Test.FullyQualifiedName)).Select((g, t) => new TestResultGroup(g.Key, g)));
-                }
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Namespace).Select((g, t) => new TestResultGroup(g.Key, g)));
                 OnPropertyChanged(nameof(GroupedTests));
             }
         }

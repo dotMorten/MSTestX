@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace UnitTests
 {
     [TestClass]
-    public class UnitTests
+    public class Tests
     {
         public TestContext TestContext { get; set; }
         [TestInitialize]
@@ -23,7 +23,7 @@ namespace UnitTests
         {
             Assert.IsNotNull(TestContext);
             Assert.IsTrue(true);
-        } 
+        }
 
         [TestMethod]
         [TestCategory("Synchronous tests")]
@@ -86,5 +86,16 @@ namespace UnitTests
         {
             Assert.AreEqual(result, value1 + value2);
         }
+    }
+
+    [TestClass]
+    public class MoreTests
+    {
+        [TestMethod]
+        public void MoreTests_1() { }
+        [TestMethod]
+        public void MoreTests_2() { }
+        [TestMethod]
+        public void MoreTests_3() { }
     }
 }

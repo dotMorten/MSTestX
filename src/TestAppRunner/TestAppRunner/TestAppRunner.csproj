@@ -26,8 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\GroupTestsPage.xaml.cs">
-      <DependentUpon>GroupTestsPage.xaml</DependentUpon>
+    <Compile Update="Views\GroupByClassTestsPage.xaml.cs">
+      <DependentUpon>GroupByClassTestsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\AllTestsPage.xaml.cs">
+      <DependentUpon>AllTestsPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 

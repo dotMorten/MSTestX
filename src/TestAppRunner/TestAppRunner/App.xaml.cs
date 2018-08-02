@@ -11,7 +11,7 @@ namespace TestAppRunner
 		{
 			InitializeComponent();
             ViewModels.TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
-            MainPage = new NavigationPage(new Views.GroupTestsPage());
+            MainPage = new NavigationPage(new Views.AllTestsPage());
 		}
 
 		protected override void OnStart ()

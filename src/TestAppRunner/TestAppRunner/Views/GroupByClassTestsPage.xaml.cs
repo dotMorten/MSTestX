@@ -12,13 +12,18 @@ namespace TestAppRunner.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public partial class TestRunPage : ContentPage
+    public partial class GroupByClassTestsPage : ContentPage
     {
-        internal TestRunPage (TestResultGroup testCases)
+        private TestResultGroup tests;
+
+        internal GroupByClassTestsPage(TestResultGroup tests)
 		{
-			InitializeComponent();
-            this.BindingContext = testCases;
+			InitializeComponent ();
+            this.tests = tests;
+            list.ItemsSource = new List<TestResultGroup>(tests.GroupBy(t => t.ClassName).Select((g, t) => new TestResultGroup(g.Key, g)));
+            this.BindingContext = tests;
         }
+
         private void Button_Clicked(object sender, EventArgs e)
         {
             if (TestRunnerVM.Instance.IsRunning)
@@ -27,17 +32,17 @@ namespace TestAppRunner.Views
             }
             else
             {
-                var _ = TestRunnerVM.Instance.Run(((TestResultGroup)BindingContext).Select(t => t.Test));
+                var _ = TestRunnerVM.Instance.Run(tests.Select(t => t.Test));
             }
         }
 
         private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
         {
-            var item = args.SelectedItem as TestResultVM;
+            var item = args.SelectedItem as TestResultGroup;
             if (item == null)
                 return;
 
-            await Navigation.PushAsync(new ItemDetailPage(item));
+            await Navigation.PushAsync(new TestRunPage(item));
 
             // Manually deselect item.
             (sender as ListView).SelectedItem = null;
