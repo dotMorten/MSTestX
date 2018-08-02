@@ -16,7 +16,7 @@ namespace TestAppRunner.Views
             {
                 if(v.Outcome == TestOutcome.Failed)
                 {
-                    if(v.ErrorStackTrace == null && v.ErrorMessage.Contains("timeout"))
+                    if(v.ErrorStackTrace == null && v.ErrorMessage != null && v.ErrorMessage.Contains("timeout"))
                     {
                         if (targetType == typeof(Color))
                             return Color.OrangeRed;

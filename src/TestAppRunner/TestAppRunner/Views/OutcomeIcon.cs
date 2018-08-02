@@ -6,6 +6,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.Views
 {
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class OutcomeIcon : Label
     {
         public static readonly BindableProperty ResultProperty =
@@ -37,7 +38,7 @@ namespace TestAppRunner.Views
                         TextColor = Color.Orange;
                         break;
                     case TestOutcome.Failed:
-                        if (Result.ErrorStackTrace == null && Result.ErrorMessage.Contains("timeout"))
+                        if (Result.ErrorStackTrace == null && Result.ErrorMessage != null &&  Result.ErrorMessage.Contains("timeout"))
                             Text = "⏱";
                         else
                             Text = "❌"; //⛔⨯"

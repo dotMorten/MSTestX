@@ -6,7 +6,7 @@ using System.Text;
 
 namespace TestAppRunner.ViewModels
 {
-    public class TestResultVM : VMBase
+    internal class TestResultVM : VMBase
     {
         public TestCase Test { get; set; }
 

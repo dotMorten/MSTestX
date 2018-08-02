@@ -10,9 +10,10 @@ using Xamarin.Forms.Xaml;
 namespace TestAppRunner.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 	public partial class ItemDetailPage : ContentPage
 	{
-		public ItemDetailPage (TestResultVM vm)
+		internal ItemDetailPage (TestResultVM vm)
 		{
             this.BindingContext = vm;
             InitializeComponent();
@@ -22,7 +23,9 @@ namespace TestAppRunner.Views
         private void Button_Clicked(object sender, EventArgs e)
         {
             if (!TestRunnerVM.Instance.IsRunning)
-                TestRunnerVM.Instance.Run(new [] { ((TestResultVM)BindingContext).Test });
+            {
+                var _ = TestRunnerVM.Instance.Run(new[] { ((TestResultVM)BindingContext).Test });
+            }
         }
     }
 }

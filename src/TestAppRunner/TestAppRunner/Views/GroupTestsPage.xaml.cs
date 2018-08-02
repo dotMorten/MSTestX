@@ -11,9 +11,10 @@ using Xamarin.Forms.Xaml;
 namespace TestAppRunner.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class GroupTestsPage : ContentPage
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public partial class GroupTestsPage : ContentPage
     {
-        public GroupTestsPage()
+        internal GroupTestsPage()
 		{
 			InitializeComponent ();
             this.BindingContext = TestRunnerVM.Instance;

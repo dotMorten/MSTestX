@@ -8,8 +8,6 @@ namespace UnitTests
     public class UnitTests
     {
         public TestContext TestContext { get; set; }
-
-
         [TestInitialize]
         public void TestInit()
         {
@@ -25,7 +23,7 @@ namespace UnitTests
         {
             Assert.IsNotNull(TestContext);
             Assert.IsTrue(true);
-        }
+        } 
 
         [TestMethod]
         [TestCategory("Synchronous tests")]
@@ -74,6 +72,17 @@ namespace UnitTests
         [DataRow(2, 3, 5)]
         [TestCategory("Miscellanous tests")]
         public void TestDataTestMethod(int value1, int value2, int result)
+        {
+            Assert.AreEqual(result, value1 + value2);
+        }
+
+        [DataTestMethod]
+        [DataRow(1, 2, 3)]
+        [DataRow(2, 2, 9)]
+        [DataRow(2, 3, 5)]
+        [TestCategory("Miscellanous tests")]
+        [TestCategory("Failing Tests")]
+        public void TestDataTestMethod_Fail(int value1, int value2, int result)
         {
             Assert.AreEqual(result, value1 + value2);
         }

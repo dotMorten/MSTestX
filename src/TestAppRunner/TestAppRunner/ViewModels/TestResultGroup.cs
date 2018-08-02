@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.ViewModels
 {
-    public class TestResultGroup : List<TestResultVM>, INotifyPropertyChanged
+    internal class TestResultGroup : List<TestResultVM>, INotifyPropertyChanged
     {
         public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests)
         {
@@ -23,7 +23,7 @@ namespace TestAppRunner.ViewModels
         {
             if (e.PropertyName == nameof(TestResultVM.Outcome))
             {
-                OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus));
+                OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus), nameof(Percentage));
             }
             else if (e.PropertyName == nameof(TestResultVM.Result))
             {
@@ -50,6 +50,8 @@ namespace TestAppRunner.ViewModels
 
         public int NotRunTests => this.Where(t => t.Result == null).Count();
 
-        public string TestStatus => $"{PassedTests} passed. {FailedTests} failed. {SkippedTests} skipped. {NotRunTests} not run";
+        public double Percentage => this.Any(t=>t.Result?.Outcome == TestOutcome.Passed) ? (int)(PassedTests * 100d / (FailedTests + PassedTests)) : 0;
+
+        public string TestStatus => $"{PassedTests} passed. {FailedTests} failed. {SkippedTests} skipped. {NotRunTests} not run. {Percentage.ToString("0")}%";
     }
 }

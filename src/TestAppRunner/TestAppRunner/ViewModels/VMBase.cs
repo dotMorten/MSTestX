@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.ViewModels
 {
-    public abstract class VMBase : INotifyPropertyChanged
+    internal abstract class VMBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

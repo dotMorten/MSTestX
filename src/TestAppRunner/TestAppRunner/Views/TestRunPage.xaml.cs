@@ -11,9 +11,10 @@ using Xamarin.Forms.Xaml;
 namespace TestAppRunner.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class TestRunPage : ContentPage
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public partial class TestRunPage : ContentPage
     {
-        public TestRunPage (TestResultGroup testCases)
+        internal TestRunPage (TestResultGroup testCases)
 		{
 			InitializeComponent ();
             this.BindingContext = testCases;
@@ -23,7 +24,9 @@ namespace TestAppRunner.Views
             if (TestRunnerVM.Instance.IsRunning)
                 TestRunnerVM.Instance.Cancel();
             else
-                TestRunnerVM.Instance.Run(((TestResultGroup)BindingContext).Select(t=>t.Test));
+            {
+                var _ = TestRunnerVM.Instance.Run(((TestResultGroup)BindingContext).Select(t => t.Test));
+            }
         }
 
         private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
