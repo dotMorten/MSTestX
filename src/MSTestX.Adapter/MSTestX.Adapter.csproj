@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/dotMorten/mstestX</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dotMorten/mstestX</RepositoryUrl>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX</PackageTags>
-    <Version>0.1</Version>
+    <Version>0.5</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>A .NET Standard 2.0 compilation of the Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter for reusing the test adapter on other platforms, like Xamarin</Description>
   </PropertyGroup>

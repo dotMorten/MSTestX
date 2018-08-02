@@ -40,28 +40,38 @@ namespace TestAppRunner.Droid
 
         private void LaunchApp()
         {
-            var testSettings = new TestAppRunner.TestSettings();
-            testSettings.AutoStart = Intent.GetBooleanExtra("AutoRun", false);
-#if true
-            testSettings.AutoStart = true;
-            // Note: To write the log to the external storage, make sure READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE is enabled in the manifest
-            var logsdir = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, "AndroidUnitTests");
-            string date = System.DateTime.Now.ToString("yyyy_MM_dd_HH-mm-ss");
-            string logFileName = System.IO.Path.Combine(logsdir, $"{date}_Android_UnitTest.log");
-            string resultsFileName = System.IO.Path.Combine(logsdir, $"{date}_Android_UnitTest_Results.trx");
-            if (CheckSelfPermission(Android.Manifest.Permission.WriteExternalStorage) != Permission.Granted)
+            var testSettings = new TestAppRunner.TestOptions();
+            // You can deploy and launch the app from the ADB shell and parsing intent parameters
+            // Example:
+            // adb install PATH_TO_APK/TestAppRunner.Android-Signed.apk
+            // Launch the app and pass parameters where -n is for starting an intent
+            // The intent should be [AppName]/[Activity Name]
+            // Use --ez for passing boolean, --es for passing a string, --ei for passing int
+            // adb shell am start -n TestAppRunner/TestAppRunner.Android --ez AutoRun true --es TrxReportFile TestResults/TestRunReport
+            // Once test run is complete you can copy the report back:
+            // adb pull /storage/emulated/0/TestResults/TestRunReport.trx TestResults/TestRunReport.trx
+            testSettings.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
+            string path = Intent.GetStringExtra("TrxReportFile");
+            if (!string.IsNullOrEmpty(path))
             {
-                logFileName = null; resultsFileName = null;
+                path = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, path);
+                testSettings.TrxOutputPath = path + ".trx";
+                testSettings.ProgressLogPath = path + ".log";
+                if (CheckSelfPermission(Android.Manifest.Permission.WriteExternalStorage) != Permission.Granted)
+                {
+                    // If we don't have write permission, turn off report output
+                    testSettings.TrxOutputPath = null;
+                    testSettings.ProgressLogPath = null;
+                }
+                else
+                {
+                    var fi = new System.IO.FileInfo(path);
+                    if (!fi.Directory.Exists)
+                        fi.Directory.Create();
+                }
+                   
             }
-            else
-            {
-                if (!System.IO.Directory.Exists(logsdir))
-                    System.IO.Directory.CreateDirectory(logsdir);
-            }
-            testSettings.ProgressLogPath = logFileName;
-            testSettings.TrxOutputPath = resultsFileName;
-#endif
-            testSettings.ShutdownOnCompletion = testSettings.AutoStart;
+            testSettings.TerminateAfterExecution = testSettings.AutoRun;
             LoadApplication(new App(testSettings));
         }
     }

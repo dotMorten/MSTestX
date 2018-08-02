@@ -45,7 +45,7 @@ namespace TestAppRunner.ViewModels
                     }
                     alltests = this.tests = tests;
                 });
-                if (Settings.AutoStart)
+                if (Settings.AutoRun)
                     Run();
             }
             OnPropertyChanged(nameof(Tests));
@@ -176,7 +176,7 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        public TestSettings Settings { get; internal set; }
+        public TestOptions Settings { get; internal set; }
 
         private static T GetProperty<T>(string id, TestObject test, T defaultValue)
         {

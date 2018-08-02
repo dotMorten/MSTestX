@@ -7,10 +7,10 @@ namespace TestAppRunner
 {
 	public partial class App : Application
 	{
-		public App (TestSettings settings = null)
+		public App (TestOptions settings = null)
 		{
 			InitializeComponent();
-            ViewModels.TestRunnerVM.Instance.Settings = settings ?? new TestSettings();
+            ViewModels.TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
             MainPage = new NavigationPage(new Views.GroupTestsPage());
 		}
 
