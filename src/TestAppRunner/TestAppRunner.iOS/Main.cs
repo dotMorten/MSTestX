@@ -9,7 +9,7 @@ namespace TestAppRunner.iOS
 {
     public class Application
     {
-        private UnitTests.UnitTests test; //Necessary to force include of the class library. Xamarin seems to strip it out if it's not referenced in code.
+        private UnitTests.Tests test; //Necessary to force include of the class library. Xamarin seems to strip it out if it's not referenced in code.
 
         // This is the main entry point of the application.
         static void Main(string[] args)

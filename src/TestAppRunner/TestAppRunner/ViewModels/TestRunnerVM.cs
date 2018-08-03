@@ -147,7 +147,40 @@ namespace TestAppRunner.ViewModels
             }
             OnPropertyChanged(nameof(IsRunning));
             OnPropertyChanged(nameof(Status));
+            if(Settings.TerminateAfterExecution)
+            {
+                Terminate();
+            }
             return results;
+        }
+
+        private void Terminate()
+        {
+            switch (Device.RuntimePlatform)
+            {
+                case Device.Android: System.Environment.Exit(0); break;
+                case Device.iOS:
+                    {
+                        // We'll just use reflection here, rather than having to start doing multi-targeting just for this one platform specific thing
+						// Reflection code equivalent to:
+                        // var selector = new ObjCRuntime.Selector("terminateWithSuccess");
+                        // UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+                        var selectorType = Type.GetType("ObjCRuntime.Selector, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
+                        var cnst = selectorType.GetConstructor(new Type[] { typeof(string) });
+                        var selector = cnst.Invoke(new object[] { "terminateWithSuccess" });
+                        var UIAppType = Type.GetType("UIKit.UIApplication, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
+                        var prop = UIAppType.GetProperty("SharedApplication");
+                        var app = prop.GetValue(null);
+                        var nsObjectType = Type.GetType("Foundation.NSObject, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
+                        var psMethod = UIAppType.GetMethod("PerformSelector", new Type[] { selector.GetType(), nsObjectType, typeof(double) });
+                        psMethod.Invoke(app, new object[] { selector, app, 0d });
+                    }
+                    break;
+                case Device.UWP:
+                    // Windows.UI.Xaml.Application.Current.Exit();
+                default:
+                    break;
+            }
         }
 
         public bool IsRunning => testRunner.IsRunning;
