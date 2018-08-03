@@ -40,3 +40,12 @@ namespace MyUnitTestApp
 Note if you put your tests in a class library, the iOS app, will need to reference one of the types in the AppDelegate, or the compiler will strip out the unit test DLL (this isn't an issue if you use a shared project with tests).
 
 Note: This is not a fork. The submodule literally uses the code as-is from TestFX but compiled so it can run and be referenced by a Xamarin App.
+
+
+### Screenshots
+
+![image](https://user-images.githubusercontent.com/1378165/43662635-757007ee-971b-11e8-9b10-63c1d2983385.png)
+
+![image](https://user-images.githubusercontent.com/1378165/43662619-65fa0a4e-971b-11e8-9059-51c86522103d.png)
+
+![image](https://user-images.githubusercontent.com/1378165/43662682-9514fbb8-971b-11e8-9c67-a46ff7290e0d.png)
