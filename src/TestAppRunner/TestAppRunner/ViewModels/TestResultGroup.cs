@@ -21,13 +21,9 @@ namespace TestAppRunner.ViewModels
 
         private void Test_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(TestResultVM.Outcome))
+            if (e.PropertyName == nameof(TestResultVM.Result))
             {
                 OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus), nameof(Percentage), nameof(Outcome));
-            }
-            else if (e.PropertyName == nameof(TestResultVM.Result))
-            {
-                OnPropertyChanged(nameof(NotRunTests), nameof(TestStatus), nameof(Outcome));
             }
         }
 

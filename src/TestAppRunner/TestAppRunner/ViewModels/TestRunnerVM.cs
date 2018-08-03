@@ -51,6 +51,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(Tests));
             OnPropertyChanged(nameof(GroupedTests));
             OnPropertyChanged(nameof(TestStatus));
+            OnPropertyChanged(nameof(NotRunTests));
             Status = $"{tests.Count} tests found.";
             OnPropertyChanged(nameof(Status));
         }
@@ -98,6 +99,13 @@ namespace TestAppRunner.ViewModels
             {
                 tests[item.Id].Result = null;
             }
+            OnPropertyChanged(nameof(TestStatus));
+            OnPropertyChanged(nameof(NotRunTests));
+            OnPropertyChanged(nameof(PassedTests));
+            OnPropertyChanged(nameof(FailedTests));
+            OnPropertyChanged(nameof(SkippedTests));
+            OnPropertyChanged(nameof(Percentage));
+
             results = new List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
             if (!string.IsNullOrEmpty(Settings.ProgressLogPath))
             {
@@ -223,17 +231,14 @@ namespace TestAppRunner.ViewModels
             {
                 var test = tests[testResult.TestCase.Id];
                 test.Result = testResult;
-                switch (testResult.Outcome)
-                {
-                    case TestOutcome.Failed: test.Outcome = UnitTestOutcome.Failed; break;
-                    case TestOutcome.Passed: test.Outcome = UnitTestOutcome.Passed; break;
-                    case TestOutcome.NotFound: test.Outcome = UnitTestOutcome.Error; break;
-                    case TestOutcome.Skipped: test.Outcome = UnitTestOutcome.NotRunnable; break;
-                    case TestOutcome.None: test.Outcome = UnitTestOutcome.Unknown; break;
-                }
+               
                 OnPropertyChanged(nameof(Progress));
                 OnPropertyChanged(nameof(Percentage));
                 OnPropertyChanged(nameof(TestStatus));
+                OnPropertyChanged(nameof(NotRunTests));
+                OnPropertyChanged(nameof(PassedTests));
+                OnPropertyChanged(nameof(FailedTests));
+                OnPropertyChanged(nameof(SkippedTests));
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()} {testResult.ErrorMessage}");
@@ -258,8 +263,7 @@ namespace TestAppRunner.ViewModels
 
         void ITestExecutionRecorder.RecordStart(TestCase testCase)
         {
-            tests[testCase.Id].Outcome = UnitTestOutcome.InProgress;
-            tests[testCase.Id].OnPropertyChanged(nameof(TestResultVM.Outcome));
+            tests[testCase.Id].SetInProgress();
             Log($"Starting test '{testCase.FullyQualifiedName}'");
             Settings.TestRecorder?.RecordStart(testCase);
         }
@@ -277,6 +281,7 @@ namespace TestAppRunner.ViewModels
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
             System.Diagnostics.Debug.WriteLine($"{testMessageLevel} - {message}");
+            Log($"MESSAGE: {testMessageLevel}: {message}");
             Settings.TestRecorder?.SendMessage(testMessageLevel, message);
         }
     }

@@ -41,7 +41,7 @@ namespace TestAppRunner.Views
                         if (Result.ErrorStackTrace == null && Result.ErrorMessage != null &&  Result.ErrorMessage.Contains("timeout"))
                             Text = "⏱";
                         else
-                            Text = "❌"; //⛔⨯"
+                            Text = "⛔"; //⛔⨯"
                         TextColor = Color.Red;
                         break;
                     case TestOutcome.Passed:
@@ -49,7 +49,7 @@ namespace TestAppRunner.Views
                         TextColor = Color.Green;
                         break;
                     case TestOutcome.Skipped:
-                        Text = "⬜"; 
+                        Text = "⚠"; 
                         TextColor = Color.Gray;
                         break;
                     case TestOutcome.None:

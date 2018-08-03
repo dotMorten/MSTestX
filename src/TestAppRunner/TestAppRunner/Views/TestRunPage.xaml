@@ -8,10 +8,34 @@
         <local:OutcomeConverter x:Key="outcomeConverter" />
     </ContentPage.Resources>
     
-    <ContentPage.Content>       
-        <StackLayout>
-            <Label Text="{Binding TestStatus}" Margin="20,20,0,0" />
-            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}">
+    <ContentPage.Content>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*"  />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackLayout>
+                <Grid Padding="20,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Label Text="Summary: " FontAttributes="Bold" Grid.Row="0" />
+                    <Label Text="{Binding Percentage, StringFormat='{0}% succeeded'}" Grid.Column="1" FontAttributes="Bold" Grid.Row="0" />
+                    <Label Text="{Binding PassedTests, StringFormat='✔ {0} passed'}" Margin="0,0,5,0" TextColor="Green" Grid.Row="1" />
+                    <Label Text="{Binding FailedTests, StringFormat='⛔ {0} failed'}" Margin="0,0,5,0" TextColor="Red" Grid.Row="1" Grid.Column="1" />
+                    <Label Text="{Binding SkippedTests, StringFormat='⚠ {0} skipped'}" Margin="0,0,5,0" TextColor="Orange"  Grid.Row="2" />
+                    <Label Text="{Binding NotRunTests, StringFormat='🔷 {0} not executed'}" Margin="0,0,5,0" TextColor="Gray"  Grid.Row="2" Grid.Column="1" />
+                </Grid>
+                <Grid BackgroundColor="Gray" HeightRequest="1" />
+            </StackLayout>
+            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}" RowHeight="60" Grid.Row="1">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
@@ -23,7 +47,7 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
-        </StackLayout>
+            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="2" />
+        </Grid>
     </ContentPage.Content>
 </ContentPage>

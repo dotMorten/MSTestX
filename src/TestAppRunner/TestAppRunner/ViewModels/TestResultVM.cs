@@ -23,12 +23,33 @@ namespace TestAppRunner.ViewModels
             set
             {
                 result = value;
-                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError));
+                inProgress = false;
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome));
             }
         }
-
-
-        public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome { get; set; } = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown;
+        private bool inProgress;
+        internal void SetInProgress()
+        {
+            inProgress = true;
+            OnPropertyChanged(nameof(Outcome));
+        }
+        public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome
+        {
+            get
+            {
+                if (result == null) return inProgress? Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.InProgress : Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown;
+                switch (result.Outcome)
+                {
+                    case TestOutcome.Failed: return Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Failed;
+                    case TestOutcome.Passed: return Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Passed;
+                    case TestOutcome.NotFound: return Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Error;
+                    case TestOutcome.Skipped: return Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotRunnable;
+                    case TestOutcome.None:
+                    default:
+                        return Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown;
+                }
+            }
+        }
 
         public string Category
         {

@@ -2,28 +2,63 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
-             Title="{Binding TestStatus}"
+             Title="{Binding Group}"
              x:Class="TestAppRunner.Views.GroupByClassTestsPage">
     <ContentPage.Resources>
         <local:Outcome2Converter x:Key="outcomeConverter" />
     </ContentPage.Resources>
-    <ContentPage.Content>       
-        <StackLayout Margin="0,20,0,0">
-            <ListView x:Name="list" ItemSelected="list_ItemSelected">
+    <ContentPage.Content>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*"  />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackLayout>
+                <Grid Padding="20,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Label Text="Summary: " FontAttributes="Bold" Grid.Row="0" />
+                    <Label Text="{Binding Percentage, StringFormat='{0}% succeeded'}" Grid.Column="1" FontAttributes="Bold" Grid.Row="0" />
+                    <Label Text="{Binding PassedTests, StringFormat='✔ {0} passed'}" Margin="0,0,5,0" TextColor="Green" Grid.Row="1" />
+                    <Label Text="{Binding FailedTests, StringFormat='⛔ {0} failed'}" Margin="0,0,5,0" TextColor="Red" Grid.Row="1" Grid.Column="1" />
+                    <Label Text="{Binding SkippedTests, StringFormat='⚠ {0} skipped'}" Margin="0,0,5,0" TextColor="Orange"  Grid.Row="2" />
+                    <Label Text="{Binding NotRunTests, StringFormat='🔷 {0} not executed'}" Margin="0,0,5,0" TextColor="Gray"  Grid.Row="2" Grid.Column="1" />
+                </Grid>
+                <Grid BackgroundColor="Gray" HeightRequest="1" />
+            </StackLayout>
+            <ListView x:Name="list" ItemSelected="list_ItemSelected" RowHeight="60" Grid.Row="1">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
                             <StackLayout Padding="20,0">
                                 <Label Text="{Binding Group, Mode=OneTime}" FontAttributes="Bold"
-                                       TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}"                    
-                                       />
-                                <Label Text="{Binding TestStatus, Mode=OneWay}" />
+                                       TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
+                                <StackLayout Orientation="Horizontal">
+                                    <Label Text=" ✔ " />
+                                    <Label Text="{Binding PassedTests}" Margin="0,0,5,0" TextColor="Green" />
+                                    <Label Text=" ⛔ " />
+                                    <Label Text="{Binding FailedTests}" Margin="0,0,5,0" TextColor="Red" />
+                                    <Label Text=" ⚠ " TextColor="Orange" />
+                                    <Label Text="{Binding SkippedTests}" Margin="0,0,5,0" TextColor="Orange" />
+                                    <Label Text=" 🔷 " />
+                                    <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="Gray" />
+                                    <Label Text="{Binding Percentage}" />
+                                    <Label Text="%" />
+                                </StackLayout>
                             </StackLayout>
                         </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
-        </StackLayout>
+            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="2" />
+        </Grid>
     </ContentPage.Content>
 </ContentPage>
