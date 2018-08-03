@@ -16,7 +16,7 @@ namespace TestAppRunner.Views
             {
                 if(v.Outcome == TestOutcome.Failed)
                 {
-                    if(v.ErrorStackTrace == null && v.ErrorMessage != null && v.ErrorMessage.Contains("timeout"))
+                    if(v.ErrorStackTrace == null && v.ErrorMessage?.Contains("timeout") == true)
                     {
                         if (targetType == typeof(Color))
                             return Color.OrangeRed;
@@ -46,6 +46,31 @@ namespace TestAppRunner.Views
                 return "Not Executed";
             }
             return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class Outcome2Converter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var outcome = (TestOutcome)value;
+            if (outcome == TestOutcome.Failed)
+            {
+                return Color.Red;
+            }
+            if (outcome == TestOutcome.Passed)
+            {
+                return Color.Green;
+            }
+            if (outcome == TestOutcome.Skipped)
+            {
+                return Color.Orange;
+            }
+            return Color.Gray;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -41,7 +41,7 @@ namespace TestAppRunner.ViewModels
                     testRunner = new TestRunner(references, new RunSettings(), this);
                     foreach (var item in testRunner.Tests)
                     {
-                        tests[item.Id] = new TestResultVM() { Test = item };
+                        tests[item.Id] = new TestResultVM(item);
                     }
                     alltests = this.tests = tests;
                 });
@@ -62,11 +62,11 @@ namespace TestAppRunner.ViewModels
             if (tests != null)
             {
                 if (grouping == "Category")
-                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)));
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Category).Select((g, t) => new TestResultGroup(g.Key, g)).OrderBy(g => g.Group));
                 else if (grouping == "Outcome")
-                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Outcome).Select((g, t) => new TestResultGroup(g.Key.ToString(), g)));
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Outcome).Select((g, t) => new TestResultGroup(g.Key.ToString(), g)).OrderBy(g => g.Group));
                 else if (grouping == "Namespace")
-                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Namespace).Select((g, t) => new TestResultGroup(g.Key, g)));
+                    _GroupedTests = new List<TestResultGroup>(tests.Values.GroupBy(t => t.Namespace).Select((g, t) => new TestResultGroup(g.Key, g)).OrderBy(g => g.Group));
                 OnPropertyChanged(nameof(GroupedTests));
             }
         }
@@ -97,7 +97,6 @@ namespace TestAppRunner.ViewModels
             foreach (var item in testCollection)
             {
                 tests[item.Id].Result = null;
-                tests[item.Id].OnPropertyChanged(nameof(TestResultVM.Result));
             }
             results = new List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
             if (!string.IsNullOrEmpty(Settings.ProgressLogPath))
@@ -232,9 +231,6 @@ namespace TestAppRunner.ViewModels
                     case TestOutcome.Skipped: test.Outcome = UnitTestOutcome.NotRunnable; break;
                     case TestOutcome.None: test.Outcome = UnitTestOutcome.Unknown; break;
                 }
-                test.OnPropertyChanged(nameof(TestResultVM.Result));
-                test.OnPropertyChanged(nameof(TestResultVM.Outcome));
-                test.OnPropertyChanged(nameof(TestResultVM.Duration));
                 OnPropertyChanged(nameof(Progress));
                 OnPropertyChanged(nameof(Percentage));
                 OnPropertyChanged(nameof(TestStatus));

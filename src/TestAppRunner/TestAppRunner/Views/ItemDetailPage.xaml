@@ -15,30 +15,38 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Grid BackgroundColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Padding="20">
-                <Label Text="{Binding Test.FullyQualifiedName}" FontSize="18" LineBreakMode="WordWrap" 
-                    VerticalOptions="Center" TextColor="White" FontAttributes="Bold" />
-            </Grid>
+            
+            <Label TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" 
+                       Text="{Binding Test.DisplayName}" FontSize="26" LineBreakMode="WordWrap" 
+                       FontAttributes="Bold" Margin="20,10"/>
 
-            <ScrollView Grid.Row="1">
+            <ScrollView Grid.Row="1" Margin="20,0">
+
                 <StackLayout>
-                    <Label Text="{Binding Outcome}" FontSize="16" FontAttributes="Bold" />
+
+                    <Label Text="{Binding ClassName}" />
+
                     <StackLayout Orientation="Horizontal">
-                        <Label Text="Category: "/>
-                        <Label Text="{Binding Category}" TextColor="White" />
-                    </StackLayout>
-                    <StackLayout Orientation="Horizontal">
-                        <Label Text="Duration: "/>
+                        <Label Text="Duration: " FontAttributes="Bold" />
                         <Label Text="{Binding Duration}" />
                     </StackLayout>
-                    <Label Text="Error: "/>
-                    <Label Text="{Binding Result.ErrorMessage}" FontAttributes="Bold" LineBreakMode="WordWrap" />
-                    <Label Text="{Binding Result.ErrorStackTrace}" LineBreakMode="WordWrap" />
-                </StackLayout>
-            </ScrollView>
 
-            <Button Text="Run Test" Grid.Row="2"
-                    Clicked="Button_Clicked" />
+                    <Label Text="Properties:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasProperties}" />
+                    <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" />
+
+                    <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" />
+                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" />
+
+                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}"  />
+                    <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" />
+
+                    <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" />
+                    <Label Text="{Binding Result.ErrorStackTrace}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" />
+
+                </StackLayout>
+
+            </ScrollView>
+            <Button Text="Run Test" Grid.Row="2" Clicked="Button_Clicked" />
         </Grid>
     </ContentPage.Content>
 </ContentPage>

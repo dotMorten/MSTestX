@@ -14,11 +14,7 @@ namespace UnitTests
         }
 
         [TestMethod]
-        [TestProperty("Test prop", "Prop val")]
-        [WorkItem(1234)]
         [TestCategory("Synchronous tests")]
-        [Owner("Morten")]
-        [Description("This test passes")]
         public void TestOK()
         {
             Assert.IsNotNull(TestContext);
@@ -31,6 +27,38 @@ namespace UnitTests
         public void TestFail()
         {
             Assert.IsTrue(false);
+        }
+
+        [TestMethod]
+        [TestCategory("Synchronous tests")]
+        [Description("This test writes out some messages")]
+        public void TestWithMessages()
+        {
+            Assert.IsNotNull(TestContext);
+            TestContext.WriteLine("This is a message from a 'TestContext.WriteLine' call.");
+            TestContext.WriteLine("And here's a second message.");
+        }
+
+        [TestMethod]
+        [TestCategory("Synchronous tests")]
+        [Description("This test writes out one message then fails")]
+        public void TestFailWithMessages()
+        {
+            Assert.IsNotNull(TestContext);
+            TestContext.WriteLine("Oh oh... I think we're about to fail...");
+            Assert.Fail();
+            TestContext.WriteLine("This message won't make it to the output");
+        }
+
+
+        [TestMethod]
+        [TestProperty("Test prop", "Prop val")]
+        [WorkItem(1234)]
+        [Owner("Morten")]
+        [Description("This test contains 4 properties")]
+        public void TestWithProperties()
+        {
+
         }
 
         [TestMethod]

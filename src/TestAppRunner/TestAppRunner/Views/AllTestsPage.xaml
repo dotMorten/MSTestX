@@ -5,7 +5,7 @@
              Title="{Binding TestStatus}"
              x:Class="TestAppRunner.Views.AllTestsPage">
     <ContentPage.Resources>
-        <local:OutcomeConverter x:Key="outcomeConverter" />
+        <local:Outcome2Converter x:Key="outcomeConverter" />
     </ContentPage.Resources>
     
     <ContentPage.Content>       
@@ -19,7 +19,9 @@
                     <DataTemplate>
                         <ViewCell>
                             <StackLayout Padding="20,0">
-                                <Label Text="{Binding Group}" FontAttributes="Bold" />
+                                <Label Text="{Binding Group}" FontAttributes="Bold"
+                                       TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}"                    
+                                       />
                                 <Label Text="{Binding TestStatus}" />
                             </StackLayout>
                         </ViewCell>

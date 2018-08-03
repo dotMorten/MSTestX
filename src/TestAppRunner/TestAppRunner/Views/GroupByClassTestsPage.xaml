@@ -4,14 +4,19 @@
              xmlns:local="clr-namespace:TestAppRunner.Views"
              Title="{Binding TestStatus}"
              x:Class="TestAppRunner.Views.GroupByClassTestsPage">
+    <ContentPage.Resources>
+        <local:Outcome2Converter x:Key="outcomeConverter" />
+    </ContentPage.Resources>
     <ContentPage.Content>       
-        <StackLayout>
+        <StackLayout Margin="0,20,0,0">
             <ListView x:Name="list" ItemSelected="list_ItemSelected">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
                             <StackLayout Padding="20,0">
-                                <Label Text="{Binding Group, Mode=OneTime}" FontAttributes="Bold" />
+                                <Label Text="{Binding Group, Mode=OneTime}" FontAttributes="Bold"
+                                       TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}"                    
+                                       />
                                 <Label Text="{Binding TestStatus, Mode=OneWay}" />
                             </StackLayout>
                         </ViewCell>

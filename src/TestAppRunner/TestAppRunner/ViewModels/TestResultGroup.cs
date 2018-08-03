@@ -10,7 +10,7 @@ namespace TestAppRunner.ViewModels
     {
         public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests)
         {
-            Group = group;
+            Group = group ?? "<None>";
             foreach (var t in tests)
             {
                 t.PropertyChanged += Test_PropertyChanged;
@@ -23,11 +23,11 @@ namespace TestAppRunner.ViewModels
         {
             if (e.PropertyName == nameof(TestResultVM.Outcome))
             {
-                OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus), nameof(Percentage));
+                OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus), nameof(Percentage), nameof(Outcome));
             }
             else if (e.PropertyName == nameof(TestResultVM.Result))
             {
-                OnPropertyChanged(nameof(NotRunTests), nameof(TestStatus));
+                OnPropertyChanged(nameof(NotRunTests), nameof(TestStatus), nameof(Outcome));
             }
         }
 
@@ -38,6 +38,17 @@ namespace TestAppRunner.ViewModels
                 foreach (var p in propertyNames)
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
             });
+        }
+
+        public TestOutcome Outcome
+        {
+            get
+            {
+                if (FailedTests > 0) return TestOutcome.Failed;
+                if (SkippedTests == Count) return TestOutcome.Skipped;
+                if (PassedTests + SkippedTests == Count) return TestOutcome.Passed;
+                return TestOutcome.None;
+            }
         }
 
         public string Group { get; }

@@ -8,9 +8,25 @@ namespace TestAppRunner.ViewModels
 {
     internal class TestResultVM : VMBase
     {
-        public TestCase Test { get; set; }
+        public TestResultVM(TestCase test)
+        {
+            Test = test;
+        }
 
-        public TestResult Result { get; set; }
+        public TestCase Test { get; }
+
+        private TestResult result;
+
+        public TestResult Result
+        {
+            get { return result; }
+            set
+            {
+                result = value;
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError));
+            }
+        }
+
 
         public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome { get; set; } = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown;
 
@@ -18,12 +34,10 @@ namespace TestAppRunner.ViewModels
         {
             get
             {
-                var c = Test.Properties.Where(p => p.Id == "MSTestDiscoverer.TestCategory").FirstOrDefault();
-                if (c != null)
-                    return (Test.GetPropertyValue(c) as string[])?.FirstOrDefault();
-                return null;
+                return Test.GetProperty("MSTestDiscoverer.TestCategory", new string[] { }).FirstOrDefault();
             }
         }
+
         public string Duration
         {
             get
@@ -37,6 +51,47 @@ namespace TestAppRunner.ViewModels
 
         public string Namespace => ClassName.Substring(0, ClassName.LastIndexOf("."));
 
+        public bool HasProperties => Test.GetProperty<KeyValuePair<string, string>[]>("TestObject.Traits", new KeyValuePair<string, string>[] { }).Any();
+
+        public string Properties
+        {
+            get
+            {
+                var traits = Test.GetProperty("TestObject.Traits", new KeyValuePair<string, string>[] { });
+                string str = "";
+                foreach (var trait in traits)
+                    str += $"{trait.Key} = {trait.Value}\n";
+                return str.Trim();
+            }
+        }
+
+        public bool HasMessages => Result?.Messages?.Any() == true;
+
+        public string Messages
+        {
+            get
+            {
+                if (Result?.Messages == null) return null;
+                string p = "";
+                foreach (var msg in Result.Messages)
+                    p += $"{msg.Category}: {msg.Text.Trim()}\n";
+                return p.Trim();
+            }
+        }
+
+        public bool HasError => !string.IsNullOrEmpty(Result?.ErrorMessage);
+
         public override string ToString() => Test.FullyQualifiedName;
+    }
+
+    internal static class PropertyExtensions
+    {
+        public static T GetProperty<T>(this TestObject test, string id, T defaultValue = default(T))
+        {
+            var prop = test.Properties.Where(p => p.Id == id).FirstOrDefault();
+            if (prop != null)
+                return test.GetPropertyValue<T>(prop, defaultValue);
+            return defaultValue;
+        }
     }
 }
