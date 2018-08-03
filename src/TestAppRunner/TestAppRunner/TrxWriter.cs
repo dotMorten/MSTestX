@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Xml;
 
 namespace TestAppRunner
@@ -85,32 +86,24 @@ namespace TestAppRunner
         {
             testCount = testFailed = testSucceeded = 0;
             doc = new XmlDocument();
-            rootNode = doc.CreateElement("TestRun", xmlNamespace);
+            rootNode = (XmlElement)doc.AppendChild(doc.CreateElement("TestRun", xmlNamespace));
             rootNode.SetAttribute("id", Guid.NewGuid().ToString());
             rootNode.SetAttribute("name", TestRunName);
             rootNode.SetAttribute("runUser", TestRunUser);
-            doc.AppendChild(rootNode);
-            header = doc.CreateElement("Times", xmlNamespace);
+            header = (XmlElement)rootNode.AppendChild(doc.CreateElement("Times", xmlNamespace));
             header.SetAttribute("finish", DateTime.Now.ToString("O", CultureInfo.InvariantCulture));
             header.SetAttribute("start", DateTime.Now.ToString("O", CultureInfo.InvariantCulture));
             header.SetAttribute("creation", DateTime.Now.ToString("O", CultureInfo.InvariantCulture));
-            rootNode.AppendChild(header);
-            resultsNode = doc.CreateElement("Results", xmlNamespace);
-            rootNode.AppendChild(resultsNode);
-            testDefinitions = doc.CreateElement("TestDefinitions", xmlNamespace);
-            rootNode.AppendChild(testDefinitions);
-            testEntries = doc.CreateElement("TestEntries", xmlNamespace);
-            rootNode.AppendChild(testEntries);
-            var testLists = doc.CreateElement("TestLists", xmlNamespace);
-            var testList = doc.CreateElement("TestList", xmlNamespace);
+            resultsNode = (XmlElement)rootNode.AppendChild(doc.CreateElement("Results", xmlNamespace));
+            testDefinitions = (XmlElement)rootNode.AppendChild(doc.CreateElement("TestDefinitions", xmlNamespace));
+            testEntries = (XmlElement)rootNode.AppendChild(doc.CreateElement("TestEntries", xmlNamespace));
+            var testLists = rootNode.AppendChild(doc.CreateElement("TestLists", xmlNamespace));
+            var testList = (XmlElement)testLists.AppendChild(doc.CreateElement("TestList", xmlNamespace));
             testList.SetAttribute("name", "Results Not in a List");
             testList.SetAttribute("id", testListId);
-            testLists.AppendChild(testList);
-            testList = doc.CreateElement("TestList", xmlNamespace);
+            testList = (XmlElement)testLists.AppendChild(doc.CreateElement("TestList", xmlNamespace));
             testList.SetAttribute("name", "All Loaded Results");
             testList.SetAttribute("id", "19431567-8539-422a-85d7-44ee4e166bda");
-            testLists.AppendChild(testList);
-            rootNode.AppendChild(testLists);
         }
 
         private static string OutcomeToTrx(TestOutcome outcome)
@@ -129,10 +122,13 @@ namespace TestAppRunner
 
         public void RecordResult(TestResult result)
         {
+            if (result.Outcome == TestOutcome.Failed) testFailed++;
+            else if (result.Outcome == TestOutcome.Skipped) testSkipped++;
+            else if (result.Outcome == TestOutcome.Passed) testSucceeded++;
+            testCount++;
+
             var innerResultsCount = GetProperty<int>("InnerResultsCount", result, 0);
             if (innerResultsCount > 0) return; // This is a data test, and we don't store the parent result
-            string id1 = result.TestCase.Id.ToString();
-            string id2 = GetProperty<Guid>("TestCase.Id", result, new Guid()).ToString();
             string name1 = result.DisplayName;
             string name2 = result.TestCase.DisplayName;
             Guid parentExecId = GetProperty<Guid>("ParentExecId", result, Guid.NewGuid());
@@ -146,7 +142,7 @@ namespace TestAppRunner
             string testName = result.DisplayName;
             if (string.IsNullOrEmpty(testName))
                 testName = result.TestCase.DisplayName;
-            var resultNode = doc.CreateElement("UnitTestResult", xmlNamespace);
+            var resultNode = (XmlElement)resultsNode.AppendChild(doc.CreateElement("UnitTestResult", xmlNamespace));
             resultNode.SetAttribute("outcome", OutcomeToTrx(result.Outcome));
             resultNode.SetAttribute("testType", "13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b");
             resultNode.SetAttribute("testListId", testListId);
@@ -157,99 +153,103 @@ namespace TestAppRunner
             resultNode.SetAttribute("computerName", result.ComputerName);
 
             string assemblyName = GetProperty<string>("TestCase.Source", result.TestCase, "");
-
+            
+            StringBuilder debugTrace = new StringBuilder();
+            StringBuilder stdErr = new StringBuilder();
+            StringBuilder stdOut = new StringBuilder();
+            List<string> textMessages = new List<string>();
+            XmlElement outputNode = doc.CreateElement("Output", xmlNamespace);
+            if (result.Messages?.Any() == true)
+            {
+                foreach (TestResultMessage message in result.Messages)
+                {
+                    if (TestResultMessage.AdditionalInfoCategory.Equals(message.Category, StringComparison.OrdinalIgnoreCase))
+                        textMessages.Add(message.Text);
+                    else if (TestResultMessage.DebugTraceCategory.Equals(message.Category, StringComparison.OrdinalIgnoreCase))
+                        debugTrace.AppendLine(message.Text);
+                    else if (TestResultMessage.StandardErrorCategory.Equals(message.Category, StringComparison.OrdinalIgnoreCase))
+                        stdErr.AppendLine(message.Text);
+                    else if (TestResultMessage.StandardOutCategory.Equals(message.Category, StringComparison.OrdinalIgnoreCase))
+                        stdOut.AppendLine(message.Text);
+                    else
+                        continue; // The message category does not match any predefined category.
+                }
+            }
+            if(stdOut.Length > 0)
+                outputNode.AppendChild(doc.CreateElement("StdOut", xmlNamespace)).InnerText = stdOut.ToString();
+            if (stdErr.Length > 0)
+                outputNode.AppendChild(doc.CreateElement("StdErr", xmlNamespace)).InnerText = stdErr.ToString();
+            if (debugTrace.Length > 0)
+                outputNode.AppendChild(doc.CreateElement("DebugTrace", xmlNamespace)).InnerText = debugTrace.ToString();
             if (result.Outcome == TestOutcome.Failed)
             {
-                testFailed++;
-                var output = doc.CreateElement("Output", xmlNamespace);
-                var errorInfo = doc.CreateElement("ErrorInfo", xmlNamespace);
-                var message = doc.CreateElement("Message", xmlNamespace);
-                message.InnerText = result.ErrorMessage;
-                var stackTrace = doc.CreateElement("StackTrace", xmlNamespace);
-                stackTrace.InnerText = result.ErrorStackTrace;
-                output.AppendChild(errorInfo);
-                errorInfo.AppendChild(message);
-                errorInfo.AppendChild(stackTrace);
-                resultNode.AppendChild(output);
+                var errorInfo = (XmlElement)outputNode.AppendChild(doc.CreateElement("ErrorInfo", xmlNamespace));
+                errorInfo.AppendChild(doc.CreateElement("Message", xmlNamespace)).InnerText = result.ErrorMessage;
+                errorInfo.AppendChild(doc.CreateElement("StackTrace", xmlNamespace)).InnerText = result.ErrorStackTrace;
             }
-            else if(result.Outcome == TestOutcome.Skipped)
+            if (outputNode.ChildNodes.Count > 0)
             {
-                testSkipped++;
+                resultNode.AppendChild(outputNode);
             }
-            else if(result.Outcome == TestOutcome.Passed)
+            if (textMessages.Any())
             {
-                testSucceeded++;
+                var txtMsgsNode = resultsNode.AppendChild(doc.CreateElement("TextMessages", xmlNamespace));
+                foreach(var msg in textMessages)
+                    txtMsgsNode.AppendChild(doc.CreateElement("Message", xmlNamespace)).InnerText = msg;
             }
-            testCount++;
 
-            resultsNode.AppendChild(resultNode);
-
-            var testNode = doc.CreateElement("UnitTest", xmlNamespace);
+            var testNode = (XmlElement)testDefinitions.AppendChild(doc.CreateElement("UnitTest", xmlNamespace));
             testNode.SetAttribute("name", testName);
             testNode.SetAttribute("id", id);
             testNode.SetAttribute("storage", assemblyName);
-            XmlElement properties = null;
+
+            XmlNode properties = null;
             var traits = GetProperty<KeyValuePair<string, string>[]>("TestObject.Traits", result.TestCase, new KeyValuePair<string, string>[] { });
             foreach (var prop in traits)
             {
                 if (properties == null)
-                {
-                    properties = doc.CreateElement("Properties", xmlNamespace);
-                    testNode.AppendChild(properties);
-                }
-                var property = doc.CreateElement("Property", xmlNamespace);
-                var key = doc.CreateElement("Key", xmlNamespace);
-                key.InnerText = prop.Key;
-                property.AppendChild(key);
-                var value = doc.CreateElement("Value", xmlNamespace);
-                value.InnerText = prop.Value;
-                property.AppendChild(value);
-                properties.AppendChild(property);
+                    properties = testNode.AppendChild(doc.CreateElement("Properties", xmlNamespace));
+
+                var property = properties.AppendChild(doc.CreateElement("Property", xmlNamespace));
+                property.AppendChild(doc.CreateElement("Key", xmlNamespace)).InnerText = prop.Key;
+                var value = property.AppendChild(doc.CreateElement("Value", xmlNamespace)).InnerText = prop.Value;
             }
+
             string[] owners = null;
             if (owners != null && owners.Any())
             {
-                var ownersNode = doc.CreateElement("Owners", xmlNamespace);
+                var ownersNode = testNode.AppendChild(doc.CreateElement("Owners", xmlNamespace));
                 foreach (var owner in owners)
                 {
-                    var item = doc.CreateElement("Owner", xmlNamespace);
+                    var item = (XmlElement)ownersNode.AppendChild(doc.CreateElement("Owner", xmlNamespace));
                     item.SetAttribute("name", owner);
-                    ownersNode.AppendChild(item);
                 }
-                testNode.AppendChild(ownersNode);
             }
 
             var categories = GetProperty<string[]>("MSTestDiscoverer.TestCategory", result.TestCase, null);
-
             if (categories != null && categories.Any())
             {
-                var testCategory = doc.CreateElement("TestCategory", xmlNamespace);
+                var testCategory = testNode.AppendChild(doc.CreateElement("TestCategory", xmlNamespace));
                 foreach (var category in categories)
                 {
-                    var item = doc.CreateElement("TestCategoryItem", xmlNamespace);
+                    var item = (XmlElement)testCategory.AppendChild(doc.CreateElement("TestCategoryItem", xmlNamespace));
                     item.SetAttribute("TestCategory", category);
-                    testCategory.AppendChild(item);
                 }
-                testNode.AppendChild(testCategory);
             }
-            var execution = doc.CreateElement("Execution", xmlNamespace);
+
+            var execution = (XmlElement)testNode.AppendChild(doc.CreateElement("Execution", xmlNamespace));
             execution.SetAttribute("id", executionId.ToString());
-            testNode.AppendChild(execution);
-            var testMethodName = doc.CreateElement("TestMethod", xmlNamespace);
+            var testMethodName = (XmlElement)testNode.AppendChild(doc.CreateElement("TestMethod", xmlNamespace));
             testMethodName.SetAttribute("name", testName);
             var className = GetProperty<string>("MSTestDiscoverer.TestClassName", result.TestCase, result.TestCase.FullyQualifiedName.Substring(0, result.TestCase.FullyQualifiedName.LastIndexOf(".")));
             testMethodName.SetAttribute("className", className);
             testMethodName.SetAttribute("adapterTypeName", GetProperty<string>("TestCase.ExecutorUri", result.TestCase, ""));
             testMethodName.SetAttribute("codeBase", assemblyName);
-            testNode.AppendChild(testMethodName);
 
-            testDefinitions.AppendChild(testNode);
-
-            var testEntry = doc.CreateElement("TestEntry", xmlNamespace);
+            var testEntry = (XmlElement)testEntries.AppendChild(doc.CreateElement("TestEntry", xmlNamespace));
             testEntry.SetAttribute("testListId", testListId);
             testEntry.SetAttribute("testId", id);
             testEntry.SetAttribute("executionId", executionId.ToString());
-            testEntries.AppendChild(testEntry);
         }
 
         private static T GetProperty<T>(string id, TestObject test, T defaultValue)
@@ -263,15 +263,13 @@ namespace TestAppRunner
         public void FinalizeReport()
         {
             header.SetAttribute("finish", DateTime.Now.ToString("O"));
-            var resultSummary = doc.CreateElement("ResultSummary", xmlNamespace);
+            var resultSummary = (XmlElement)rootNode.AppendChild(doc.CreateElement("ResultSummary", xmlNamespace));
             resultSummary.SetAttribute("outcome", "Completed");
-            var counters = doc.CreateElement("Counters", xmlNamespace);
+            var counters = (XmlElement)resultSummary.AppendChild(doc.CreateElement("Counters", xmlNamespace));
             counters.SetAttribute("passed", testSucceeded.ToString(CultureInfo.InvariantCulture));
             counters.SetAttribute("failed", testFailed.ToString(CultureInfo.InvariantCulture));
             counters.SetAttribute("notExecuted", testSkipped.ToString(CultureInfo.InvariantCulture));
             counters.SetAttribute("total", testCount.ToString(CultureInfo.InvariantCulture));
-            resultSummary.AppendChild(counters);
-            rootNode.AppendChild(resultSummary);
             doc.Save(outputStream);
             if (disposeStream)
             {
