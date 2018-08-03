@@ -41,8 +41,9 @@
                     <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" />
 
                     <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" />
-                    <Label Text="{Binding Result.ErrorStackTrace}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" />
-
+                    <ScrollView Orientation="Horizontal" HorizontalOptions="Fill" Margin="-20,0">
+                        <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" IsVisible="{Binding HasError}" FontFamily="Courier" FontSize="10" Margin="0" />
+                    </ScrollView>
                 </StackLayout>
 
             </ScrollView>
