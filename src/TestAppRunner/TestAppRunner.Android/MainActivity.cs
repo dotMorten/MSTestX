@@ -9,7 +9,7 @@ using Android.OS;
 
 namespace TestAppRunner.Droid
 {
-    [Activity(Label = "TestAppRunner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(Name = "TestAppRunner.RunTestsActivity", Label = "TestAppRunner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
         protected override void OnCreate(Bundle bundle)
@@ -51,7 +51,7 @@ namespace TestAppRunner.Droid
             // Once test run is complete you can copy the report back:
             // adb pull /storage/emulated/0/TestResults/TestRunReport.trx TestResults/TestRunReport.trx
             testSettings.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
-            string path = Intent.GetStringExtra("TrxReportFile");
+            string path = Intent.GetStringExtra("ReportFile");
             if (!string.IsNullOrEmpty(path))
             {
                 path = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, path);
