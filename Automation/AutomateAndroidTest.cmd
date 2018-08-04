@@ -2,9 +2,14 @@
 REM This script will Compile the APK, Deploy the app, unlock your device, launch the unit test app,
 REM  and retrive the test report upon completion
 
+REM Configuration:
 SET ADB_PATH="C:\Program Files (x86)\Android\android-sdk\platform-tools\adb"
 SET APK_ID=com.mstestx.TestAppRunner
 SET ACTIVITY_NAME=TestAppRunner.RunTestsActivity
+SET PROJECT_TO_BUILD=..\src\TestAppRunner\TestAppRunner.Android\TestAppRunner.Android.csproj
+SET APK_PATH=..\src\TestAppRunner\TestAppRunner.Android\bin\Debug\%APK_ID%-Signed.apk
+SET DEVICE_PIN=1234
+
 
 REM LOCATE VS2017
 SET VSPATH=
@@ -23,11 +28,9 @@ IF NOT %VSPATH%=="" (
 )
 
 REM Compile Android App:
-MSBUILD /restore /t:PackageForAndroid /t:signandroidpackage ..\src\TestAppRunner\TestAppRunner.Android\TestAppRunner.Android.csproj /p:Configuraton=Debug
+MSBUILD /restore /t:PackageForAndroid /t:signandroidpackage %PROJECT_TO_BUILD% /p:Configuraton=Debug
 
 if NOT ["%errorlevel%"]==["0"] ( exit /b %errorlevel% )
-
-SET APK_PATH=..\src\TestAppRunner\TestAppRunner.Android\bin\Debug\%APK_ID%-Signed.apk
 
 ECHO Installing app...
 %ADB_PATH% install -r %APK_PATH%
@@ -39,7 +42,7 @@ REM Pressing the lock button
 REM Swipe UP
 %ADB_PATH% shell input touchscreen swipe 930 880 930 380
 REM Entering your passcode
-%ADB_PATH% shell input text 1323
+%ADB_PATH% shell input text %DEVICE_PIN%
 REM Pressing Enter
 %ADB_PATH% shell input keyevent 66
 echo "Device is unlocked...."
