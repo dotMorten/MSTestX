@@ -147,6 +147,8 @@ namespace TestAppRunner.ViewModels
                 Status = $"Test run failed to run: {ex.Message}";
             }
             DateTime end = DateTime.Now;
+            CurrentTestRunning = null;
+            OnPropertyChanged(nameof(CurrentTestRunning));
             if (logOutput != null)
             {
                 Log("*************************************************");
@@ -278,10 +280,15 @@ namespace TestAppRunner.ViewModels
 
         void ITestExecutionRecorder.RecordStart(TestCase testCase)
         {
-            tests[testCase.Id].SetInProgress();
+            var vmtest = tests[testCase.Id];
+            vmtest.SetInProgress();
+            CurrentTestRunning = vmtest;
+            OnPropertyChanged(nameof(CurrentTestRunning));
             Log($"Starting test '{testCase.FullyQualifiedName}'");
             Settings.TestRecorder?.RecordStart(testCase);
         }
+
+        public TestResultVM CurrentTestRunning { get; private set; }
 
         void ITestExecutionRecorder.RecordEnd(TestCase testCase, TestOutcome outcome)
         {

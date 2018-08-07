@@ -18,6 +18,7 @@ namespace TestAppRunner.Views
 		{
 			InitializeComponent();
             this.BindingContext = testCases;
+            currentTestView.BindingContext = TestRunnerVM.Instance;
         }
         private void Button_Clicked(object sender, EventArgs e)
         {
