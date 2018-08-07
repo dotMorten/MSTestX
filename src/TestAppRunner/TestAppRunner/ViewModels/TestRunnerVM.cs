@@ -23,6 +23,8 @@ namespace TestAppRunner.ViewModels
         private static TestRunnerVM _Instance;
         public static TestRunnerVM Instance => _Instance ?? (_Instance = new TestRunnerVM());
 
+        internal App HostApp { get; set; }
+
         private TestRunnerVM()
         {
             LoadTests();
@@ -74,6 +76,8 @@ namespace TestAppRunner.ViewModels
 
         public string Status { get; private set; }
 
+        public string DiagnosticsInfo { get; private set; }
+
         public string TestStatus => $"{PassedTests} passed. {FailedTests} failed. {SkippedTests} skipped. {NotRunTests} not run. {Percentage.ToString("0")}%";
 
         private CancellationTokenSource tcs;
@@ -92,9 +96,12 @@ namespace TestAppRunner.ViewModels
 
         public async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run(IEnumerable<TestCase> testCollection)
         {
+            HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
             Status = $"Running tests...";
             OnPropertyChanged(nameof(Status));
+            DiagnosticsInfo = "";
+            OnPropertyChanged(nameof(DiagnosticsInfo));
             foreach (var item in testCollection)
             {
                 tests[item.Id].Result = null;
@@ -120,6 +127,7 @@ namespace TestAppRunner.ViewModels
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
                 trxWriter.InitializeReport();
             }
+            DateTime start = DateTime.Now;
             var task = testRunner.Run(testCollection, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
@@ -138,6 +146,7 @@ namespace TestAppRunner.ViewModels
             {
                 Status = $"Test run failed to run: {ex.Message}";
             }
+            DateTime end = DateTime.Now;
             if (logOutput != null)
             {
                 Log("*************************************************");
@@ -152,9 +161,15 @@ namespace TestAppRunner.ViewModels
                 trxWriter.FinalizeReport();
                 trxWriter = null;
             }
+            DiagnosticsInfo += $"\nLast run duration: {(end - start).ToString("c")}";
+            DiagnosticsInfo += $"\n{results.Where(a => a.Outcome == TestOutcome.Passed).Count()} passed - {results.Where(a => a.Outcome == TestOutcome.Failed).Count()} failed";
+            if (Settings.ProgressLogPath != null) DiagnosticsInfo += $"\nLog: {Settings.ProgressLogPath}";
+            if (Settings.TrxOutputPath != null) DiagnosticsInfo += $"\nTRX Report: {Settings.TrxOutputPath}";
+            OnPropertyChanged(nameof(DiagnosticsInfo));
             OnPropertyChanged(nameof(IsRunning));
             OnPropertyChanged(nameof(Status));
-            if(Settings.TerminateAfterExecution)
+            HostApp?.RaiseTestRunCompleted(results);
+            if (Settings.TerminateAfterExecution)
             {
                 Terminate();
             }

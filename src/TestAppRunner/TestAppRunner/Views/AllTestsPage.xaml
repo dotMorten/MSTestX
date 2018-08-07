@@ -61,7 +61,9 @@
                         </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>
-                
+                <ListView.Footer>
+                    <Label Text="{Binding DiagnosticsInfo}" Margin="20,0" TextColor="Gray" />
+                </ListView.Footer>
             </ListView>
             <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" />
         </Grid>

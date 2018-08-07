@@ -24,7 +24,7 @@ namespace TestAppRunner.ViewModels
             {
                 result = value;
                 inProgress = false;
-                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome));
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace));
             }
         }
         private bool inProgress;
@@ -101,6 +101,8 @@ namespace TestAppRunner.ViewModels
         }
 
         public bool HasError => !string.IsNullOrEmpty(Result?.ErrorMessage);
+
+        public bool HasStacktrace => !string.IsNullOrEmpty(Result?.ErrorStackTrace);
 
         public override string ToString() => Test.FullyQualifiedName;
     }

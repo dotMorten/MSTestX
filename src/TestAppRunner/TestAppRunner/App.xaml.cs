@@ -1,4 +1,6 @@
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
+using System.Collections.Generic;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -11,6 +13,7 @@ namespace TestAppRunner
 		{
 			InitializeComponent();
             ViewModels.TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
+            ViewModels.TestRunnerVM.Instance.HostApp = this;
             MainPage = new NavigationPage(new Views.AllTestsPage());
 		}
 
@@ -28,5 +31,13 @@ namespace TestAppRunner
 		{
 			// Handle when your app resumes
 		}
-	}
+
+        internal void RaiseTestRunStarted(IEnumerable<TestCase> tests) => TestRunStarted?.Invoke(this, tests);
+
+        internal void RaiseTestRunCompleted(IEnumerable<TestResult> results) => TestRunCompleted?.Invoke(this, results);
+
+        public event EventHandler<IEnumerable<TestCase>> TestRunStarted;
+
+        public event EventHandler<IEnumerable<TestResult>> TestRunCompleted;
+    }
 }

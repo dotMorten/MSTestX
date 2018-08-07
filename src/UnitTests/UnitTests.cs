@@ -69,6 +69,13 @@ namespace UnitTests
         }
 
         [TestMethod]
+        [Ignore("Ignore this test for now...")]
+        [TestCategory("Synchronous tests")]
+        public void TestSkippedWithMessage()
+        {
+        }
+
+        [TestMethod]
         [TestCategory("Synchronous tests")]
         public async Task TestOKAsync()
         {
