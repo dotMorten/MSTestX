@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,6 +13,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.ViewModels
 {
+    //[EditorBrowsable(EditorBrowsableState.Never)]
     internal class TestRunnerVM : VMBase, ITestExecutionRecorder
     {
         private static TestRunner testRunner;
@@ -19,6 +21,19 @@ namespace TestAppRunner.ViewModels
         private Dictionary<Guid, TestResultVM> tests;
         private System.IO.StreamWriter logOutput;
         private TrxWriter trxWriter;
+        private string testListPath;
+        private string testResultPath;
+        private System.Runtime.Serialization.DataContractSerializer resultSerializer =
+            new System.Runtime.Serialization.DataContractSerializer(typeof(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult));
+        private JsonSerializer serializer = JsonSerializer.Create(
+                            new JsonSerializerSettings
+                            {
+                                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                                DateParseHandling = DateParseHandling.DateTimeOffset,
+                                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                                TypeNameHandling = TypeNameHandling.None,
+                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                            });
 
         private static TestRunnerVM _Instance;
         public static TestRunnerVM Instance => _Instance ?? (_Instance = new TestRunnerVM());
@@ -28,6 +43,9 @@ namespace TestAppRunner.ViewModels
         private TestRunnerVM()
         {
             LoadTests();
+            var path = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+            testListPath = System.IO.Path.Combine(path, "TestList.xml");
+            testResultPath = System.IO.Path.Combine(path, "TestResults.xml");
         }
 
         private async void LoadTests()
@@ -47,7 +65,43 @@ namespace TestAppRunner.ViewModels
                     }
                     alltests = this.tests = tests;
                 });
-                if (Settings.AutoRun)
+                if (Settings.ContinueCrashedTestrun && System.IO.File.Exists(testListPath))
+                {
+
+                    var IDs = System.IO.File.ReadAllLines(testListPath);
+                    
+                    List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> results = new List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
+                    using (var stream = new System.IO.StreamReader(testResultPath))
+                    {
+                        var line = stream.ReadLine();
+                        var reader = new JsonTextReader(new System.IO.StringReader(line));
+                        var result = serializer.Deserialize<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>(reader);
+                        results.Add(result);
+                        //using (var ms = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(line)))
+                        //    try
+                        //    {
+                        //        results.Add(resultSerializer.ReadObject(ms) as Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult);
+                        //    }
+                        //    catch(System.Exception ex)
+                        //    {
+                        //        var ie = ex.InnerException;
+                        //
+                        //    }
+                    }
+                    List<TestCase> testsToRun = new List<TestCase>();
+                    foreach(var test in IDs)
+                    {
+                        var vmtest = testRunner.Tests.Where(t => test == t.Id.ToString()).FirstOrDefault();
+                        if(vmtest != null)
+                        {
+                            testsToRun.Add(vmtest);
+                            tests[vmtest.Id].Result = results.Where(r => r.TestCase.Id == vmtest.Id).FirstOrDefault();
+                        }
+                    }
+                    Run(testsToRun, true);
+                }
+                else
+                 if (Settings.AutoRun)
                     Run();
             }
             OnPropertyChanged(nameof(Tests));
@@ -94,7 +148,7 @@ namespace TestAppRunner.ViewModels
 
         private List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> results;
 
-        public async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run(IEnumerable<TestCase> testCollection)
+        public async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run(IEnumerable<TestCase> testCollection, bool unrunTestsOnly = false)
         {
             HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
@@ -102,9 +156,12 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(Status));
             DiagnosticsInfo = "";
             OnPropertyChanged(nameof(DiagnosticsInfo));
-            foreach (var item in testCollection)
+            if (!unrunTestsOnly)
             {
-                tests[item.Id].Result = null;
+                foreach (var item in testCollection)
+                {
+                    tests[item.Id].Result = null;
+                }
             }
             OnPropertyChanged(nameof(TestStatus));
             OnPropertyChanged(nameof(NotRunTests));
@@ -128,6 +185,13 @@ namespace TestAppRunner.ViewModels
                 trxWriter.InitializeReport();
             }
             DateTime start = DateTime.Now;
+            if (System.IO.File.Exists(testResultPath))
+                System.IO.File.Delete(testResultPath);
+            if (Settings.StoreProgressForRelaunch)
+            {
+                // Write test list to disk
+                System.IO.File.WriteAllText(testListPath, string.Join("\n", testCollection.Select(test => test.Id.ToString())));
+            }
             var task = testRunner.Run(testCollection, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
@@ -146,6 +210,11 @@ namespace TestAppRunner.ViewModels
             {
                 Status = $"Test run failed to run: {ex.Message}";
             }
+            //if (System.IO.File.Exists(testListPath))
+            //    System.IO.File.Delete(testListPath);
+            //if (System.IO.File.Exists(testResultPath))
+            //    System.IO.File.Delete(testResultPath);
+            
             DateTime end = DateTime.Now;
             CurrentTestRunning = null;
             OnPropertyChanged(nameof(CurrentTestRunning));
@@ -244,11 +313,11 @@ namespace TestAppRunner.ViewModels
             results?.Add(testResult);
             var innerResultsCount = GetProperty<int>("InnerResultsCount", testResult, 0);
             var parentExecId = GetProperty<Guid?>("ParentExecId", testResult, Guid.Empty);
-            if(parentExecId == Guid.Empty) // We don't report child result in the UI
+            if (parentExecId == Guid.Empty) // We don't report child result in the UI
             {
                 var test = tests[testResult.TestCase.Id];
                 test.Result = testResult;
-               
+
                 OnPropertyChanged(nameof(Progress));
                 OnPropertyChanged(nameof(Percentage));
                 OnPropertyChanged(nameof(TestStatus));
@@ -259,12 +328,9 @@ namespace TestAppRunner.ViewModels
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()} {testResult.ErrorMessage}");
-            //var s = new System.Runtime.Serialization.DataContractSerializer(testResult.GetType());
-            //using (var ms = new System.IO.MemoryStream())
-            //{
-            //    s.WriteObject(ms, testResult);
-            //    var xml = System.Text.Encoding.Default.GetString(ms.ToArray());
-            //}
+
+            var json = JsonConvert.SerializeObject(testResult);
+            System.IO.File.AppendAllText(testResultPath, json + "\n");
             trxWriter?.RecordResult(testResult);
             Settings.TestRecorder?.RecordResult(testResult);
         }

@@ -31,5 +31,17 @@ namespace TestAppRunner
         /// Custom test recorder for recording test progress
         /// </summary>
         public ITestExecutionRecorder TestRecorder { get; set; }
+
+        /// <summary>
+        /// Serializes progress so a crashed test run can be continued.
+        /// </summary>
+        /// <remarks>Test run can be continued by setting <see cref="ContinueCrashedTestrun"/> to <c>true</c>.</remarks>
+        public bool StoreProgressForRelaunch { get; set; }
+
+        /// <summary>
+        /// If <see cref="ContinueCrashedTestrun"/> was set to <c>true</c> and a test run wasn't completed due to a crash, this'll continue where it left off, skipping
+        /// the last test that was active when it crashed
+        /// </summary>
+        public bool ContinueCrashedTestrun { get; set; }
     }
 }
