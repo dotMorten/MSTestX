@@ -52,6 +52,10 @@ namespace TestAppRunner.Droid
             // adb pull /storage/emulated/0/TestResults/TestRunReport.trx TestResults/TestRunReport.trx
             testSettings.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
             string path = Intent.GetStringExtra("ReportFile");
+            // Or generate a new time-stamped log file path on each run:
+            // if (string.IsNullOrEmpty(path))
+            //     path = System.IO.Path.Combine("AndroidUnitTests", "TestAppRunner_" + System.DateTime.Now.ToString("yyyy_MM_dd_HH-mm-ss"));
+
             if (!string.IsNullOrEmpty(path))
             {
                 path = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, path);

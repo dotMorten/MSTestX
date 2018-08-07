@@ -39,7 +39,7 @@
                     <DataTemplate>
                         <ViewCell>
                             <StackLayout Padding="20,0">
-                                <Label Text="{Binding Group, Mode=OneTime}" FontAttributes="Bold"
+                                <Label Text="{Binding Group, Mode=OneTime}" FontAttributes="Bold" LineBreakMode="MiddleTruncation"
                                        TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
                                 <StackLayout Orientation="Horizontal">
                                     <Label Text=" ✔ " />

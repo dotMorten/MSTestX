@@ -41,7 +41,7 @@
                         <ViewCell>
                             <StackLayout HorizontalOptions="StartAndExpand" Margin="20,0,0,0" Orientation="Horizontal">
                                 <local:OutcomeIcon Result="{Binding Result}" Grid.RowSpan="2" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="20"/>
-                                <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center"/>
+                                <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center"/>
                             </StackLayout>
                         </ViewCell>
                     </DataTemplate>
