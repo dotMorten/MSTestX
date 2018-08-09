@@ -181,11 +181,13 @@ namespace TestAppRunner
                 outputNode.AppendChild(doc.CreateElement("StdErr", xmlNamespace)).InnerText = stdErr.ToString();
             if (debugTrace.Length > 0)
                 outputNode.AppendChild(doc.CreateElement("DebugTrace", xmlNamespace)).InnerText = debugTrace.ToString();
-            if (result.Outcome == TestOutcome.Failed)
+            if (!string.IsNullOrEmpty(result.ErrorMessage) || !string.IsNullOrEmpty(result.ErrorStackTrace))
             {
                 var errorInfo = (XmlElement)outputNode.AppendChild(doc.CreateElement("ErrorInfo", xmlNamespace));
-                errorInfo.AppendChild(doc.CreateElement("Message", xmlNamespace)).InnerText = result.ErrorMessage;
-                errorInfo.AppendChild(doc.CreateElement("StackTrace", xmlNamespace)).InnerText = result.ErrorStackTrace;
+                if (!string.IsNullOrEmpty(result.ErrorMessage))
+                    errorInfo.AppendChild(doc.CreateElement("Message", xmlNamespace)).InnerText = result.ErrorMessage;
+                if(!string.IsNullOrEmpty(result.ErrorStackTrace))
+                    errorInfo.AppendChild(doc.CreateElement("StackTrace", xmlNamespace)).InnerText = result.ErrorStackTrace;
             }
             if (outputNode.ChildNodes.Count > 0)
             {
