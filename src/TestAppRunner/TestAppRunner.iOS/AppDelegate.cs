@@ -23,7 +23,7 @@ namespace TestAppRunner.iOS
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             global::Xamarin.Forms.Forms.Init();
-            LoadApplication(new App(new TestOptions() { AutoRun = false }));
+            LoadApplication(new App(Application.TestOptions));
 
             return base.FinishedLaunching(app, options);
         }
