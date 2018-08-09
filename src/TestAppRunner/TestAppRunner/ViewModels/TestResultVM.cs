@@ -27,6 +27,9 @@ namespace TestAppRunner.ViewModels
                 OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace));
             }
         }
+
+        public IList<TestResult> ChildResults { get; set; }
+
         private bool inProgress;
         internal void SetInProgress()
         {

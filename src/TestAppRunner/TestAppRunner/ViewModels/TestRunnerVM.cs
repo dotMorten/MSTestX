@@ -243,10 +243,10 @@ namespace TestAppRunner.ViewModels
         {
             results?.Add(testResult);
             var innerResultsCount = GetProperty<int>("InnerResultsCount", testResult, 0);
-            var parentExecId = GetProperty<Guid?>("ParentExecId", testResult, Guid.Empty);
-            if(parentExecId == Guid.Empty) // We don't report child result in the UI
+            var parentExecId = GetProperty<Guid>("ParentExecId", testResult, Guid.Empty);
+            var test = tests[testResult.TestCase.Id];
+            if (parentExecId == Guid.Empty) // We don't report child result in the UI
             {
-                var test = tests[testResult.TestCase.Id];
                 test.Result = testResult;
                
                 OnPropertyChanged(nameof(Progress));
@@ -256,6 +256,15 @@ namespace TestAppRunner.ViewModels
                 OnPropertyChanged(nameof(PassedTests));
                 OnPropertyChanged(nameof(FailedTests));
                 OnPropertyChanged(nameof(SkippedTests));
+            }
+            else
+            {
+                if (test.ChildResults == null)
+                {
+                    test.ChildResults = new System.Collections.ObjectModel.ObservableCollection<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
+                    test.OnPropertyChanged(nameof(TestResultVM.ChildResults));
+                }
+                test.ChildResults.Add(testResult);
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()} {testResult.ErrorMessage}");

@@ -11,6 +11,8 @@ namespace TestAppRunner.Views
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if(parameter as string == "reverse")
+                return value == null;
             return value != null;
         }
 
