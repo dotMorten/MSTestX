@@ -1,10 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +34,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(Status));
             if (testRunner == null)
             {
-                await System.Threading.Tasks.Task.Run(() =>
+                await Task.Run(() =>
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
                     var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
@@ -89,14 +87,14 @@ namespace TestAppRunner.ViewModels
             tcs?.Cancel();
             tcs = null;
         }
-        public Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run()
+        public Task<IEnumerable<TestResult>> Run()
         {
             return Run(testRunner.Tests);
         }
 
-        private List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> results;
+        private List<TestResult> results;
 
-        public async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run(IEnumerable<TestCase> testCollection)
+        public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection)
         {
             try
             {
@@ -111,7 +109,7 @@ namespace TestAppRunner.ViewModels
 
         public event EventHandler<Exception> OnTestRunException;
 
-        private async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run_Internal(IEnumerable<TestCase> testCollection)
+        private async Task<IEnumerable<TestResult>> Run_Internal(IEnumerable<TestCase> testCollection)
         {
             HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
@@ -130,7 +128,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(SkippedTests));
             OnPropertyChanged(nameof(Percentage));
 
-            results = new List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
+            results = new List<TestResult>();
             if (!string.IsNullOrEmpty(Settings.ProgressLogPath))
             {
                 var s = System.IO.File.OpenWrite(Settings.ProgressLogPath);
@@ -256,7 +254,7 @@ namespace TestAppRunner.ViewModels
                 return test.GetPropertyValue<T>(prop, defaultValue);
             return defaultValue;
         }
-        void ITestExecutionRecorder.RecordResult(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testResult)
+        void ITestExecutionRecorder.RecordResult(TestResult testResult)
         {
             results?.Add(testResult);
             var innerResultsCount = GetProperty<int>("InnerResultsCount", testResult, 0);
@@ -278,7 +276,7 @@ namespace TestAppRunner.ViewModels
             {
                 if (test.ChildResults == null)
                 {
-                    test.ChildResults = new System.Collections.ObjectModel.ObservableCollection<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>();
+                    test.ChildResults = new System.Collections.ObjectModel.ObservableCollection<TestResult>();
                     test.OnPropertyChanged(nameof(TestResultVM.ChildResults));
                 }
                 test.ChildResults.Add(testResult);
