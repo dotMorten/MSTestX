@@ -19,6 +19,7 @@ namespace TestAppRunner.ViewModels
         private TrxWriter trxWriter;
 
         private static TestRunnerVM _Instance;
+
         public static TestRunnerVM Instance => _Instance ?? (_Instance = new TestRunnerVM());
 
         internal App HostApp { get; set; }
@@ -82,11 +83,14 @@ namespace TestAppRunner.ViewModels
 
         private CancellationTokenSource tcs;
 
+        public event EventHandler<Exception> OnTestRunException;
+
         public void Cancel()
         {
             tcs?.Cancel();
             tcs = null;
         }
+
         public Task<IEnumerable<TestResult>> Run()
         {
             return Run(testRunner.Tests);
@@ -106,8 +110,6 @@ namespace TestAppRunner.ViewModels
                 throw;
             }
         }
-
-        public event EventHandler<Exception> OnTestRunException;
 
         private async Task<IEnumerable<TestResult>> Run_Internal(IEnumerable<TestCase> testCollection)
         {
@@ -197,7 +199,6 @@ namespace TestAppRunner.ViewModels
         {
             switch (Device.RuntimePlatform)
             {
-                case Device.Android: System.Environment.Exit(0); break;
                 case Device.iOS:
                     {
                         // We'll just use reflection here, rather than having to start doing multi-targeting just for this one platform specific thing
@@ -215,8 +216,9 @@ namespace TestAppRunner.ViewModels
                         psMethod.Invoke(app, new object[] { selector, app, 0d });
                     }
                     break;
+                case Device.Android:
                 case Device.UWP:
-                    // Windows.UI.Xaml.Application.Current.Exit();
+                    Environment.Exit(0); break;
                 default:
                     break;
             }
