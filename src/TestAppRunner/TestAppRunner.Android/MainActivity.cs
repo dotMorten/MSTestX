@@ -45,17 +45,9 @@ namespace TestAppRunner.Droid
             testOptions.TerminateAfterExecution = testOptions.AutoRun;
             var testApp = new App(testOptions);
 
-            /* Alternative post result to a server on completion:
-            if (testSettings.AutoRun) {
-                testApp.TestRunCompleted += (s, e) =>
-                {
-                    if (System.IO.File.Exists(testSettings.TrxOutputPath))
-                    {
-                        var client = new System.Net.Http.HttpClient();
-                        var _ = client.PostAsync("http://testserver/ReportLogger", new System.Net.Http.StreamContent(System.IO.File.OpenRead(testSettings.TrxOutputPath)));
-                    }
-                };
-            }*/
+            // Disable screen saver while tests are running
+            testApp.TestRunStarted += (s,e) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+            testApp.TestRunCompleted += (s, e) => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
             LoadApplication(testApp);
         }
