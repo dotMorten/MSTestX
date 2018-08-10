@@ -25,6 +25,10 @@ namespace TestAppRunner.ViewModels
             {
                 OnPropertyChanged(nameof(PassedTests), nameof(FailedTests), nameof(SkippedTests), nameof(NotRunTests), nameof(TestStatus), nameof(Percentage), nameof(Outcome));
             }
+            else if(e.PropertyName == nameof(TestResultVM.Outcome))
+            {
+                OnPropertyChanged(nameof(IsInProgress));
+            }
         }
 
         public void OnPropertyChanged(params string[] propertyNames)
@@ -60,5 +64,7 @@ namespace TestAppRunner.ViewModels
         public double Percentage => this.Any(t=>t.Result?.Outcome == TestOutcome.Passed) ? (int)(PassedTests * 100d / (FailedTests + PassedTests)) : 0;
 
         public string TestStatus => $"{PassedTests} passed. {FailedTests} failed. {SkippedTests} skipped. {NotRunTests} not run. {Percentage.ToString("0")}%";
+
+        public bool IsInProgress => this.Any(t => t.Outcome == Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.InProgress);
     }
 }

@@ -20,6 +20,7 @@ namespace TestAppRunner.Views
             this.BindingContext = testCases;
             currentTestView.BindingContext = TestRunnerVM.Instance;
         }
+
         private void Button_Clicked(object sender, EventArgs e)
         {
             if (TestRunnerVM.Instance.IsRunning)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,6 +27,18 @@ namespace TestAppRunner.Views
             {
                 var _ = TestRunnerVM.Instance.Run(new[] { ((TestResultVM)BindingContext).Test });
             }
+        }
+
+        private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
+        {
+            var item = args.SelectedItem as TestResult;
+            if (item == null)
+                return;
+
+            await Navigation.PushAsync(new ItemDetailPage( new TestResultVM(item.TestCase) { Result = item }));
+
+            // Manually deselect item.
+            (sender as ListView).SelectedItem = null;
         }
     }
 }

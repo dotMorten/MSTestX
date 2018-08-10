@@ -11,6 +11,8 @@ namespace TestAppRunner.ViewModels
             Test = test;
         }
 
+        public string DisplayName => result?.DisplayName ?? Test?.DisplayName;
+
         public TestCase Test { get; }
 
         private TestResult result;
@@ -22,7 +24,8 @@ namespace TestAppRunner.ViewModels
             {
                 result = value;
                 inProgress = false;
-                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace));
+                ChildResults = null;
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace), nameof(IsInProgress), nameof(ChildResults));
             }
         }
 
@@ -33,6 +36,7 @@ namespace TestAppRunner.ViewModels
         {
             inProgress = true;
             OnPropertyChanged(nameof(Outcome));
+            OnPropertyChanged(nameof(IsInProgress));
         }
         public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome
         {
@@ -51,6 +55,8 @@ namespace TestAppRunner.ViewModels
                 }
             }
         }
+
+        public bool IsInProgress => inProgress;
 
         public string Category
         {

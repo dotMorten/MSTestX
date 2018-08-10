@@ -34,7 +34,7 @@
                     <Label Text="{Binding NotRunTests, StringFormat='🔷 {0} not executed'}" Margin="0,0,5,0" TextColor="Gray"  Grid.Row="2" Grid.Column="1" />
                 </Grid>
                 <StackLayout Margin="20,0" x:Name="currentTestView" Orientation="Horizontal" Grid.Row="3" IsVisible="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" Grid.ColumnSpan="2" >
-                    <ActivityIndicator IsRunning="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" />
+                    <ActivityIndicator IsRunning="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" HeightRequest="15" WidthRequest="15" />
                     <Label Text="{Binding CurrentTestRunning.Test.FullyQualifiedName, Mode=OneWay}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Start"/>
                 </StackLayout>
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
@@ -57,6 +57,7 @@
                                     <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="Gray" />
                                     <Label Text="{Binding Percentage}" />
                                     <Label Text="%" />
+                                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" />
                                 </StackLayout>
                             </StackLayout>
                         </ViewCell>
