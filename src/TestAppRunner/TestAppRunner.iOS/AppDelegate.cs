@@ -26,8 +26,8 @@ namespace TestAppRunner.iOS
 
             var testApp = new App(Application.TestOptions);
             // Disable screen saver while tests are running
-            testApp.TestRunStarted += (s, e) => UIApplication.SharedApplication.IdleTimerDisabled = true;
-            testApp.TestRunCompleted += (s, e) => UIApplication.SharedApplication.IdleTimerDisabled = false;
+            testApp.TestRunStarted += (a, testCases) => UIApplication.SharedApplication.IdleTimerDisabled = true;
+            testApp.TestRunCompleted += (a, results) => UIApplication.SharedApplication.IdleTimerDisabled = false;
             LoadApplication(testApp);
 
             return base.FinishedLaunching(app, options);

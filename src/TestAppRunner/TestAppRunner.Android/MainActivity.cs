@@ -46,9 +46,9 @@ namespace TestAppRunner.Droid
             var testApp = new App(testOptions);
 
             // Disable screen saver while tests are running
-            testApp.TestRunStarted += (s,e) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
-            testApp.TestRunCompleted += (s, e) => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
-
+            testApp.TestRunStarted += (a, testCases) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+            testApp.TestRunCompleted += (a, results) => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
+            
             LoadApplication(testApp);
         }
     }
