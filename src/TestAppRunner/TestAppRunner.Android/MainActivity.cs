@@ -9,7 +9,7 @@ using Android.OS;
 
 namespace TestAppRunner.Droid
 {
-    [Activity(Name = "TestAppRunner.RunTestsActivity", Label = "TestAppRunner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(Name = "TestAppRunner.RunTestsActivity", Label = "MSTestX Test Runner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
         protected override void OnCreate(Bundle bundle)
@@ -20,63 +20,44 @@ namespace TestAppRunner.Droid
             base.OnCreate(bundle);
             global::Xamarin.Forms.Forms.Init(this, bundle);
 
-            if (CheckSelfPermission(Android.Manifest.Permission.WriteExternalStorage) != Permission.Granted)
-            {
-                Android.Support.V4.App.ActivityCompat.RequestPermissions(this, new String[] { Android.Manifest.Permission.WriteExternalStorage }, 1);
-                return;
-            }
-            else
-            {
-                LaunchApp();
-            }
-        }
-
-        protected override void OnResume()
-        {
-            base.OnResume();
-            // if was resumed by the storage permission dialog
-            LaunchApp();
-        }
-
-        private void LaunchApp()
-        {
-            var testSettings = new TestAppRunner.TestOptions();
+            var testOptions = new TestAppRunner.TestOptions();
             // You can deploy and launch the app from the ADB shell and parsing intent parameters
             // Example:
             // adb install PATH_TO_APK/TestAppRunner.Android-Signed.apk
             // Launch the app and pass parameters where -n is for starting an intent
             // The intent should be [AppName]/[Activity Name]
             // Use --ez for passing boolean, --es for passing a string, --ei for passing int
-            // adb shell am start -n TestAppRunner/TestAppRunner.Android --ez AutoRun true --es TrxReportFile TestResults/TestRunReport
+            // adb shell am start -n TestAppRunner/TestAppRunner.Android --ez AutoRun true --es TrxReportFile TestReport
             // Once test run is complete you can copy the report back:
-            // adb pull /storage/emulated/0/TestResults/TestRunReport.trx TestResults/TestRunReport.trx
-            testSettings.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
+            // adb exec -out run -as com.mstestx.TestAppRunner cat/data/data/com.mstestx.TestAppRunner/files/TestReport.trx > TestReport.trx
+            testOptions.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
             string path = Intent.GetStringExtra("ReportFile");
             // Or generate a new time-stamped log file path on each run:
             // if (string.IsNullOrEmpty(path))
-            //     path = System.IO.Path.Combine("AndroidUnitTests", "TestAppRunner_" + System.DateTime.Now.ToString("yyyy_MM_dd_HH-mm-ss"));
+            //     path = "TestAppRunner_" + System.DateTime.Now.ToString("yyyy_MM_dd_HH-mm-ss");
 
             if (!string.IsNullOrEmpty(path))
             {
-                path = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, path);
-                testSettings.TrxOutputPath = path + ".trx";
-                testSettings.ProgressLogPath = path + ".log";
-                if (CheckSelfPermission(Android.Manifest.Permission.WriteExternalStorage) != Permission.Granted)
-                {
-                    // If we don't have write permission, turn off report output
-                    testSettings.TrxOutputPath = null;
-                    testSettings.ProgressLogPath = null;
-                }
-                else
-                {
-                    var fi = new System.IO.FileInfo(path);
-                    if (!fi.Directory.Exists)
-                        fi.Directory.Create();
-                }
-                   
+                path = System.IO.Path.Combine(ApplicationContext.FilesDir.Path, path);
+                testOptions.TrxOutputPath = path + ".trx";
+                testOptions.ProgressLogPath = path + ".log";
             }
-            testSettings.TerminateAfterExecution = testSettings.AutoRun;
-            LoadApplication(new App(testSettings));
+            testOptions.TerminateAfterExecution = testOptions.AutoRun;
+            var testApp = new App(testOptions);
+
+            /* Alternative post result to a server on completion:
+            if (testSettings.AutoRun) {
+                testApp.TestRunCompleted += (s, e) =>
+                {
+                    if (System.IO.File.Exists(testSettings.TrxOutputPath))
+                    {
+                        var client = new System.Net.Http.HttpClient();
+                        var _ = client.PostAsync("http://testserver/ReportLogger", new System.Net.Http.StreamContent(System.IO.File.OpenRead(testSettings.TrxOutputPath)));
+                    }
+                };
+            }*/
+
+            LoadApplication(testApp);
         }
     }
 }

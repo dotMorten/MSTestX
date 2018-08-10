@@ -48,7 +48,7 @@ REM Pressing Enter
 echo "Device is unlocked...."
 
 ECHO Launching app...
-%ADB_PATH% shell am start -n %APK_ID%/%ACTIVITY_NAME% --ez AutoRun true --es ReportFile TestResults/TestRunReport
+%ADB_PATH% shell am start -n %APK_ID%/%ACTIVITY_NAME% --ez AutoRun true --es ReportFile TestRunReport
 @timeout /t 2 > NUL
 
 REM Wait for app to complete. We just keep checking the Process ID until it no longer returns a value
@@ -70,8 +70,8 @@ DEL PID.txt
 
 REM Copy the test reports back to the host OS
 ECHO Retriving TestReport
-%ADB_PATH% pull /storage/emulated/0/TestResults/TestRunReport.trx TestRunReport.trx
-%ADB_PATH% pull /storage/emulated/0/TestResults/TestRunReport.log TestRunReport.log
+%ADB_PATH% exec-out run-as %APK_ID% cat /data/data/%APK_ID%/files/TestRunReport.trx > TestRunReport.trx
+%ADB_PATH% exec-out run-as %APK_ID% cat /data/data/%APK_ID%/files/TestRunReport.log > TestRunReport.log
 
 GOTO :eof
 
