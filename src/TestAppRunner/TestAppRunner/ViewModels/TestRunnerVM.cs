@@ -22,7 +22,7 @@ namespace TestAppRunner.ViewModels
 
         public static TestRunnerVM Instance => _Instance ?? (_Instance = new TestRunnerVM());
 
-        internal App HostApp { get; set; }
+        internal MSTestX.RunnerApp HostApp { get; set; }
 
         private TestRunnerVM()
         {
@@ -247,7 +247,7 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        public TestOptions Settings { get; internal set; }
+        public MSTestX.TestOptions Settings { get; internal set; }
 
         private static T GetProperty<T>(string id, TestObject test, T defaultValue)
         {

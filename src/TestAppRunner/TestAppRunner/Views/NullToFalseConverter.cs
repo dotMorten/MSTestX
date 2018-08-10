@@ -7,6 +7,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.Views
 {
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class NullToFalseConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

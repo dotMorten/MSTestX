@@ -54,6 +54,6 @@ namespace TestAppRunner.iOS
             // you can specify it here.
             UIApplication.Main(args, null, "AppDelegate");
         }
-        public static TestOptions TestOptions { get; } = new TestOptions();
+        public static MSTestX.TestOptions TestOptions { get; } = new MSTestX.TestOptions();
     }
 }

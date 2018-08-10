@@ -7,6 +7,7 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.Views
 {
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class OutcomeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -53,6 +54,8 @@ namespace TestAppRunner.Views
             throw new NotImplementedException();
         }
     }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class Outcome2Converter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

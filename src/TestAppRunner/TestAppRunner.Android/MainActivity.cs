@@ -20,7 +20,7 @@ namespace TestAppRunner.Droid
             base.OnCreate(bundle);
             global::Xamarin.Forms.Forms.Init(this, bundle);
 
-            var testOptions = new TestAppRunner.TestOptions();
+            var testOptions = new MSTestX.TestOptions();
             // You can deploy and launch the app from the ADB shell and parsing intent parameters
             // Example:
             // adb install PATH_TO_APK/TestAppRunner.Android-Signed.apk
@@ -43,7 +43,7 @@ namespace TestAppRunner.Droid
                 testOptions.ProgressLogPath = path + ".log";
             }
             testOptions.TerminateAfterExecution = testOptions.AutoRun;
-            var testApp = new App(testOptions);
+            var testApp = new MSTestX.RunnerApp(testOptions);
 
             // Disable screen saver while tests are running
             testApp.TestRunStarted += (a, testCases) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);

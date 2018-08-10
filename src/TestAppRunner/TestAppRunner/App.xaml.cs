@@ -1,20 +1,23 @@
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Collections.Generic;
+using TestAppRunner;
+using TestAppRunner.ViewModels;
+using TestAppRunner.Views;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation (XamlCompilationOptions.Compile)]
-namespace TestAppRunner
+namespace MSTestX
 {
-	public partial class App : Application
+	public partial class RunnerApp : Application
 	{
-		public App (TestOptions settings = null)
+		public RunnerApp(TestOptions settings = null)
 		{
 			InitializeComponent();
-            ViewModels.TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
-            ViewModels.TestRunnerVM.Instance.HostApp = this;
-            MainPage = new NavigationPage(new Views.AllTestsPage());
+            TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
+            TestRunnerVM.Instance.HostApp = this;
+            MainPage = new NavigationPage(new AllTestsPage());
 		}
 
 		protected override void OnStart ()

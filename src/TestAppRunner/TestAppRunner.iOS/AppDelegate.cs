@@ -24,7 +24,7 @@ namespace TestAppRunner.iOS
         {
             global::Xamarin.Forms.Forms.Init();
 
-            var testApp = new App(Application.TestOptions);
+            var testApp = new MSTestX.RunnerApp(Application.TestOptions);
             // Disable screen saver while tests are running
             testApp.TestRunStarted += (a, testCases) => UIApplication.SharedApplication.IdleTimerDisabled = true;
             testApp.TestRunCompleted += (a, results) => UIApplication.SharedApplication.IdleTimerDisabled = false;
