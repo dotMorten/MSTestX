@@ -71,7 +71,17 @@
                     <Label Text="{Binding DiagnosticsInfo}" Margin="20,0" TextColor="Gray" />
                 </ListView.Footer>
             </ListView>
+            
             <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" />
+
+            <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
+                  IsVisible="False" OutlineColor="Black">
+                <StackLayout Padding="20" BackgroundColor="#CCFFFFFF">
+                    <Label x:Name="ErrorHeader" FontAttributes="Bold" />
+                    <Label x:Name="ErrorMessage" LineBreakMode="WordWrap" />
+                    <Button Text="Close" Clicked="Error_Close_Button_Clicked"/>
+                </StackLayout>
+            </Frame>
         </Grid>
     </ContentPage.Content>
 </ContentPage>

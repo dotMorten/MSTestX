@@ -18,16 +18,31 @@ namespace TestAppRunner.Views
 		{
 			InitializeComponent ();
             this.BindingContext = TestRunnerVM.Instance;
+            TestRunnerVM.Instance.OnTestRunException += Instance_OnTestRunException;
 
             picker.ItemsSource = new string[] { "Category", "Namespace", "Outcome" };
             picker.SelectedIndex = 1;
         }
-        private void Button_Clicked(object sender, EventArgs e)
+
+        private void Instance_OnTestRunException(object sender, Exception e)
+        {
+            ErrorHeader.Text = "Test Run Error";
+            ErrorMessage.Text = e.Message;
+            ErrorPanel.IsVisible = true;
+        }
+
+        private async void Button_Clicked(object sender, EventArgs e)
         {
             if (TestRunnerVM.Instance.IsRunning)
                 TestRunnerVM.Instance.Cancel();
             else
-                TestRunnerVM.Instance.Run();
+            {
+                try
+                {
+                    await TestRunnerVM.Instance.Run();
+                }
+                catch { }
+            }
         }
 
         private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
@@ -45,6 +60,11 @@ namespace TestAppRunner.Views
         private void picker_SelectedIndexChanged(object sender, EventArgs e)
         {
             TestRunnerVM.Instance.UpdateGroup(((string[])picker.ItemsSource)[picker.SelectedIndex]);
+        }
+
+        private void Error_Close_Button_Clicked(object sender, EventArgs e)
+        {
+            ErrorPanel.IsVisible = false;
         }
     }
 }

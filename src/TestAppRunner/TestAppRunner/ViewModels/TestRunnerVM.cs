@@ -48,7 +48,9 @@ namespace TestAppRunner.ViewModels
                     alltests = this.tests = tests;
                 });
                 if (Settings.AutoRun)
-                    Run();
+                {
+                    var _ = Run();
+                }
             }
             OnPropertyChanged(nameof(Tests));
             OnPropertyChanged(nameof(GroupedTests));
@@ -95,6 +97,21 @@ namespace TestAppRunner.ViewModels
         private List<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> results;
 
         public async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run(IEnumerable<TestCase> testCollection)
+        {
+            try
+            {
+                return await Run_Internal(testCollection);
+            }
+            catch(System.Exception ex)
+            {
+                OnTestRunException?.Invoke(this, ex);
+                throw;
+            }
+        }
+
+        public event EventHandler<Exception> OnTestRunException;
+
+        private async Task<IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult>> Run_Internal(IEnumerable<TestCase> testCollection)
         {
             HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
