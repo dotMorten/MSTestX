@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="ProjectGroup" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+        <Name>MSTestX Cross-Platform Unit Test App</Name>
+        <Description>An MSTest-based Unit Test runner for UWP, iOS and Android.</Description>
+        <Icon Package="{52CBD135-1F97-2580-011F-C7CD052E44DE}" ID="531"/>
+        <TemplateID>MSTestX.UnitTestApp</TemplateID>
+        <DefaultName>UnitTestApp</DefaultName>
+        <ProjectType>CSharp</ProjectType>
+        <SortOrder>1000</SortOrder>
+        <CreateNewFolder>true</CreateNewFolder>
+        <CreateInPlace>true</CreateInPlace>
+        <LocationField>Enabled</LocationField>
+        <PreviewImage>__PreviewImage.png</PreviewImage>
+        <PromptForSaveOnCreation>true</PromptForSaveOnCreation>
+        <ProvideDefaultName>true</ProvideDefaultName>
+    </TemplateData>
+    <TemplateContent>
+      <ProjectCollection>
+        <ProjectTemplateLink ProjectName="$safeprojectname$"         CopyParameters="true">Shared\UnitTestApp.vstemplate</ProjectTemplateLink>
+        <ProjectTemplateLink ProjectName="$safeprojectname$.iOS"     CopyParameters="true">iOS\UnitTestApp.vstemplate</ProjectTemplateLink>
+        <ProjectTemplateLink ProjectName="$safeprojectname$.Android" CopyParameters="true">Android\UnitTestApp.vstemplate</ProjectTemplateLink>
+        <ProjectTemplateLink ProjectName="$safeprojectname$.UWP"     CopyParameters="true">UWP\UnitTestApp.vstemplate</ProjectTemplateLink>
+      </ProjectCollection>
+    </TemplateContent>
+</VSTemplate>

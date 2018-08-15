@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>UnitTestApp.iOS</Name>
+	<DefaultName>$ext_safeprojectname$.iOS</DefaultName>
+    <ProjectType>CSharp</ProjectType>
+    <SortOrder>1000</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <CreateInPlace>true</CreateInPlace>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Hidden>true</Hidden>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="UnitTestApp1.iOS.csproj" ReplaceParameters="true">
+      <Folder Name="Assets.xcassets" TargetFolderName="Assets.xcassets">
+	      <Folder Name="AppIcon.appiconset" TargetFolderName="AppIcon.appiconset">
+          <ProjectItem ReplaceParameters="false" TargetFileName="Contents.json">Contents.json</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="icon1024.png">icon1024.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon120.png">icon120.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon152.png">icon152.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon167.png">icon167.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon180.png">icon180.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon20.png">icon20.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon29.png">icon29.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon40.png">icon40.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon58.png">icon58.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon60.png">icon60.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon76.png">icon76.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon80.png">icon80.png</ProjectItem>
+		      <ProjectItem ReplaceParameters="false" TargetFileName="icon87.png">icon87.png</ProjectItem>
+		    </Folder>
+      </Folder>
+      <Folder Name="Properties" TargetFolderName="Properties">
+        <ProjectItem ReplaceParameters="true" TargetFileName="AssemblyInfo.cs">AssemblyInfo.cs</ProjectItem>
+      </Folder>
+	    <Folder Name="Resources" TargetFolderName="Resources">
+          <ProjectItem ReplaceParameters="false" TargetFileName="Default.png">Default.png</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="Default@2x.png">Default@2x.png</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="Default-568h@2x.png">Default-568h@2x.png</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="Default-Portrait.png">Default-Portrait.png</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="Default-Portrait@2x.png">Default-Portrait@2x.png</ProjectItem>
+          <ProjectItem ReplaceParameters="false" TargetFileName="LaunchScreen.storyboard">LaunchScreen.storyboard</ProjectItem>
+	    </Folder>
+      <ProjectItem ReplaceParameters="true" TargetFileName="AppDelegate.cs">AppDelegate.cs</ProjectItem>
+	    <ProjectItem ReplaceParameters="true" TargetFileName="Main.cs">Main.cs</ProjectItem>
+	    <ProjectItem ReplaceParameters="false" TargetFileName="Entitlements.plist">Entitlements.plist</ProjectItem>
+	    <ProjectItem ReplaceParameters="true" TargetFileName="Info.plist">Info.plist</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardData>
+    <UsePackageReferences>true</UsePackageReferences>
+  </WizardData>
+</VSTemplate>
