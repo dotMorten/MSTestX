@@ -35,7 +35,6 @@ namespace TestAppRunner.iOS
                             }
                         }
                         arguments[a] = value;
-                        System.Diagnostics.Debug.WriteLine($"Argument: {a} = '{value}'");
                     }
                 }
             }

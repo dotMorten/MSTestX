@@ -100,6 +100,8 @@ namespace TestAppRunner.ViewModels
 
         public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection)
         {
+            if (IsRunning)
+                throw new InvalidOperationException("Can't begin a test run while another is in progress");
             try
             {
                 return await Run_Internal(testCollection);
@@ -145,6 +147,7 @@ namespace TestAppRunner.ViewModels
                 trxWriter.InitializeReport();
             }
             DateTime start = DateTime.Now;
+            Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
             var task = testRunner.Run(testCollection, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
@@ -188,6 +191,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(IsRunning));
             OnPropertyChanged(nameof(Status));
             HostApp?.RaiseTestRunCompleted(results);
+            Logger.Log($"COMPLETED TESTRUN Total:{results.Count()} Failed:{results.Where(a => a.Outcome == TestOutcome.Failed).Count()} Passed:{results.Where(a => a.Outcome == TestOutcome.Passed).Count()}  Skipped:{results.Where(a => a.Outcome == TestOutcome.Skipped).Count()}");
             if (Settings.TerminateAfterExecution)
             {
                 Terminate();
@@ -284,15 +288,9 @@ namespace TestAppRunner.ViewModels
                 test.ChildResults.Add(testResult);
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
-            System.Diagnostics.Debug.WriteLine($"Completed test: {testResult.TestCase.FullyQualifiedName} - {testResult.Outcome.ToString().ToUpper()} {testResult.ErrorMessage}");
-            //var s = new System.Runtime.Serialization.DataContractSerializer(testResult.GetType());
-            //using (var ms = new System.IO.MemoryStream())
-            //{
-            //    s.WriteObject(ms, testResult);
-            //    var xml = System.Text.Encoding.Default.GetString(ms.ToArray());
-            //}
             trxWriter?.RecordResult(testResult);
             Settings.TestRecorder?.RecordResult(testResult);
+            Logger.LogResult(testResult);
         }
 
         private void Log(string message)
@@ -312,6 +310,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(CurrentTestRunning));
             Log($"Starting test '{testCase.FullyQualifiedName}'");
             Settings.TestRecorder?.RecordStart(testCase);
+            Logger.LogTestStart(testCase);
         }
 
         public TestResultVM CurrentTestRunning { get; private set; }
@@ -328,7 +327,6 @@ namespace TestAppRunner.ViewModels
 
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
-            System.Diagnostics.Debug.WriteLine($"{testMessageLevel} - {message}");
             Log($"MESSAGE: {testMessageLevel}: {message}");
             Settings.TestRecorder?.SendMessage(testMessageLevel, message);
         }
