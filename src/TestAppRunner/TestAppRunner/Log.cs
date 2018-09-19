@@ -45,8 +45,13 @@ namespace TestAppRunner
             //    string msg = Encoding.UTF8.GetString(ms.ToArray());
             //    Log("TEST COMPLETED:"+msg);
             //}
-            var className = testResult.TestCase.FullyQualifiedName.Substring(0, testResult.TestCase.FullyQualifiedName.LastIndexOf("."));
-            Log($"TEST COMPLETED: {className}.{testResult.DisplayName} - {testResult.Outcome}" + (testResult.Outcome == TestOutcome.Failed?  " " + testResult.ErrorMessage : ""));
+            var testName = testResult.TestCase.FullyQualifiedName;
+            if (testResult.DisplayName != null)
+            {
+                var className = testResult.TestCase.FullyQualifiedName.Substring(0, testResult.TestCase.FullyQualifiedName.LastIndexOf("."));
+                testName = $"{className}.{testResult.DisplayName}";
+            }
+            Log($"TEST COMPLETED: {testName} - {testResult.Outcome}" + (testResult.Outcome == TestOutcome.Failed?  " " + testResult.ErrorMessage : ""));
         }
     }
 }
