@@ -6,6 +6,9 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using System.Text;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace TestAppRunner.Droid
 {
@@ -43,12 +46,24 @@ namespace TestAppRunner.Droid
                 testOptions.ProgressLogPath = path + ".log";
             }
             testOptions.TerminateAfterExecution = testOptions.AutoRun;
+
+            // Get the MSTest Settings as documented here: https://docs.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2017
+            // Example setting default timeout to 10000ms:
+            // <?xml version=""1.0"" encoding=""utf-8""?>
+            // <RunSettings>
+            //   <MSTestV2>
+            //      <TestTimeout>10000</TestTimeout>
+            //  </MSTestV2>
+            // </RunSettings>"
+            testOptions.SettingsXml = Intent.GetStringExtra("SettingsXml");
+
+            // Launch the test app
             var testApp = new MSTestX.RunnerApp(testOptions);
 
             // Disable screen saver while tests are running
             testApp.TestRunStarted += (a, testCases) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
             testApp.TestRunCompleted += (a, results) => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
-            
+
             LoadApplication(testApp);
         }
     }

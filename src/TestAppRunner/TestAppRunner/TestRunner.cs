@@ -17,7 +17,7 @@ namespace TestAppRunner
 
         public TestRunner(IEnumerable<string> sources, IRunSettings runSettings, ITestExecutionRecorder recorder)
         {
-            RunSettings = RunSettings;
+            RunSettings = runSettings;
             sink = new TestCaseDiscoverySink();
             new MSTestDiscoverer().DiscoverTests(sources, this, this, sink);
             this.recorder = recorder;

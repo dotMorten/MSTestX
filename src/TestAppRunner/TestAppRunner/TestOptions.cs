@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MSTestX
 {
-    public class TestOptions
+    public class TestOptions : IRunSettings
     {
         /// <summary>
         /// Start the test run when the test app launches
@@ -31,5 +31,15 @@ namespace MSTestX
         /// Custom test recorder for recording test progress
         /// </summary>
         public ITestExecutionRecorder TestRecorder { get; set; }
+
+        /// <summary>
+        /// Gets or sets the MSTestSettings XML
+        /// </summary>
+        public string SettingsXml { get; set; }
+
+        ISettingsProvider IRunSettings.GetSettings(string settingsName)
+        {
+            return null;
+        }
     }
 }
