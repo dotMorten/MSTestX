@@ -39,7 +39,7 @@ namespace TestAppRunner.ViewModels
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
                     var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
-                    testRunner = new TestRunner(references, new RunSettings(), this);
+                    testRunner = new TestRunner(references, Settings, this);
                     foreach (var item in testRunner.Tests)
                     {
                         tests[item.Id] = new TestResultVM(item);
@@ -136,12 +136,13 @@ namespace TestAppRunner.ViewModels
             if (!string.IsNullOrEmpty(Settings.ProgressLogPath))
             {
                 var s = System.IO.File.OpenWrite(Settings.ProgressLogPath);
-                logOutput = new System.IO.StreamWriter(s); // Settings.ProgressLogPath, true);
+                logOutput = new System.IO.StreamWriter(s);
                 logOutput.WriteLine("*************************************************");
                 logOutput.WriteLine($"* Starting Test Run @ {DateTime.Now}");
                 logOutput.WriteLine("*************************************************");
+                Logger.Log($"LOGREPORT LOCATION: {Settings.ProgressLogPath}");
             }
-            if(!string.IsNullOrEmpty(Settings.TrxOutputPath))
+            if (!string.IsNullOrEmpty(Settings.TrxOutputPath))
             {
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
                 trxWriter.InitializeReport();
@@ -182,6 +183,7 @@ namespace TestAppRunner.ViewModels
             {
                 trxWriter.FinalizeReport();
                 trxWriter = null;
+                Logger.Log($"TRXREPORT LOCATION: {Settings.TrxOutputPath}");
             }
             DiagnosticsInfo += $"\nLast run duration: {(end - start).ToString("c")}";
             DiagnosticsInfo += $"\n{results.Where(a => a.Outcome == TestOutcome.Passed).Count()} passed - {results.Where(a => a.Outcome == TestOutcome.Failed).Count()} failed";
