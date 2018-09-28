@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <DisableParallelization>True</DisableParallelization>
+  </RunConfiguration>
+  <!-- MSTest adapter -->
+  <MSTestV2>
+     <!-- If no timeout is specified on a test, use this as default -->
+     <TestTimeout>10000</TestTimeout>
+ </MSTestV2>
+</RunSettings>

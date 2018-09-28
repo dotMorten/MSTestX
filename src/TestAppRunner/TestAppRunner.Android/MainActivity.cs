@@ -6,7 +6,6 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
