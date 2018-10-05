@@ -40,16 +40,19 @@
                 </StackLayout>
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
             </StackLayout>
-            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}" RowHeight="60" Grid.Row="1">
+            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}" RowHeight="50" Grid.Row="1">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
-                            <StackLayout Orientation="Horizontal" HorizontalOptions="StartAndExpand" Margin="20,0,0,0">
+                            <StackLayout Orientation="Horizontal" HorizontalOptions="StartAndExpand" Margin="15,0,0,0">
                                 <Grid VerticalOptions="Fill">
-                                    <local:OutcomeIcon Result="{Binding Result}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="20"/>
+                                    <local:OutcomeIcon Result="{Binding Result}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="30" FontSize="20" />
                                     <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" VerticalOptions="Center" />
                                 </Grid>
-                                <Label Text="{Binding Test.FullyQualifiedName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center" />
+                                <StackLayout VerticalOptions="Center">
+                                    <Label Text="{Binding ClassName, Mode=OneTime}" LineBreakMode="MiddleTruncation" TextColor="Gray" FontSize="10" Margin="0" />
+                                    <Label Text="{Binding Test.DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Margin="0" />
+                                </StackLayout>
                             </StackLayout>
                         </ViewCell>
                     </DataTemplate>
