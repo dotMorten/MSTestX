@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RunnerApp", "RunnerApp", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automation", "Automation", "{558BBD3A-1713-4E3B-BBE7-DD3DC9A08B0F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestX.Console.Android", "..\Automation\MSTestX.Android.ADB\MSTestX.Console.Android.csproj", "{3C83F3B8-50B0-436F-9243-CFAB7D42FAEC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestX.Console.Android", "..\Automation\MSTestX.Console.Android\MSTestX.Console.Android.csproj", "{3C83F3B8-50B0-436F-9243-CFAB7D42FAEC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{485668D4-6416-4315-9DBA-44DB3D4CF3BF} = {485668D4-6416-4315-9DBA-44DB3D4CF3BF}
 	EndProjectSection
