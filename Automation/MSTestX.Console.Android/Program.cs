@@ -160,6 +160,7 @@ namespace MSTestX.Console
             monitor.LogReceived += Monitor_LogReceived;
             System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
             settingsXml = settingsXml?.Replace("\n", "").Replace("\r", "").Replace("\"","\\\"");
+            await client.SendCommandAsync("forward tcp:38300 tcp:38300", device.Serial);
             string launchCommand = $"am start -n {apk_id}/{activityName} --ez AutoRun true --es ReportFile TestRunReport --es SettingsXml \"{settingsXml}\"";
             await client.SendShellCommandAsync(launchCommand, device.Serial);
         }

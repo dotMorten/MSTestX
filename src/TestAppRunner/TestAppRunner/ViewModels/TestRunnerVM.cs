@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using MessageType = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType;
 
 namespace TestAppRunner.ViewModels
 {
@@ -26,6 +27,8 @@ namespace TestAppRunner.ViewModels
 
         private TestRunnerVM()
         {
+            var server = Logger.Socket.HostServer(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 38300));
+            var _ = Logger.Socket.AcceptClientAsync();
             LoadTests();
         }
 
@@ -38,6 +41,7 @@ namespace TestAppRunner.ViewModels
                 await Task.Run(() =>
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
+                    Logger.LogMessage(MessageType.DiscoveryInitialize);
                     var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
                     testRunner = new TestRunner(references, Settings, this);
                     foreach (var item in testRunner.Tests)
@@ -45,6 +49,7 @@ namespace TestAppRunner.ViewModels
                         tests[item.Id] = new TestResultVM(item);
                     }
                     alltests = this.tests = tests;
+                    Logger.LogMessage(MessageType.DiscoveryComplete, new Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.DiscoveryCompletePayload() { LastDiscoveredTests = testRunner.Tests, TotalTests = tests.Count });
                 });
                 if (Settings.AutoRun)
                 {
@@ -117,6 +122,7 @@ namespace TestAppRunner.ViewModels
         {
             HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
+            t.Token.Register(() => Logger.LogMessage(MessageType.CancelTestRun));
             Status = $"Running tests...";
             OnPropertyChanged(nameof(Status));
             DiagnosticsInfo = "";
@@ -148,6 +154,7 @@ namespace TestAppRunner.ViewModels
                 trxWriter.InitializeReport();
             }
             DateTime start = DateTime.Now;
+            //Logger.LogMessage(Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType.StartTestExecutionWithTests, new Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection.SessionStartEventArgs( )
             Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
             var task = testRunner.Run(testCollection, t.Token);
             OnPropertyChanged(nameof(IsRunning));
@@ -157,16 +164,24 @@ namespace TestAppRunner.ViewModels
                 if (t.IsCancellationRequested)
                 {
                     Status = $"Test run canceled.";
+                    
                 }
                 else
                 {
                     Status = $"Test run completed.";
+                    Logger.LogMessage(MessageType.AfterTestRunEnd);
                 }
             }
             catch (System.Exception ex)
             {
                 Status = $"Test run failed to run: {ex.Message}";
+                Logger.LogMessage(MessageType.AbortTestRun);
             }
+            Logger.LogMessage(MessageType.AfterTestRunEndResult,
+                new Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.TestRunCompletePayload()
+                {
+                    LastRunTests = new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunChangedEventArgs(null, results, testCollection)
+                });
             DateTime end = DateTime.Now;
             CurrentTestRunning = null;
             OnPropertyChanged(nameof(CurrentTestRunning));
@@ -330,6 +345,8 @@ namespace TestAppRunner.ViewModels
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
             Log($"MESSAGE: {testMessageLevel}: {message}");
+            Logger.LogMessage(testMessageLevel, message);
+            //Logger.LogMessage(Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType.TestMessage)
             Settings.TestRecorder?.SendMessage(testMessageLevel, message);
         }
     }

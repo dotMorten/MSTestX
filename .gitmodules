@@ -1,3 +1,6 @@
 [submodule "testfx"]
 	path = testfx
 	url = https://github.com/Microsoft/testfx
+[submodule "vstest"]
+	path = vstest
+	url = https://github.com/Microsoft/vstest
