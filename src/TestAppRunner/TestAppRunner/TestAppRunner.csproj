@@ -27,11 +27,11 @@
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Serialization\**\*.cs">
       <Link>CommunicationUtilities\Serialization\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="..\..\..\..\..\Microsoft\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
-    <Compile Include="..\..\..\..\..\Microsoft\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
-    <Compile Include="..\..\..\..\..\Microsoft\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
-    <Compile Include="..\..\..\..\..\Microsoft\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketCommunicationManager.cs" Link="CommunicationUtilities\SocketCommunicationManager.cs" />
-    <Compile Include="..\..\..\..\..\Microsoft\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketConstants.cs" Link="CommunicationUtilities\SocketConstants.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketCommunicationManager.cs" Link="CommunicationUtilities\SocketCommunicationManager.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketConstants.cs" Link="CommunicationUtilities\SocketConstants.cs" />
   </ItemGroup>
 
   <ItemGroup>
