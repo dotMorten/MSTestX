@@ -48,7 +48,10 @@ namespace TestAppRunner.iOS
                 TestOptions.TrxOutputPath = arguments["ReportFile"] + ".trx";
                 TestOptions.ProgressLogPath = arguments["ReportFile"] + ".log";
             }
-
+            if (arguments.ContainsKey("TestAdapterPort") && ushort.TryParse(arguments["TestAdapterPort"], out ushort port))
+            {
+                TestOptions.TestAdapterPort = port;
+            }
             // if you want to use a different Application Delegate class from "AppDelegate"
             // you can specify it here.
             UIApplication.Main(args, null, "AppDelegate");

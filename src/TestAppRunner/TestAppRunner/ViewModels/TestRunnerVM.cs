@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using MessageType = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType;
 
 namespace TestAppRunner.ViewModels
 {
@@ -17,6 +18,7 @@ namespace TestAppRunner.ViewModels
         private Dictionary<Guid, TestResultVM> tests;
         private System.IO.StreamWriter logOutput;
         private TrxWriter trxWriter;
+        private TestAdapterConnection connection;
 
         private static TestRunnerVM _Instance;
 
@@ -25,8 +27,26 @@ namespace TestAppRunner.ViewModels
         internal MSTestX.RunnerApp HostApp { get; set; }
 
         private TestRunnerVM()
+        {   
+        }
+
+        public void Initialize()
         {
+            int port = Settings.TestAdapterPort;
+            if (port > 0)
+            {
+                InitializeTestAdapterConnection(port);
+            }
             LoadTests();
+        }
+
+        public async void InitializeTestAdapterConnection(int port)
+        {
+            Status = $"Waiting for connection on port {port}...";
+            OnPropertyChanged(nameof(Status));
+            var conn = new TestAdapterConnection(port);
+            await conn.StartAsync();
+            connection = conn;
         }
 
         private async void LoadTests()
@@ -39,7 +59,8 @@ namespace TestAppRunner.ViewModels
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
                     var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
-                    testRunner = new TestRunner(references, Settings, this);
+                    //references = references.Where(r => !r.StartsWith("Microsoft.") && !r.StartsWith("Xamarin.Android.") && r != "mscorlib.dll" && !r.StartsWith("System.")).ToArray();
+                    testRunner = new TestRunner(references, this);
                     foreach (var item in testRunner.Tests)
                     {
                         tests[item.Id] = new TestResultVM(item);
@@ -48,7 +69,7 @@ namespace TestAppRunner.ViewModels
                 });
                 if (Settings.AutoRun)
                 {
-                    var _ = Run();
+                    var _ = Run(Settings);
                 }
             }
             OnPropertyChanged(nameof(Tests));
@@ -93,18 +114,27 @@ namespace TestAppRunner.ViewModels
 
         public Task<IEnumerable<TestResult>> Run()
         {
-            return Run(testRunner.Tests);
+            return Run(testRunner.Tests, Settings);
+        }
+        public Task<IEnumerable<TestResult>> Run(IRunSettings runSettings)
+        {
+            return Run(testRunner.Tests, runSettings);
         }
 
         private List<TestResult> results;
 
-        public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection)
+        public Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection)
+        {
+            return Run(testCollection, Settings);
+        }
+
+        public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
         {
             if (IsRunning)
                 throw new InvalidOperationException("Can't begin a test run while another is in progress");
             try
             {
-                return await Run_Internal(testCollection);
+                return await Run_Internal(testCollection, runSettings);
             }
             catch(System.Exception ex)
             {
@@ -113,7 +143,7 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        private async Task<IEnumerable<TestResult>> Run_Internal(IEnumerable<TestCase> testCollection)
+        private async Task<IEnumerable<TestResult>> Run_Internal(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
         {
             HostApp?.RaiseTestRunStarted(testCollection);
             var t = tcs = new CancellationTokenSource();
@@ -149,7 +179,7 @@ namespace TestAppRunner.ViewModels
             }
             DateTime start = DateTime.Now;
             Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
-            var task = testRunner.Run(testCollection, t.Token);
+            var task = testRunner.Run(testCollection, runSettings, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
             {
@@ -157,6 +187,7 @@ namespace TestAppRunner.ViewModels
                 if (t.IsCancellationRequested)
                 {
                     Status = $"Test run canceled.";
+                    
                 }
                 else
                 {
@@ -291,8 +322,9 @@ namespace TestAppRunner.ViewModels
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             trxWriter?.RecordResult(testResult);
-            Settings.TestRecorder?.RecordResult(testResult);
             Logger.LogResult(testResult);
+            connection?.SendTestEndResult(testResult);
+            Settings.TestRecorder?.RecordResult(testResult);
         }
 
         private void Log(string message)
@@ -311,25 +343,30 @@ namespace TestAppRunner.ViewModels
             CurrentTestRunning = vmtest;
             OnPropertyChanged(nameof(CurrentTestRunning));
             Log($"Starting test '{testCase.FullyQualifiedName}'");
-            Settings.TestRecorder?.RecordStart(testCase);
             Logger.LogTestStart(testCase);
+            connection?.SendTestStart(testCase);
+            Settings.TestRecorder?.RecordStart(testCase);
         }
 
         public TestResultVM CurrentTestRunning { get; private set; }
 
         void ITestExecutionRecorder.RecordEnd(TestCase testCase, TestOutcome outcome)
         {
+            connection?.SendTestEnd(testCase, outcome);
             Settings.TestRecorder?.RecordEnd(testCase, outcome);
         }
 
         void ITestExecutionRecorder.RecordAttachments(IList<AttachmentSet> attachmentSets)
         {
+            connection?.SendAttachments(attachmentSets);
             Settings.TestRecorder?.RecordAttachments(attachmentSets);
         }
 
         void IMessageLogger.SendMessage(TestMessageLevel testMessageLevel, string message)
         {
             Log($"MESSAGE: {testMessageLevel}: {message}");
+            connection?.SendMessage(testMessageLevel, message);
+            //Logger.LogMessage(Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType.TestMessage)
             Settings.TestRecorder?.SendMessage(testMessageLevel, message);
         }
     }

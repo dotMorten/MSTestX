@@ -20,8 +20,26 @@
     <IncludeSource>true</IncludeSource>
   </PropertyGroup>
 
+  <!-- The Microsoft.TestPlatform.TestHost has all this, but unfortunately doens't currently compile for .NET Standard targets.
+       See https://github.com/Microsoft/vstest/issues/1790 -->
+  <ItemGroup>
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Messages\**\*.cs">
+      <Link>CommunicationUtilities\Messages\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Serialization\**\*.cs">
+      <Link>CommunicationUtilities\Serialization\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketCommunicationManager.cs" Link="CommunicationUtilities\SocketCommunicationManager.cs" />
+    <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketConstants.cs" Link="CommunicationUtilities\SocketConstants.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="3.1.0.637273" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <!--<PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.8.0" />-->
   </ItemGroup>
 
   <ItemGroup>
@@ -45,4 +63,5 @@
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
   </ItemGroup>
+
 </Project>
