@@ -12,9 +12,6 @@ namespace TestAppRunner
 {
     internal static class Logger
     {
-        static System.Runtime.Serialization.Json.DataContractJsonSerializer testCaseSerializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(TestCase));
-        static System.Runtime.Serialization.Json.DataContractJsonSerializer testResultSerializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(TestResult));
-
         static System.Reflection.MethodInfo logMethod;
 
         public static void Log(string message, string category = "MSTestX")

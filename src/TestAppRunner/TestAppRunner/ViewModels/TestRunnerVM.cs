@@ -238,8 +238,13 @@ namespace TestAppRunner.ViewModels
             {
                 case Device.iOS:
                     {
+#if __IOS__
+                        var selector = new ObjCRuntime.Selector("terminateWithSuccess");
+                        UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+#endif
+                        /*
                         // We'll just use reflection here, rather than having to start doing multi-targeting just for this one platform specific thing
-						// Reflection code equivalent to:
+                        // Reflection code equivalent to:
                         // var selector = new ObjCRuntime.Selector("terminateWithSuccess");
                         // UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
                         var selectorType = Type.GetType("ObjCRuntime.Selector, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
@@ -251,6 +256,7 @@ namespace TestAppRunner.ViewModels
                         var nsObjectType = Type.GetType("Foundation.NSObject, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
                         var psMethod = UIAppType.GetMethod("PerformSelector", new Type[] { selector.GetType(), nsObjectType, typeof(double) });
                         psMethod.Invoke(app, new object[] { selector, app, 0d });
+                        */
                     }
                     break;
                 case Device.Android:

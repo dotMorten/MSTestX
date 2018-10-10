@@ -213,7 +213,14 @@ namespace TestAppRunner
 
         private static int GetProcessId()
         {
-            int pid = 0;
+#if __ANDROID__
+            return Android.OS.Process.MyPid();
+#elif __IOS__
+            return Foundation.NSProcessInfo.ProcessInfo.ProcessIdentifier;
+#else
+            return 0;
+#endif
+            /*int pid = 0;
             if (Xamarin.Forms.Device.RuntimePlatform == Xamarin.Forms.Device.Android)
             {
                 var processType = Type.GetType("Android.OS.Process, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
@@ -222,11 +229,11 @@ namespace TestAppRunner
             }
             else if (Xamarin.Forms.Device.RuntimePlatform == Xamarin.Forms.Device.iOS)
             {
-                var processType = Type.GetType("NSProcessInfo.ProcessInfo, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
+                var processType = Type.GetType("Foundation.NSProcessInfo.ProcessInfo, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
                 var pidProperty = processType.GetProperty("ProcessIdentifier");
                 pid = (int)pidProperty.GetValue(null);
             }
-            return pid;
+            return pid;*/
         }
     }
 }
