@@ -82,7 +82,7 @@ namespace MSTestX.Console.Adb
             {
                 var error = await s.ReadString().ConfigureAwait(false);
                 s.Dispose();
-                throw new Exception(error);
+                throw new Exception($"ADB Error sending command '{command}': {error}");
             }
             //Disposing too fast causes the command to not execute
             var _ = s.ReceiveAsync(buffer, 0, 1, SocketFlags.None, default).ContinueWith(t => s.Dispose());

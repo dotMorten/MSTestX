@@ -55,6 +55,7 @@ namespace MSTestX.Console.Adb
             //Checks if the response is the ASCII version of "OKAY"
             return count == 4 && buffer[offset] == 79 && buffer[offset + 1] == 75 && buffer[offset + 2] == 65 && buffer[offset + 3] == 89;
         }
+
         private async void ProcessBuffer(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
@@ -71,11 +72,14 @@ namespace MSTestX.Console.Adb
             int count = 0;
             while (!token.IsCancellationRequested)
             {
-                count = await s.ReceiveAsync(buffer, 0, 4096, System.Net.Sockets.SocketFlags.None, CancellationToken.None).ConfigureAwait(true);
-                if (count > 0)
-                {
-                    lcs.EnqueueData(buffer, count);
+                try {
+                    count = await s.ReceiveAsync(buffer, 0, 4096, System.Net.Sockets.SocketFlags.None, token).ConfigureAwait(true);
+                    if (count > 0)
+                    {
+                        lcs.EnqueueData(buffer, count);
+                    }
                 }
+                catch(TaskCanceledException) { break; }
             }
         }
 

@@ -38,6 +38,7 @@ namespace MSTestX.Console
                 return;
             }
             await RunTest(ParseArguments(args));
+            while (true) System.Console.ReadKey(true);
         }
 
         private static void PrintUsage()
@@ -118,6 +119,12 @@ Android specific (ignored if using remoteIp):
                     }
                     device = devices.First();
                 }
+
+                if (arguments.ContainsKey("apkid"))
+                    apk_id = arguments["apkid"];
+                if (arguments.ContainsKey("activity"))
+                    activityName = arguments["activity"];
+
                 await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial); //Ensure app isn't already running
 
                 if (arguments.ContainsKey("apkpath"))
@@ -170,10 +177,6 @@ Android specific (ignored if using remoteIp):
 
                 if (File.Exists("RunLog.txt"))
                     File.Delete("RunLog.txt");
-                if (arguments.ContainsKey("apkid"))
-                    apk_id = arguments["apkid"];
-                if (arguments.ContainsKey("activity"))
-                    activityName = arguments["activity"];
 
                 if (arguments.ContainsKey("logFileName"))
                     outputFilename = arguments["logFileName"];
@@ -193,8 +196,8 @@ Android specific (ignored if using remoteIp):
                     return;
                 }
                 monitor.LogReceived += Monitor_LogReceived;
-                await client.SendShellCommandAsync("forward tcp:38300 tcp:38300", device.Serial); //Set up port forwarding for socket communication
-
+                await client.SendCommandAsync($"host-serial:{device.Serial}:forward:tcp:38300;tcp:38300", null);  //Set up port forwarding for socket communication
+                
                 System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
                 string launchCommand = $"am start -n {apk_id}/{activityName} --ez TestAdapterPort 38300";
                 await client.SendShellCommandAsync(launchCommand, device.Serial);
@@ -243,7 +246,8 @@ Android specific (ignored if using remoteIp):
             if (!socket.WaitForServerConnection(5 * 10000))
             {
                 System.Console.WriteLine("No connection to test host could be established. Make sure the app is running in the foreground.");
-                Environment.Exit(0);
+                KillProcess();
+                return;
             }
             socket.SendMessage(MessageType.SessionConnected); //Start session
             
@@ -358,21 +362,21 @@ Android specific (ignored if using remoteIp):
                     System.Console.WriteLine($"\t Failed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed]} ");
                     System.Console.WriteLine($"\t Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
                     loggerEvents?.OnTestRunComplete(trc.TestRunCompleteArgs);
-                    KillProcess(pid);
+                    KillProcess();
                     return;
                 }
                 else if (msg.MessageType == MessageType.AbortTestRun)
                 {
                     // Cancelled
                     System.Console.WriteLine("Test Run Aborted!");
-                    KillProcess(pid);
+                    KillProcess();
                     return;
                 }
                 else if(msg.MessageType == MessageType.CancelTestRun)
                 {
                     // Cancelled
                     System.Console.WriteLine("Test Run Cancelled!");
-                    KillProcess(pid);
+                    KillProcess();
                     return;
                 }
                 else if(msg.MessageType == MessageType.TestMessage)
@@ -387,18 +391,20 @@ Android specific (ignored if using remoteIp):
             }
         }
 
-        private static async void KillProcess(int pid)
+        private static async void KillProcess()
         {
             socket.StopClient();
             if (monitor != null)
             {
                 monitor.LogReceived -= Monitor_LogReceived;
-                monitor.Close();
             }
             if (client != null)
             {
                 await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial);
             }
+            monitor?.Close();
+            if (Debugger.IsAttached)
+                System.Console.ReadKey();
             Environment.Exit(0);
         }
 
