@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+	  <RootNamespace>MSTestX.Console</RootNamespace>
+    <AssemblyName>MSTestX.Console</AssemblyName>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	  <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.8.0" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.8.0" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\**\*.cs" Exclude="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\obj\**\*.*;..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Properties\**\*.*;..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Resources\**\*.*">
+      <Link>TrxLogger\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <EmbeddedResource Include="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Resources\TrxResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <Link>TrxLogger\Resources\TrxResource.resx</Link>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>TrxResource.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.TestPlatform.Extensions.TrxLogger</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Update="TrxLogger\Resources\TrxResource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TrxResource.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

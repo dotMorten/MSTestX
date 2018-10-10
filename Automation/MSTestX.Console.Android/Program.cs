@@ -1,5 +1,10 @@
 ﻿//using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 //using Newtonsoft.Json;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using MSTestX.Console.Adb;
 using System;
 using System.Collections.Generic;
@@ -20,161 +25,398 @@ namespace MSTestX.Console
         private static string activityName = null;
         private static AdbClient client;
         private static string outputFilename;
+        private static string settingsXml = null;
+        private static LogCatMonitor monitor;
+        private static SocketCommunicationManager socket;
+        private static CancellationTokenSource processExitCancellationTokenSource;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Length == 0 || args[0] == "/?" || args[0] == "-?" || args[0] == "?")
             {
                 PrintUsage();
                 return;
             }
-            RunTest(ParseArguments(args));
-            while(true) System.Console.ReadKey(true);
+            await RunTest(ParseArguments(args));
         }
 
         private static void PrintUsage()
         {
             System.Console.WriteLine(@"Test Runner commandline arguments:
+    /remoteIp <ip:port>                 The IP address of a device already running the unit test app
+    /logFileName <path>                 TRX Output Filename
+    /settings <path>                    MSTest RunSettings xml file
+
+Android specific (ignored if using remoteIp):
     /deviceid <Device Serial Number>    If more than one device is connected, specifies which device to use
-    /apkpath <file path>                Path to an APK to install
+    /apkpath <file path>                Path to an APK to install.
     /apkid <id>                         Package ID of the test app
     /activity <activity id>             Activity to launch
     /pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
-    /logFileName                        TRX Output Filename
 ");
         }
 
-        static async void RunTest(Dictionary<string, string> arguments)
+        static async Task RunTest(Dictionary<string, string> arguments)
         {
-            client = new AdbClient();
-            var devices = await client.GetDevicesAsync();
-            if(!devices.Any())
-            {
-                System.Console.WriteLine("No devices connected to ADB");
-                Environment.Exit(0);
-                return;
-            }
-            if (arguments.ContainsKey("deviceid"))
-            {
-                device = devices.Where(d => d.Serial == arguments["deviceid"]).FirstOrDefault();
-                if(device == null)
-                {
-                    System.Console.WriteLine($"ERROR Device '{arguments["deviceid"]}' not found");
-                    Environment.Exit(0);
-                    return;
-                }
-            }
-            if (device == null)
-            {
-                if(devices.Count() > 1)
-                {
-                    System.Console.WriteLine($"ERROR. Multiple devices connected. Please specify -deviceId <deviceid>");
-                    foreach(var d in devices)
-                    {
-                        System.Console.WriteLine($"\t{d.Serial}\t{d.Name}\t{d.Model}\t{d.Product}\t{d.State}");
-                    }
-                    Environment.Exit(0);
-                    return;
-                }
-                device = devices.First();
-            }
-            await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial); //Ensure app isn't already running
+            processExitCancellationTokenSource = new CancellationTokenSource();
 
-            if (arguments.ContainsKey("apkpath"))
-            {
-                var path = arguments["apkpath"];
-                if (!File.Exists(path))
-                {
-                    System.Console.WriteLine("ERROR. APK Not Found: " + path);
-                    Environment.Exit(0);
-                }
-                System.Console.WriteLine("Installing app...");
-                await client.InstallApk(device.Serial, path);
-            }
-            string settingsXml = null;
             if (arguments.ContainsKey("settings") && File.Exists(arguments["settings"]))
             {
                 settingsXml = File.ReadAllText(arguments["settings"]);
             }
 
-            // Get unlock state
-            var dmpData = await client.SendCommandAndReceiveDataAsync("shell: dumpsys power", device.Serial);
-            string[] data = Encoding.ASCII.GetString(dmpData).Split('\n');
-            var mHoldingWakeLockSuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingWakeLockSuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
-            var mHoldingDisplaySuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingDisplaySuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
-            bool isDisplayOn = false;
-            bool isLocked = false;
-            if(!mHoldingWakeLockSuspendBlocker && mHoldingDisplaySuspendBlocker)
+            System.Net.IPEndPoint testAdapterEndpoint = null;
+            if (arguments.ContainsKey("remoteIp"))
             {
-                // Display on but locked
-                isDisplayOn = true;
-                isLocked = true;
-            }
-            else if (mHoldingWakeLockSuspendBlocker && mHoldingDisplaySuspendBlocker)
-            {
-                isDisplayOn = true;
-                isLocked = false;
-            }
-            if (!mHoldingWakeLockSuspendBlocker && !mHoldingDisplaySuspendBlocker)
-            {
-                isDisplayOn = false;
-                isLocked = true;
-            }
-            if (!isDisplayOn)
-                await client.TurnOnDisplayAsync(device.Serial);
-            if (arguments.ContainsKey("pin") && isLocked)
-            {
-                string pin = null;
-                if (int.TryParse(arguments["pin"], out int numericPin)) //Ensures it's numeric
+                var val = arguments["remoteIp"];
+                if (val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress ip) && int.TryParse(val.Split(':')[1], out int port))
                 {
-                    pin = arguments["pin"];
+                    testAdapterEndpoint = new System.Net.IPEndPoint(ip, port);
                 }
-                System.Console.WriteLine("Unlocking phone...");
-                await client.UnlockAsync(device.Serial, pin);
+                else
+                {
+                    System.Console.WriteLine("Invalid remote ip and/or port");
+                    Environment.Exit(1);
+                }
             }
-
-            if (File.Exists("RunLog.txt"))
-                File.Delete("RunLog.txt");
-            if (arguments.ContainsKey("apkid"))
-                apk_id = arguments["apkid"];
-            if (arguments.ContainsKey("activity"))
-                activityName = arguments["activity"];
-
-            if (arguments.ContainsKey("logFileName"))
-                outputFilename = arguments["logFileName"];
-            else
-                outputFilename = Path.Combine(System.Environment.CurrentDirectory, "TestRunReport.trx");
-            
-            LogCatMonitor monitor = new LogCatMonitor(device.Serial);
-            // Connecting to logcat...
-            bool result = await monitor.OpenAsync($"{ apk_id}");
-            if (result)
+            if (testAdapterEndpoint != null)
             {
-                System.Console.WriteLine("Connected logcat to " + device.Serial);
+                await OnApplicationLaunched(testAdapterEndpoint);
             }
             else
             {
-                System.Console.WriteLine("Failed to connect to LogCat");
-                return;
+                // Launch Android android app
+                client = new AdbClient();
+                var devices = await client.GetDevicesAsync();
+                if (!devices.Any())
+                {
+                    System.Console.WriteLine("No devices connected to ADB");
+                    Environment.Exit(0);
+                    return;
+                }
+                if (arguments.ContainsKey("deviceid"))
+                {
+                    device = devices.Where(d => d.Serial == arguments["deviceid"]).FirstOrDefault();
+                    if (device == null)
+                    {
+                        System.Console.WriteLine($"ERROR Device '{arguments["deviceid"]}' not found");
+                        Environment.Exit(0);
+                        return;
+                    }
+                }
+                if (device == null)
+                {
+                    if (devices.Count() > 1)
+                    {
+                        System.Console.WriteLine($"ERROR. Multiple devices connected. Please specify -deviceId <deviceid>");
+                        foreach (var d in devices)
+                        {
+                            System.Console.WriteLine($"\t{d.Serial}\t{d.Name}\t{d.Model}\t{d.Product}\t{d.State}");
+                        }
+                        Environment.Exit(0);
+                        return;
+                    }
+                    device = devices.First();
+                }
+                await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial); //Ensure app isn't already running
+
+                if (arguments.ContainsKey("apkpath"))
+                {
+                    var path = arguments["apkpath"];
+                    if (!File.Exists(path))
+                    {
+                        System.Console.WriteLine("ERROR. APK Not Found: " + path);
+                        Environment.Exit(0);
+                    }
+                    System.Console.WriteLine("Installing app...");
+                    await client.InstallApk(device.Serial, path);
+                }
+
+                // Get unlock state
+                var dmpData = await client.SendCommandAndReceiveDataAsync("shell: dumpsys power", device.Serial);
+                string[] data = Encoding.ASCII.GetString(dmpData).Split('\n');
+                var mHoldingWakeLockSuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingWakeLockSuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
+                var mHoldingDisplaySuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingDisplaySuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
+                bool isDisplayOn = false;
+                bool isLocked = false;
+                if (!mHoldingWakeLockSuspendBlocker && mHoldingDisplaySuspendBlocker)
+                {
+                    // Display on but locked
+                    isDisplayOn = true;
+                    isLocked = true;
+                }
+                else if (mHoldingWakeLockSuspendBlocker && mHoldingDisplaySuspendBlocker)
+                {
+                    isDisplayOn = true;
+                    isLocked = false;
+                }
+                if (!mHoldingWakeLockSuspendBlocker && !mHoldingDisplaySuspendBlocker)
+                {
+                    isDisplayOn = false;
+                    isLocked = true;
+                }
+                if (!isDisplayOn)
+                    await client.TurnOnDisplayAsync(device.Serial);
+                if (arguments.ContainsKey("pin") && isLocked)
+                {
+                    string pin = null;
+                    if (int.TryParse(arguments["pin"], out int numericPin)) //Ensures it's numeric
+                    {
+                        pin = arguments["pin"];
+                    }
+                    System.Console.WriteLine("Unlocking phone...");
+                    await client.UnlockAsync(device.Serial, pin);
+                }
+
+                if (File.Exists("RunLog.txt"))
+                    File.Delete("RunLog.txt");
+                if (arguments.ContainsKey("apkid"))
+                    apk_id = arguments["apkid"];
+                if (arguments.ContainsKey("activity"))
+                    activityName = arguments["activity"];
+
+                if (arguments.ContainsKey("logFileName"))
+                    outputFilename = arguments["logFileName"];
+                else
+                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, "TestRunReport.trx");
+
+                monitor = new LogCatMonitor(device.Serial);
+                // Connecting to logcat...
+                bool result = await monitor.OpenAsync($"{ apk_id}");
+                if (result)
+                {
+                    System.Console.WriteLine("Connected logcat to " + device.Serial);
+                }
+                else
+                {
+                    System.Console.WriteLine("Failed to connect to LogCat");
+                    return;
+                }
+                monitor.LogReceived += Monitor_LogReceived;
+                await client.SendShellCommandAsync("forward tcp:38300 tcp:38300", device.Serial); //Set up port forwarding for socket communication
+
+                System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
+                string launchCommand = $"am start -n {apk_id}/{activityName} --ez TestAdapterPort 38300";
+                await client.SendShellCommandAsync(launchCommand, device.Serial);
             }
-            monitor.LogReceived += Monitor_LogReceived;
-            System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
-            settingsXml = settingsXml?.Replace("\n", "").Replace("\r", "").Replace("\"","\\\"");
-            await client.SendCommandAsync("forward tcp:38300 tcp:38300", device.Serial);
-            string launchCommand = $"am start -n {apk_id}/{activityName} --ez AutoRun true --es ReportFile TestRunReport --es SettingsXml \"{settingsXml}\"";
-            await client.SendShellCommandAsync(launchCommand, device.Serial);
         }
 
+        private class TestLoggerEventsImpl : Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestLoggerEvents
+        {
+            public void OnTestRunMessage(TestRunMessageEventArgs e) => TestRunMessage?.Invoke(this, e);
+            public override event EventHandler<TestRunMessageEventArgs> TestRunMessage;
+
+            public void OnTestRunStart(TestRunStartEventArgs e) => TestRunStart?.Invoke(this, e);
+            public override event EventHandler<TestRunStartEventArgs> TestRunStart;
+
+            public void OnTestResult(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestResultEventArgs e) => TestResult?.Invoke(this, e);
+            public override event EventHandler<Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestResultEventArgs> TestResult;
+
+            public void OnTestRunComplete(TestRunCompleteEventArgs e) => TestRunComplete?.Invoke(this, e);
+            public override event EventHandler<TestRunCompleteEventArgs> TestRunComplete;
+
+            public void OnDiscoveryStart(DiscoveryStartEventArgs e) => DiscoveryStart?.Invoke(this, e);
+            public override event EventHandler<DiscoveryStartEventArgs> DiscoveryStart;
+
+            public void OnDiscoveryMessage(TestRunMessageEventArgs e) => DiscoveryMessage?.Invoke(this, e);
+            public override event EventHandler<TestRunMessageEventArgs> DiscoveryMessage;
+
+            public void OnDiscoveredTests(DiscoveredTestsEventArgs e) => DiscoveredTests?.Invoke(this, e);
+            public override event EventHandler<DiscoveredTestsEventArgs> DiscoveredTests;
+
+            public void OnDiscoveryComplete(DiscoveryCompleteEventArgs e) => DiscoveryComplete?.Invoke(this, e);
+            public override event EventHandler<DiscoveryCompleteEventArgs> DiscoveryComplete;
+        }
+
+        private static async Task OnApplicationLaunched(System.Net.IPEndPoint endpoint = null)
+        {
+            TestLoggerEventsImpl loggerEvents = new TestLoggerEventsImpl();
+            var logger = new Microsoft.VisualStudio.TestPlatform.Extensions.TrxLogger.TrxLogger();
+            var parameters = new Dictionary<string, string>() { { "TestRunDirectory", "." } };
+            if (!string.IsNullOrEmpty(outputFilename))
+                parameters.Add("LogFileName", outputFilename);
+            logger.Initialize(loggerEvents, parameters);
+
+            System.Console.WriteLine("Waiting for connection to test adapter...");
+            socket = new SocketCommunicationManager();
+            await socket.SetupClientAsync(endpoint ?? new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 38300)).ConfigureAwait(false);
+            if (!socket.WaitForServerConnection(5 * 10000))
+            {
+                System.Console.WriteLine("No connection to test host could be established. Make sure the app is running in the foreground.");
+                Environment.Exit(0);
+            }
+            socket.SendMessage(MessageType.SessionConnected); //Start session
+            
+            //Perform version handshake
+            Message msg = await socket.ReceiveMessageAsync(processExitCancellationTokenSource.Token);
+            if(msg.MessageType == MessageType.VersionCheck)
+            {
+                var version = JsonDataSerializer.Instance.DeserializePayload<int>(msg);
+                var success = version == 1;
+                System.Console.WriteLine("Connected to test adapter");
+            }
+            else
+            {
+                throw new InvalidOperationException("Handshake failed");
+            }
+
+            // Get tests
+            socket.SendMessage(MessageType.StartDiscovery,
+                new DiscoveryRequestPayload()
+                {
+                    Sources = new string[] { },
+                    RunSettings = settingsXml ?? @"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings><RunConfiguration /></RunSettings>",
+                    TestPlatformOptions = null
+                });
+          
+            int pid = 0;
+            
+            while (true)
+            {
+                try
+                {
+                    msg = await socket.ReceiveMessageAsync(processExitCancellationTokenSource.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+                catch (System.Exception)
+                {
+                    continue;
+                }
+                if (msg == null)
+                    continue;
+
+                if (msg.MessageType == MessageType.TestHostLaunched)
+                {
+                    var thl = JsonDataSerializer.Instance.DeserializePayload<TestHostLaunchedPayload>(msg);
+                    pid = thl.ProcessId;
+                    System.Console.WriteLine($"Test Host Launched. Process ID '{pid}'");
+                }
+                else if (msg.MessageType == MessageType.DiscoveryInitialize)
+                {
+                    System.Console.Write("Discovering tests...");
+                    loggerEvents?.OnDiscoveryStart(new DiscoveryStartEventArgs(new DiscoveryCriteria()));
+                }
+                else if (msg.MessageType == MessageType.DiscoveryComplete)
+                {
+                    var dcp = JsonDataSerializer.Instance.DeserializePayload<DiscoveryCompletePayload>(msg);
+                    System.Console.WriteLine($"Discovered {dcp.TotalTests} tests");
+                    foreach (var t in dcp.LastDiscoveredTests)
+                        System.Console.WriteLine($"\t{t.FullyQualifiedName}");
+
+                    loggerEvents?.OnDiscoveryComplete(new DiscoveryCompleteEventArgs(dcp.TotalTests, false));
+                    loggerEvents?.OnDiscoveredTests(new DiscoveredTestsEventArgs(dcp.LastDiscoveredTests));
+                    //Start testrun
+                    socket.SendMessage(MessageType.TestRunSelectedTestCasesDefaultHost,
+                        new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunRequestPayload() { TestCases = dcp.LastDiscoveredTests.ToList(), RunSettings = settingsXml });
+                    loggerEvents?.OnTestRunStart(new TestRunStartEventArgs(new TestRunCriteria(dcp.LastDiscoveredTests, 1)));
+                }
+                else if (msg.MessageType == MessageType.DataCollectionTestStart)
+                {
+                    var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
+                    var testName = tcs.TestCaseName;
+                    testName = tcs.TestElement.DisplayName;
+                    System.Console.Write($"Running {testName}");
+                }
+                else if (msg.MessageType == MessageType.DataCollectionTestEnd)
+                {
+                    //Skip
+                }
+                else if (msg.MessageType == MessageType.DataCollectionTestEndResult)
+                {
+                    var tr = JsonDataSerializer.Instance.DeserializePayload<Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection.TestResultEventArgs>(msg);
+                    var testName = tr.TestResult.DisplayName ?? tr.TestElement.DisplayName;
+                    var outcome = tr.TestResult.Outcome;
+
+                    var parentExecId = tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").Any() ?
+                        tr.TestResult.GetPropertyValue<Guid>(tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").First(), Guid.Empty) : Guid.Empty;
+                    if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Red;
+                    }
+                    else if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
+                    if (parentExecId == Guid.Empty) //Not a data test child item
+                        System.Console.SetCursorPosition(0, System.Console.CursorTop);
+                    else
+                        System.Console.Write("\t");
+                    string testMessage = tr.TestResult?.ErrorMessage;
+                    System.Console.WriteLine($"{outcome}\t{testName}\t{testMessage}");
+                    System.Console.ResetColor();
+                    loggerEvents?.OnTestResult(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestResultEventArgs(tr.TestResult));
+                }
+                else if (msg.MessageType == MessageType.ExecutionComplete)
+                {
+                    System.Console.WriteLine("Test Run Complete");
+                    var trc = JsonDataSerializer.Instance.DeserializePayload<TestRunCompletePayload>(msg);
+                    System.Console.WriteLine($"Result: Ran {trc.LastRunTests.TestRunStatistics.ExecutedTests} tests");
+                    System.Console.WriteLine($"\t Passed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed]} ");
+                    System.Console.WriteLine($"\t Failed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed]} ");
+                    System.Console.WriteLine($"\t Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
+                    loggerEvents?.OnTestRunComplete(trc.TestRunCompleteArgs);
+                    KillProcess(pid);
+                    return;
+                }
+                else if (msg.MessageType == MessageType.AbortTestRun)
+                {
+                    // Cancelled
+                    System.Console.WriteLine("Test Run Aborted!");
+                    KillProcess(pid);
+                    return;
+                }
+                else if(msg.MessageType == MessageType.CancelTestRun)
+                {
+                    // Cancelled
+                    System.Console.WriteLine("Test Run Cancelled!");
+                    KillProcess(pid);
+                    return;
+                }
+                else if(msg.MessageType == MessageType.TestMessage)
+                {
+                    var tm = JsonDataSerializer.Instance.DeserializePayload<TestMessagePayload>(msg);
+                    System.Console.WriteLine($"{tm.MessageLevel}: {tm.Message}");
+                }
+                else
+                {
+                    System.Console.WriteLine("Received: " + msg.MessageType);
+                }
+            }
+        }
+
+        private static async void KillProcess(int pid)
+        {
+            socket.StopClient();
+            if (monitor != null)
+            {
+                monitor.LogReceived -= Monitor_LogReceived;
+                monitor.Close();
+            }
+            if (client != null)
+            {
+                await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial);
+            }
+            Environment.Exit(0);
+        }
 
         private static int processID = -1;
-        private static string trxReportPath;
         
         private static void Monitor_LogReceived(object sender, LogCatMonitor.LogEntry e)
         {
             var msg = e.DataString;
+
+            //Log anything from logcat for the process or it the APK ID is in the message
+            if (processID > 0 && e.ProcessId == processID || msg.Contains(apk_id))
+            {
+                File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\t{e.Type}\t{e.Tag}\t{e.DataString}{Environment.NewLine}");
+            }
+
             if (processID < 0)
             {
-                if (msg.Contains("Start proc") && msg.Contains($":{apk_id}"))
+                if (msg.Contains("Start proc") && msg.Contains($":{apk_id}") && !msg.Contains(" for backup "))
                 {
                     string processIDStr = msg.Substring(11, msg.IndexOf(":") - 11);
                     if (!int.TryParse(processIDStr, out processID))
@@ -185,86 +427,22 @@ namespace MSTestX.Console
                         System.Console.WriteLine($"Application launched with Process ID {processID}");
                     }
                 }
-                else
-                    return;
             }
 
             //Log anything from logcat for the process or it the APK ID is in the message
-            if (e.ProcessId == processID || msg.Contains(apk_id))
+            if (processID > 0 && e.ProcessId == processID || msg.Contains(apk_id))
             {
                 File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\r{e.Type}\r{e.Tag}\t{e.DataString}{Environment.NewLine}");
             }
 
-            if (e.ProcessId == processID)
+            if (e.Tag == "ActivityManager" && msg.StartsWith($"Displayed {apk_id}/{activityName}"))
             {
-                if (e.Tag == "MSTestX")
-                {
-                    if(msg.StartsWith("TRXREPORT LOCATION: "))
-                    {
-                        trxReportPath = msg.Substring(20);
-                    }
-                    else if (msg.StartsWith("STARTING TESTRUN"))
-                    {
-                        System.Console.WriteLine(msg);
-                        System.Console.WriteLine("=============================");
-                    }
-                    else if (msg.StartsWith("COMPLETED TESTRUN"))
-                    {
-                        System.Console.WriteLine("=============================");
-                        System.Console.WriteLine(msg);
-                        System.Console.WriteLine("=============================");
-                        System.Console.WriteLine("Saving report to " + outputFilename);
-                        FileInfo fi = new FileInfo(outputFilename);
-                        if (!fi.Directory.Exists)
-                            fi.Directory.Create();
-                        client.SendCommandAndReceiveDataAsync(
-                              $"exec:run-as {apk_id} cat /data/data/{apk_id}/files/TestRunReport.trx",
-                              device.Serial).ContinueWith(t =>
-                              {
-                                  File.WriteAllBytes(outputFilename, t.Result);
-                                  System.Console.WriteLine("Report saved");
-                                  if (!Debugger.IsAttached)
-                                      Environment.Exit(0);
-                              });
-                    }
-                    else if (msg.StartsWith("TEST STARTING:"))
-                    {
-                        var testName = msg.Substring(14).Trim();
-                        testName = testName.Substring(testName.LastIndexOf(".") + 1);
-                        System.Console.Write($"Running {testName}");
-                    }
-                    else if (msg.StartsWith("TEST COMPLETED:"))
-                    {
-                        var testName = msg.Substring(15).Trim();
-                        var outcomeIdx = testName.LastIndexOf(" - ");
-                        string outcome = outcomeIdx < 0 ? "" : testName.Substring(outcomeIdx + 3).Trim();
-                        testName = outcomeIdx < 0 ? testName : testName.Substring(0, outcomeIdx);
-                        bool isDataTest = testName.Contains(" (");
-                        var outcomeMessageIdx = outcome.IndexOf(' ');
-                        string testMessage = "";
-                        if (outcomeMessageIdx > 0)
-                        {
-                            testMessage = outcome.Substring(outcomeMessageIdx).Trim();
-                            outcome = outcome.Substring(0, outcomeMessageIdx);
-                        }
-                        if (outcome == "Failed" || outcome == "Error")
-                        {
-                            System.Console.ForegroundColor = ConsoleColor.Red;
-                        }
-                        else if (outcome == "Skipped" || outcome == "Inconclusive")
-                        {
-                            System.Console.ForegroundColor = ConsoleColor.Yellow;
-                        }
-                        if (!isDataTest)
-                            System.Console.SetCursorPosition(0, System.Console.CursorTop);
-                        else
-                            System.Console.Write("\t");
-                        testName = testName.Substring(testName.LastIndexOf(".") + 1);
-                        System.Console.WriteLine($"{outcome}\t{testName}\t{testMessage}");
-                        System.Console.ResetColor();
-                    }
-                }
-                else if (e.Tag == "AndroidRuntime" && e.Type == LogCatMonitor.LogEntry.LogType.Error)
+                OnApplicationLaunched(); //Detect app launched and start VSTest connection
+                return;
+            }
+            if (processID > 0 && e.ProcessId == processID)
+            {
+                if (e.Tag == "AndroidRuntime" && e.Type == LogCatMonitor.LogEntry.LogType.Error)
                 {
                     System.Console.ForegroundColor = ConsoleColor.Red;
                     System.Console.WriteLine(Environment.NewLine + "ERROR: " + e.DataString);
@@ -281,6 +459,7 @@ namespace MSTestX.Console
                         {
                             if (t.Result.Length == 0)
                             {
+                                processExitCancellationTokenSource.Cancel();
                                 System.Console.WriteLine($"{Environment.NewLine}Android application process killed. Exiting...");
                                 if (Debugger.IsAttached)
                                     System.Console.ReadKey();

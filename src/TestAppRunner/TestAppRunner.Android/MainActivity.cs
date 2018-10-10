@@ -55,13 +55,15 @@ namespace TestAppRunner.Droid
             //  </MSTestV2>
             // </RunSettings>"
             testOptions.SettingsXml = Intent.GetStringExtra("SettingsXml");
+            
+            testOptions.TestAdapterPort = (ushort)Intent.GetIntExtra("TestAdapterPort", testOptions.TestAdapterPort);
 
             // Launch the test app
             var testApp = new MSTestX.RunnerApp(testOptions);
 
             // Disable screen saver while tests are running
-            testApp.TestRunStarted += (a, testCases) => Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
-            testApp.TestRunCompleted += (a, results) => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
+            testApp.TestRunStarted += (a, testCases) => RunOnUiThread(() => Window?.AddFlags(WindowManagerFlags.KeepScreenOn));
+            testApp.TestRunCompleted += (a, results) => RunOnUiThread(() => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn));
 
             LoadApplication(testApp);
         }

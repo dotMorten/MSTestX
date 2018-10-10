@@ -37,6 +37,11 @@ namespace MSTestX
         /// </summary>
         public string SettingsXml { get; set; }
 
+        /// <summary>
+        /// If set, will be using a socket connection to discover, launch and monitor tests.
+        /// </summary>
+        public ushort TestAdapterPort { get; set; } = 38300;
+
         ISettingsProvider IRunSettings.GetSettings(string settingsName)
         {
             return null;

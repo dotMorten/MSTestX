@@ -17,6 +17,7 @@ namespace MSTestX
 			InitializeComponent();
             TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
             TestRunnerVM.Instance.HostApp = this;
+            TestRunnerVM.Instance.Initialize();
             MainPage = new NavigationPage(new AllTestsPage());
 		}
 

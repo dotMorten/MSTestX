@@ -14,31 +14,32 @@ namespace TestAppRunner
         private ITestExecutionRecorder recorder;
         private TestCaseDiscoverySink sink;
         private TestRunCancellationToken token;
+        private IRunSettings settings;
 
-        public TestRunner(IEnumerable<string> sources, IRunSettings runSettings, ITestExecutionRecorder recorder)
+        public TestRunner(IEnumerable<string> sources, ITestExecutionRecorder recorder)
         {
-            RunSettings = runSettings;
             sink = new TestCaseDiscoverySink();
             new MSTestDiscoverer().DiscoverTests(sources, this, this, sink);
             this.recorder = recorder;
         }
 
-        public IRunSettings RunSettings { get; }
+        IRunSettings IDiscoveryContext.RunSettings => settings;
 
         public IEnumerable<TestCase> Tests => sink.Tests;
 
-        internal Task Run(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        internal Task Run(IRunSettings runSettings = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
-            return Run(sink.Tests, cancellationToken);
+            return Run(sink.Tests, runSettings, cancellationToken);
         }
 
-        internal Task Run(IEnumerable<TestCase> tests, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        internal Task Run(IEnumerable<TestCase> tests, IRunSettings runSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (IsRunning)
                 throw new InvalidOperationException("Test run already running");
             token = new TestRunCancellationToken();
             if (cancellationToken.CanBeCanceled)
                 cancellationToken.Register(() => token.Cancel());
+            settings = runSettings;
             return System.Threading.Tasks.Task.Run(() => {
                 new TestExecutionManager().RunTests(tests, this, this, token);
                 token = null;
