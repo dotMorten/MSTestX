@@ -12,13 +12,16 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console.Adb
 {
+    // Good command-reference overview here: https://android.googlesource.com/platform/system/core/+/master/adb/SERVICES.TXT
     internal class AdbClient
     {
-        int port;
+        private int port;
+
         public AdbClient(int port=5037)
         {
             this.port = port;
         }
+
         public async Task TurnOnDisplayAsync(string deviceId)
         {
             await SendShellCommandAsync("input keyevent 26", deviceId); //Unlock button
@@ -44,12 +47,14 @@ namespace MSTestX.Console.Adb
             }
             return devices;
         }
+
         internal static Encoding Encoding { get; } = Encoding.GetEncoding("ISO-8859-1");
 
         public Task SendShellCommandAsync(string command, string deviceId)
         {
             return SendCommandAsync("shell:" + command, deviceId);
         }
+
         public async Task SendCommandAsync(string command, string deviceId)
         {
             var s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -87,6 +92,7 @@ namespace MSTestX.Console.Adb
             //Disposing too fast causes the command to not execute
             var _ = s.ReceiveAsync(buffer, 0, 1, SocketFlags.None, default).ContinueWith(t => s.Dispose());
         }
+
         public async Task<string> SendCommandAndReceiveAsync(string command, string deviceId)
         {
             var data = await SendCommandAndReceiveDataAsync(command, deviceId).ConfigureAwait(false);
@@ -95,6 +101,7 @@ namespace MSTestX.Console.Adb
             if (len == 0) return string.Empty;
             return Encoding.UTF8.GetString(data, 4, len);
         }
+
         public async Task<byte[]> SendCommandAndReceiveDataAsync(string command, string deviceId)
         {
             using (var s = await SendCommandAndStartReceiveDataAsync(command, deviceId))
@@ -112,6 +119,7 @@ namespace MSTestX.Console.Adb
                 }
             }
         }
+
         private async Task<Socket> SendCommandAndStartReceiveDataAsync(string command, string deviceId)
         {
             var s = await StartSendCommandAsync(deviceId);
