@@ -260,9 +260,12 @@ namespace TestAppRunner.ViewModels
                     }
                     break;
                 case Device.Android:
-                case Device.UWP:
-                    Environment.Exit(0); break;
+#if __ANDROID__
+                   Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+#endif
+                    break;
                 default:
+                    Environment.Exit(0);
                     break;
             }
         }
