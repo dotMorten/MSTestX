@@ -56,7 +56,7 @@ namespace MSTestX.Console.Adb
             return count == 4 && buffer[offset] == 79 && buffer[offset + 1] == 75 && buffer[offset + 2] == 65 && buffer[offset + 3] == 89;
         }
 
-        private async void ProcessBuffer(CancellationToken token)
+        private void ProcessBuffer(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
@@ -64,7 +64,6 @@ namespace MSTestX.Console.Adb
                 LogReceived?.Invoke(this, entry);
             }
         }
-
       
         private async void ProcessInputs(CancellationToken token)
         {

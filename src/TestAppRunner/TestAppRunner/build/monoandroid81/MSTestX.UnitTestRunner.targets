@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+
+  <!-- 
+    Dependent targets:
+       PackageForAndroid->SignAndroidPackage->Deploy->Install
+    APK Filename: $(ApkFileSigned)
+    ADB Path: $(AdbToolPath)\adb
+    AndroidManifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    ActivityName="$(RunActivity)"
+			AdbTarget="$(AdbTarget)"
+			ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+			PackageName="$(_AndroidPackage)"
+      
+  <GetAndroidPackageName ManifestFile="$(_AndroidManifestAbs)" AssemblyName="$(AssemblyName)">
+		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
+	</GetAndroidPackageName>
+  <Error Text="Could not determine package name." Condition="'$(_AndroidPackage)' == ''" />
+
+
+    -->
+
+  <Target Name="RunTests" DependsOnTargets="Install">
+    <GetAndroidActivityName ManifestPath="$(IntermediateOutputPath)android\AndroidManifest.xml" Condition="'$(MSTextXActivityName)'==''">
+      <Output TaskParameter="ActivityName" PropertyName="MSTextXActivityName" />
+    </GetAndroidActivityName>
+    <PropertyGroup>
+      <MSTestXApkId Condition="'$(MSTestXApkID)'==''">$(_AndroidPackage)</MSTestXApkId>
+      <MSTestXApkIDParameter>/apkid $(_AndroidPackage)</MSTestXApkIDParameter>
+      <MSTextXActivityNameParameter Condition="'$(MSTextXActivityName)'!=''">/activity $(MSTextXActivityName)</MSTextXActivityNameParameter>
+      <MSTestXRunSettingsParameter Condition="'$(MSTestSettingsPath)'!=''"> /settings &quot;$(MSTestSettingsPath)&quot;</MSTestXRunSettingsParameter>
+      <MSTestXDeviceIdParameter Condition="'$(MSTestXDeviceId)'!=''">/deviceid $(MSTestXDeviceId)</MSTestXDeviceIdParameter>
+      <MSTestXDevicePinParameter Condition="'$(MSTestXDevicePin)'!=''">/pin $(MSTestXDevicePin)</MSTestXDevicePinParameter>
+      <!--TODO: Use Path APIs instead $([System.IO.Directory]::GetParent($(MSBuildThisFileDirectory.TrimEnd("\"))))-->
+      <MSTestXConsolePath Condition="'$(MSTestXConsolePath)'==''">$(MSBuildThisFileDirectory)../../tools/TestConsole/MSTestX.Console.dll</MSTestXConsolePath>
+      <MSTestXLogFilename Condition="'$(MSTestXLogFilename)'==''">$(IntermediateOutputPath)$(AssemblyName).trx</MSTestXLogFilename>
+      <MSTestXLaunchCommand>
+        dotnet &quot;$(MSTestXConsolePath)&quot; $(MSTestXApkIDParameter) $(MSTextXActivityNameParameter) /LogFileName &quot;$(MSTestXLogFilename)&quot; $(MSTestXRunSettingsParameter) $(MSTestXRunSettingsParameter) $(MSTestXDevicePinParameter)
+      </MSTestXLaunchCommand>
+    </PropertyGroup>
+
+    <Exec ConsoleToMsBuild="true" Command="$(MSTestXLaunchCommand)" />
+  </Target>
+  
+
+  <UsingTask TaskName="GetAndroidActivityName" TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <ManifestPath ParameterType="System.String" Required="true" />
+      <ActivityName ParameterType="System.String" Output="true"  />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System" />
+      <Reference Include="System.Xml" />
+      <Using Namespace="System.Xml" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Using Namespace="Microsoft.Build.Utilities" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+                 XmlDocument d = new XmlDocument();
+                 d.Load(ManifestPath);
+                 var node = d.SelectSingleNode("manifest/application/activity") as XmlElement;
+                 if (node != null)
+                    ActivityName = node.GetAttribute("name", "http://schemas.android.com/apk/res/android");
+                 else
+                    ActivityName = "";
+            ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project> 

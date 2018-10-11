@@ -10,6 +10,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppRunner.iOS", "TestAppRunner\TestAppRunner.iOS\TestAppRunner.iOS.csproj", "{D1CA65FD-596A-4025-878C-02B0ADA1AFA6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAppRunner", "TestAppRunner\TestAppRunner\TestAppRunner.csproj", "{30B38FAB-20AE-49C7-8329-A4C939B9A97D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3C83F3B8-50B0-436F-9243-CFAB7D42FAEC} = {3C83F3B8-50B0-436F-9243-CFAB7D42FAEC}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{2F17D349-1906-4409-8799-4E4D25909380}"
 EndProject
@@ -18,9 +21,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automation", "Automation", "{558BBD3A-1713-4E3B-BBE7-DD3DC9A08B0F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestX.Console", "..\Automation\MSTestX.Console\MSTestX.Console.csproj", "{3C83F3B8-50B0-436F-9243-CFAB7D42FAEC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{485668D4-6416-4315-9DBA-44DB3D4CF3BF} = {485668D4-6416-4315-9DBA-44DB3D4CF3BF}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

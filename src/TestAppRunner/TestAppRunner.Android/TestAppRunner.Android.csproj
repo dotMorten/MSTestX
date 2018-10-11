@@ -39,6 +39,7 @@
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AndroidLinkMode>None</AndroidLinkMode>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Android" />
@@ -101,4 +102,8 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <PropertyGroup>
+    <MSTestXConsolePath>$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\MSTestX.Console.dll</MSTestXConsolePath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\TestAppRunner\build\monoandroid81\MSTestX.UnitTestRunner.targets" />
 </Project>

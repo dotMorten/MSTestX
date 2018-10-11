@@ -29,6 +29,7 @@
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Serialization\**\*.cs">
       <Link>CommunicationUtilities\Serialization\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <None Remove="build\monoandroid10\MSTestX.UnitTestRunner.targets" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
@@ -66,4 +67,12 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\*.dll"
+          Pack="true"
+          Link="tools\TestConsole\%(Filename)%(Extension)"
+          PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
+    <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true"
+          PackagePath="build\monoandroid81"/>
+  </ItemGroup>
 </Project>
