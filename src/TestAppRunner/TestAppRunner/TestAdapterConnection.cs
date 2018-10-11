@@ -27,7 +27,7 @@ namespace TestAppRunner
 
         public async Task StartAsync()
         {
-            var server = comm.HostServer(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, port));
+            var server = comm.HostServer(new System.Net.IPEndPoint(System.Net.IPAddress.Any, port));
             await comm.AcceptClientAsync();
             isConnected = true;
             var tcs = new TaskCompletionSource<object>();
