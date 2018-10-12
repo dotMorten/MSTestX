@@ -39,7 +39,7 @@
       <MSTestXConsolePath Condition="'$(MSTestXConsolePath)'==''">$(MSBuildThisFileDirectory)../../tools/TestConsole/MSTestX.Console.dll</MSTestXConsolePath>
       <MSTestXLogFilename Condition="'$(MSTestXLogFilename)'==''">$(IntermediateOutputPath)$(AssemblyName).trx</MSTestXLogFilename>
       <MSTestXLaunchCommand>
-        dotnet &quot;$(MSTestXConsolePath)&quot; $(MSTestXApkIDParameter) $(MSTextXActivityNameParameter) /LogFileName &quot;$(MSTestXLogFilename)&quot; $(MSTestXRunSettingsParameter) $(MSTestXRunSettingsParameter) $(MSTestXDevicePinParameter)
+        dotnet &quot;$(MSTestXConsolePath)&quot; $(MSTestXApkIDParameter) $(MSTextXActivityNameParameter) /LogFileName &quot;$(MSTestXLogFilename)&quot; $(MSTestXDeviceIdParameter) $(MSTestXRunSettingsParameter) $(MSTestXDevicePinParameter)
       </MSTestXLaunchCommand>
     </PropertyGroup>
 
