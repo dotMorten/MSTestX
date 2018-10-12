@@ -72,6 +72,10 @@
           Pack="true" 
           Link="tools\TestConsole\%(Filename)%(Extension)" 
           PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
+    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\MSTestX.Console.runtimeconfig.json"
+          Pack="true"
+          Link="tools\TestConsole\MSTestX.Console.runtimeconfig.json"
+          PackagePath="tools\TestConsole" />    
     <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true"
           PackagePath="build\monoandroid81" />
   </ItemGroup>
