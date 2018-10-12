@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -233,6 +234,45 @@ Android specific (ignored if using remoteIp):
             public void OnDiscoveryComplete(DiscoveryCompleteEventArgs e) => DiscoveryComplete?.Invoke(this, e);
             public override event EventHandler<DiscoveryCompleteEventArgs> DiscoveryComplete;
         }
+        private static Task<Message> ReceiveMessageAsync()
+        {
+            return Task.Run<Message>(() =>
+            {
+                Message msg = null;
+                // Set read timeout to avoid blocking receive raw message
+                while (!processExitCancellationTokenSource.IsCancellationRequested)
+                {
+                    try
+                    {
+                        msg = socket.ReceiveMessage();
+                        if (msg != null)
+                            return msg;
+                    }
+                    catch (IOException ioException)
+                    {
+                        var socketException = ioException.InnerException as SocketException;
+                        if (socketException != null && socketException.SocketErrorCode == SocketError.TimedOut)
+                        {
+                            System.Console.WriteLine("Test runner connection timed out");
+                            testRunCompleted.TrySetResult(1);
+                            break;
+                        }
+                        else
+                        {
+                            //System.Console.WriteLine("Failed to receive message : " + ioException.Message);
+                            //testRunCompleted.TrySetResult(1);
+                            continue;
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Console.WriteLine("Failed to receive message : " + ex.Message);
+                        continue;
+                    }
+                }
+                return msg;
+            });
+        }
 
         private static async Task OnApplicationLaunched(System.Net.IPEndPoint endpoint = null)
         {
@@ -256,7 +296,7 @@ Android specific (ignored if using remoteIp):
             socket.SendMessage(MessageType.SessionConnected); //Start session
             
             //Perform version handshake
-            Message msg = await socket.ReceiveMessageAsync(processExitCancellationTokenSource.Token);
+            Message msg = await ReceiveMessageAsync();
             if(msg.MessageType == MessageType.VersionCheck)
             {
                 var version = JsonDataSerializer.Instance.DeserializePayload<int>(msg);
@@ -282,24 +322,10 @@ Android specific (ignored if using remoteIp):
             
             while (!processExitCancellationTokenSource.Token.IsCancellationRequested)
             {
-                try
-                {
-                    msg = await socket.ReceiveMessageAsync(processExitCancellationTokenSource.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    testRunCompleted.TrySetResult(0);
-                    return;
-                }
-                catch (System.Exception ex)
-                {
-                    System.Console.WriteLine(ex.Message);
-                    continue;
-                }
+                msg = await ReceiveMessageAsync().ConfigureAwait(false);
                 if (msg == null)
                 {
-                    System.Console.WriteLine("Message was null");
-                    continue;
+                    return;
                 }
 
                 if (msg.MessageType == MessageType.TestHostLaunched)
@@ -317,8 +343,8 @@ Android specific (ignored if using remoteIp):
                 {
                     var dcp = JsonDataSerializer.Instance.DeserializePayload<DiscoveryCompletePayload>(msg);
                     System.Console.WriteLine($"Discovered {dcp.TotalTests} tests");
-                    foreach (var t in dcp.LastDiscoveredTests)
-                        System.Console.WriteLine($"\t{t.FullyQualifiedName}");
+                    // foreach (var t in dcp.LastDiscoveredTests)
+                    //     System.Console.WriteLine($"\t{t.FullyQualifiedName}");
 
                     loggerEvents?.OnDiscoveryComplete(new DiscoveryCompleteEventArgs(dcp.TotalTests, false));
                     loggerEvents?.OnDiscoveredTests(new DiscoveredTestsEventArgs(dcp.LastDiscoveredTests));
@@ -342,7 +368,10 @@ Android specific (ignored if using remoteIp):
                 else if (msg.MessageType == MessageType.DataCollectionTestEndResult)
                 {
                     var tr = JsonDataSerializer.Instance.DeserializePayload<Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection.TestResultEventArgs>(msg);
-                    var testName = tr.TestResult.DisplayName ?? tr.TestElement.DisplayName;
+                    var testName = tr.TestResult.DisplayName;
+                    if (string.IsNullOrEmpty(testName))
+                         testName = tr.TestElement.DisplayName;
+
                     var outcome = tr.TestResult.Outcome;
 
                     var parentExecId = tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").Any() ?
