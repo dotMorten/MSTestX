@@ -146,9 +146,9 @@ Android specific (ignored if using remoteIp):
                 // Get unlock state
                 var dmpData = await client.SendCommandAndReceiveDataAsync("shell: dumpsys power", device.Serial);
                 string[] data = Encoding.ASCII.GetString(dmpData).Split('\n');
-                var mHoldingWakeLockSuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingWakeLockSuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
-                var mHoldingDisplaySuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingDisplaySuspendBlocker")).FirstOrDefault()?.EndsWith("=true") == true;
-                bool isDisplayOn = false;
+                var mHoldingWakeLockSuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingWakeLockSuspendBlocker")).FirstOrDefault()?.TrimEnd()?.EndsWith("=true") == true;
+                var mHoldingDisplaySuspendBlocker = data.Where(d => d.TrimStart().StartsWith("mHoldingDisplaySuspendBlocker")).FirstOrDefault()?.TrimEnd()?.EndsWith("=true") == true;
+                bool isDisplayOn = true;
                 bool isLocked = false;
                 if (!mHoldingWakeLockSuspendBlocker && mHoldingDisplaySuspendBlocker)
                 {
