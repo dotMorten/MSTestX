@@ -69,10 +69,20 @@
 
   <ItemGroup>
     <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\*.dll"
-          Pack="true"
-          Link="tools\TestConsole\%(Filename)%(Extension)"
+          Pack="true" 
+          Link="tools\TestConsole\%(Filename)%(Extension)" 
           PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
     <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true"
-          PackagePath="build\monoandroid81"/>
+          PackagePath="build\monoandroid81" />
   </ItemGroup>
+
+  <Target Name="BuildAndPublishConsoleRunner" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp2.1</PublishConsoleRunnerCmd>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp2.1</PublishConsoleRunnerCmd>
+    </PropertyGroup>
+    <Exec ConsoleToMsBuild="true" Command="$(PublishConsoleRunnerCmd)" />
+  </Target>
 </Project>
