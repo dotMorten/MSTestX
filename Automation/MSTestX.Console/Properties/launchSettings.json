@@ -2,7 +2,7 @@
   "profiles": {
     "MSTestX.Android.ADB.DotNetCore": {
       "commandName": "Project",
-      "commandLineArgs": "/apkpath ..\\..\\..\\..\\src\\TestAppRunner\\TestAppRunner.Android\\bin\\Debug\\com.mstestx.TestAppRunner-Signed.apk /apkid com.mstestx.TestAppRunner /activity TestAppRunner.RunTestsActivity /settings ..\\..\\testsettings.runsettings\""
+      "commandLineArgs": "/apkpath ..\\..\\..\\..\\src\\TestAppRunner\\TestAppRunner.Android\\bin\\Debug\\com.mstestx.TestAppRunner-Signed.apk /apkid com.mstestx.TestAppRunner /activity testAppRunner.RunTestsActivity /settings ..\\..\\testsettings.runsettings\""
     }
   }
 }

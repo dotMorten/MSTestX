@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TestAppRunner.Droid
 {
-    [Activity(Name = "TestAppRunner.RunTestsActivity", Label = "MSTestX Test Runner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(Name = "testAppRunner.RunTestsActivity", Label = "MSTestX Test Runner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class MainActivity : MSTestX.TestRunnerActivity
     {
         protected override void OnCreate(Bundle bundle)
