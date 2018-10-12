@@ -4,6 +4,8 @@
     <TargetFrameworks>netstandard2.0;monoandroid81;xamarinios10</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
+    <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
+    <RootNamespace>MSTestX.UnitTestRunner</RootNamespace>
     <Authors>Morten Nielsen</Authors>
     <Product>MSTestX</Product>
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
@@ -11,13 +13,14 @@
     <Copyright>Copyright 2018 Morten Nielsen</Copyright>
     <PackageLicenseUrl>https://raw.githubusercontent.com/dotMorten/MSTestX/master/LICENSE</PackageLicenseUrl>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX</PackageTags>
-    <AssemblyVersion>0.13.0.0</AssemblyVersion>
-    <FileVersion>0.13.0.0</FileVersion>
-    <Version>0.13.0</Version>
+    <AssemblyVersion>0.14.0.0</AssemblyVersion>
+    <FileVersion>0.14.0.0</FileVersion>
+    <Version>0.14.0</Version>
     <Description>A Xamarin.Forms-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
   <!-- The Microsoft.TestPlatform.TestHost has all this, but unfortunately doens't currently compile for .NET Standard targets.
@@ -68,16 +71,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\*.dll"
-          Pack="true" 
-          Link="tools\TestConsole\%(Filename)%(Extension)" 
-          PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
-    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\MSTestX.Console.runtimeconfig.json"
-          Pack="true"
-          Link="tools\TestConsole\MSTestX.Console.runtimeconfig.json"
-          PackagePath="tools\TestConsole" />    
-    <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true"
-          PackagePath="build\monoandroid81" />
+    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\*.dll" Pack="true" Link="tools\TestConsole\%(Filename)%(Extension)" PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
+    <None Include="..\..\..\Automation\MSTestX.Console\bin\netcoreapp2.1\publish\MSTestX.Console.runtimeconfig.json" Pack="true" Link="tools\TestConsole\MSTestX.Console.runtimeconfig.json" PackagePath="tools\TestConsole" />    
+    <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true" PackagePath="build\monoandroid81" />
   </ItemGroup>
 
   <Target Name="BuildAndPublishConsoleRunner" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'netstandard2.0'">

@@ -66,6 +66,7 @@ namespace TestAppRunner.ViewModels
                         tests[item.Id] = new TestResultVM(item);
                     }
                     alltests = this.tests = tests;
+                    this.HostApp.RaiseTestsDiscovered(testRunner.Tests);
                 });
                 if (Settings.AutoRun)
                 {

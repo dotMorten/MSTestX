@@ -1,16 +1,9 @@
-﻿using System;
-
-using Android.App;
+﻿using Android.App;
 using Android.Content.PM;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using Android.OS;
-using System.Text;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Collections.Generic;
-using MSTestX;
+using System.Threading.Tasks;
 
 namespace TestAppRunner.Droid
 {
@@ -24,10 +17,10 @@ namespace TestAppRunner.Droid
             base.OnCreate(bundle);
         }
 
-        protected override TestOptions GenerateTestOptions()
+        protected override MSTestX.TestOptions GenerateTestOptions()
         {
-            var testOptions = base.GenerateTestOptions();
-            //Set/override test settings.
+            var testOptions = base.GenerateTestOptions(); // Creates default test options and initializes some values based on intent arguments.
+            // Set/override test settings...
             return testOptions;
         }
 
@@ -39,6 +32,13 @@ namespace TestAppRunner.Droid
         protected override void OnTestRunCompleted(IEnumerable<TestResult> results)
         {
             base.OnTestRunCompleted(results);
+        }
+
+        protected override void OnTestsDiscovered(IEnumerable<TestCase> testCases)
+        {
+            base.OnTestsDiscovered(testCases);
+            // Run all tests:
+            // Task<IEnumerable<TestResult>> results = base.RunTestsAsync(testCases);
         }
     }
 }

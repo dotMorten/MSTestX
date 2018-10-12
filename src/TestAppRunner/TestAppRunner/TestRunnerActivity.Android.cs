@@ -14,8 +14,14 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace MSTestX
 {
+    /// <summary>
+    /// An MSTest default Android Activity for launching the test runs
+    /// </summary>
     public abstract class TestRunnerActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
+        private RunnerApp testApp;
+
+        /// <inheritdoc />
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
@@ -23,21 +29,58 @@ namespace MSTestX
 
             var testOptions = GenerateTestOptions();
             // Launch the test app
-            var testApp = new RunnerApp(testOptions);
+            testApp = new RunnerApp(testOptions);
 
             // Disable screen saver while tests are running
             testApp.TestRunStarted += (a, testCases) => { OnTestRunStarted(testCases); RunOnUiThread(() => Window?.AddFlags(WindowManagerFlags.KeepScreenOn)); };
             testApp.TestRunCompleted += (a, results) => { OnTestRunCompleted(results); RunOnUiThread(() => Window?.ClearFlags(WindowManagerFlags.KeepScreenOn)); };
+            testApp.TestsDiscovered += (a, testCases) => OnTestsDiscovered(testCases);
 
             LoadApplication(testApp);
         }
 
+        /// <summary>
+        /// Gets a value indicating whether a test run is currently running
+        /// </summary>
+        protected bool IsTestRunActive => TestAppRunner.ViewModels.TestRunnerVM.Instance.IsRunning;
+
+        /// <summary>
+        /// Called when a test run is about to start
+        /// </summary>
+        /// <param name="testCases">A collection of test cases being run</param>
         protected virtual void OnTestRunStarted(IEnumerable<TestCase> testCases)
         {
         }
 
+        /// <summary>
+        /// Called when a test run has completed
+        /// </summary>
+        /// <param name="results">A collection of test results</param>
         protected virtual void OnTestRunCompleted(IEnumerable<TestResult> results)
         {
+        }
+
+        /// <summary>
+        /// Called on start-up when all tests have been discovered
+        /// </summary>
+        /// <param name="testCases"></param>
+        protected virtual void OnTestsDiscovered(IEnumerable<TestCase> testCases)
+        {
+        }
+
+        /// <summary>
+        /// Launches a test run with the provided set of tests
+        /// </summary>
+        /// <param name="testCases">The set of tests to run</param>
+        /// <param name="settings">Optional test settings</param>
+        /// <returns>A task for the test results</returns>
+        /// <seealso cref="IsTestRunActive"/>
+        /// <exception cref="InvalidOperationException">Trown if <see cref="IsTestRunActive"/> is true</exception>
+        protected System.Threading.Tasks.Task<IEnumerable<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings settings = null)
+        {
+            if (IsTestRunActive)
+                throw new InvalidOperationException("Can't start a test run while another is already active");
+            return testApp.RunTestsAsync(testCases, settings);
         }
 
         /// <summary>
