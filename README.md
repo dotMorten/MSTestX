@@ -41,6 +41,15 @@ Note if you put your tests in a class library, the iOS app, will need to referen
 
 Note: This is not a fork. The submodule literally uses the code as-is from TestFX but compiled so it can run and be referenced by a Xamarin App.
 
+### Automation
+
+On Android you can build, deploy, run and generate a TRX report with the `RunMSTestX` MS Build target:
+
+```
+msbuild /t:RunMSTestX
+```
+
+The NuGet package also contains a console app in the `tools\` folder useful for automating the unit test run. Android has the most capability including deploy, launch and monitoring. For both iOS and Android you can connect to an already running Unit Test app using the `/remoteIp deviceip:38300` command-line parameter.
 
 ### Screenshots
 
