@@ -24,7 +24,7 @@
 
     -->
 
-  <Target Name="RunTests" DependsOnTargets="Install">
+  <Target Name="RunMSTestX" DependsOnTargets="Install">
     <GetAndroidActivityName ManifestPath="$(IntermediateOutputPath)android\AndroidManifest.xml" Condition="'$(MSTextXActivityName)'==''">
       <Output TaskParameter="ActivityName" PropertyName="MSTextXActivityName" />
     </GetAndroidActivityName>
