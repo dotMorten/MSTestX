@@ -9,17 +9,18 @@
     <Authors>Morten Nielsen</Authors>
     <Product>MSTestX</Product>
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/dotMorten/MSTestX</RepositoryUrl>
     <Copyright>Copyright 2018 Morten Nielsen</Copyright>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/dotMorten/MSTestX/master/LICENSE</PackageLicenseUrl>
+    <!--<PackageLicenseUrl>https://raw.githubusercontent.com/dotMorten/MSTestX/master/LICENSE</PackageLicenseUrl>-->
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX</PackageTags>
     <AssemblyVersion>0.15.0.0</AssemblyVersion>
     <FileVersion>0.15.0.0</FileVersion>
     <Version>0.15.0</Version>
     <Description>A Xamarin.Forms-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
-    <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
-    <IncludeSource>true</IncludeSource>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
@@ -46,6 +47,7 @@
     <!--<PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.8.0" />-->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
     <Reference Condition="'$(TargetFramework)' != 'netstandard2.0'" Include="System.Runtime.Serialization" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
