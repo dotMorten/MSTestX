@@ -40,6 +40,7 @@ namespace TestAppRunner
             if (cancellationToken.CanBeCanceled)
                 cancellationToken.Register(() => token.Cancel());
             settings = runSettings;
+            MSTestSettings.PopulateSettings(this);
             return System.Threading.Tasks.Task.Run(() => {
                 new TestExecutionManager().RunTests(tests, this, this, token);
                 token = null;
