@@ -97,7 +97,7 @@
       <Name>UnitTests</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestAppRunner\TestAppRunner.csproj">
-      <Project>{A7F8D439-33DF-4A2D-B234-B219FB446D10}</Project>
+      <Project>{30b38fab-20ae-49c7-8329-a4c939b9a97d}</Project>
       <Name>TestAppRunner</Name>
     </ProjectReference>
   </ItemGroup>
