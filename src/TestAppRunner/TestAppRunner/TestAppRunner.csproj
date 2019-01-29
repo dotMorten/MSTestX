@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;monoandroid81;xamarinios10</TargetFrameworks>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
     <RootNamespace>MSTestX.UnitTestRunner</RootNamespace>
