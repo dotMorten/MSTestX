@@ -13,26 +13,8 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.9.0" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.9.0" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="4.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\**\*.cs" Exclude="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\obj\**\*.*;..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Properties\**\*.*;..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Resources\**\*.*">
-      <Link>TrxLogger\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-    <EmbeddedResource Include="..\..\vstest\src\Microsoft.TestPlatform.Extensions.TrxLogger\Resources\TrxResource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <Link>TrxLogger\Resources\TrxResource.resx</Link>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>TrxResource.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.TestPlatform.Extensions.TrxLogger</CustomToolNamespace>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Update="TrxLogger\Resources\TrxResource.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TrxResource.resx</DependentUpon>
-    </Compile>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.0.0-preview-20181205-02" />
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="16.0.0-preview-20181205-02" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.0.1" />
   </ItemGroup>
 </Project>

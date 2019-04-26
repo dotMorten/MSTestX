@@ -41,6 +41,10 @@ namespace MSTestX.Console
             }
             await RunTest(ParseArguments(args));
             var exitCode = await testRunCompleted.Task;
+#if DEBUG
+            if (Debugger.IsAttached)
+                System.Console.ReadKey();
+#endif
             Environment.Exit(exitCode);
         }
 
@@ -129,7 +133,7 @@ Android specific (ignored if using remoteIp):
                 if (arguments.ContainsKey("activity"))
                     activityName = arguments["activity"];
 
-                await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial); //Ensure app isn't already running
+                await ShutdownApp();
 
                 if (arguments.ContainsKey("apkpath"))
                 {
@@ -142,6 +146,7 @@ Android specific (ignored if using remoteIp):
                     System.Console.WriteLine("Installing app...");
                     await client.InstallApk(device.Serial, path);
                 }
+                int APILevel = await client.GetAPILevelAsync(device.Serial);
 
                 // Get unlock state
                 var dmpData = await client.SendCommandAndReceiveDataAsync("shell: dumpsys power", device.Serial);
@@ -185,11 +190,21 @@ Android specific (ignored if using remoteIp):
                 if (arguments.ContainsKey("logFileName"))
                     outputFilename = arguments["logFileName"];
                 else
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, "TestRunReport.trx");
+                {
+                    string defaultFilename = device.Serial + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                    if (apk_id != null)
+                        defaultFilename += "_" + apk_id;
+                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                }
 
                 monitor = new LogCatMonitor(device.Serial);
-                // Connecting to logcat...
-                bool result = await monitor.OpenAsync($"{ apk_id}");
+                // Connecting to logcat...                
+                await client.SendShellCommandAsync("logcat -b all -c", device.Serial);
+                bool result;
+                if (APILevel > 22)
+                    result = await monitor.OpenAsync($"{apk_id} -T 1");
+                else
+                    result = await monitor.OpenAsync($"");
                 if (result)
                 {
                     System.Console.WriteLine("Connected logcat to " + device.Serial);
@@ -200,11 +215,45 @@ Android specific (ignored if using remoteIp):
                     return;
                 }
                 monitor.LogReceived += Monitor_LogReceived;
-                await client.SendCommandAsync($"host-serial:{device.Serial}:forward:tcp:38300;tcp:38300", null);  //Set up port forwarding for socket communication
                 
+                await client.SendCommandAsync($"host-serial:{device.Serial}:forward:tcp:38300;tcp:38300", null);  //Set up port forwarding for socket communication
+
                 System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
                 string launchCommand = $"am start -n {apk_id}/{activityName} --ez TestAdapterPort 38300";
                 await client.SendShellCommandAsync(launchCommand, device.Serial);
+               
+                // Keep looking for process starting up
+                bool launched = false;
+                while (!launched)
+                {
+                    await Task.Delay(1000);
+                    var pid = await client.GetProcessId(apk_id, device.Serial);
+                    if (pid > 0)
+                    {
+                        launched = true;
+                        OnApplicationLaunched();
+                        break;
+                    }
+                    else
+                    {
+                        await client.SendShellCommandAsync(launchCommand, device.Serial); //Keep retrying. Doesn't always launch the first time
+                    }
+                }
+                
+            }
+        }
+
+        private static async Task ShutdownApp()
+        {
+            var id = await client.GetProcessId(apk_id, device.Serial);
+            if (id > 0)
+            {
+                System.Console.WriteLine($"Application '{apk_id}' already running. Shutting down...");
+                await client.SendShellCommandAsync($"am force-stop {apk_id}", device.Serial); //Ensure app isn't already running
+                while (await client.GetProcessId(apk_id, device.Serial) > 0)
+                {
+                    await Task.Delay(100);
+                }
             }
         }
 
@@ -274,24 +323,41 @@ Android specific (ignored if using remoteIp):
             });
         }
 
+        private static bool appLaunchDetected;
+        private static TestLoggerEventsImpl loggerEvents;
+
         private static async Task OnApplicationLaunched(System.Net.IPEndPoint endpoint = null)
         {
-            TestLoggerEventsImpl loggerEvents = new TestLoggerEventsImpl();
+            if (appLaunchDetected)
+                return;
+            appLaunchDetected = true;
+            loggerEvents = new TestLoggerEventsImpl();
             var logger = new Microsoft.VisualStudio.TestPlatform.Extensions.TrxLogger.TrxLogger();
             var parameters = new Dictionary<string, string>() { { "TestRunDirectory", "." } };
             if (!string.IsNullOrEmpty(outputFilename))
                 parameters.Add("LogFileName", outputFilename);
             logger.Initialize(loggerEvents, parameters);
-
             System.Console.WriteLine("Waiting for connection to test adapter...");
-            socket = new SocketCommunicationManager();
-            await socket.SetupClientAsync(endpoint ?? new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 38300)).ConfigureAwait(false);
-            if (!socket.WaitForServerConnection(5 * 10000))
+            for (int i = 1; i <= 10; i++)
             {
-                System.Console.WriteLine("No connection to test host could be established. Make sure the app is running in the foreground.");
-                KillProcess();
-                testRunCompleted.TrySetResult(1);
-                return;
+                socket = new SocketCommunicationManager();
+                await socket.SetupClientAsync(endpoint ?? new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 38300)).ConfigureAwait(false);
+                if (!socket.WaitForServerConnection(10000))
+                {
+                    if (i == 10)
+                    {
+                        System.Console.WriteLine("No connection to test host could be established. Make sure the app is running in the foreground.");
+                        await KillProcess();
+                        testRunCompleted.TrySetResult(1);
+                        return;
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Retrying connection.... ({i} of 10)");
+                        continue;
+                    }
+                }
+                break;
             }
             socket.SendMessage(MessageType.SessionConnected); //Start session
             
@@ -343,8 +409,6 @@ Android specific (ignored if using remoteIp):
                 {
                     var dcp = JsonDataSerializer.Instance.DeserializePayload<DiscoveryCompletePayload>(msg);
                     System.Console.WriteLine($"Discovered {dcp.TotalTests} tests");
-                    // foreach (var t in dcp.LastDiscoveredTests)
-                    //     System.Console.WriteLine($"\t{t.FullyQualifiedName}");
 
                     loggerEvents?.OnDiscoveryComplete(new DiscoveryCompleteEventArgs(dcp.TotalTests, false));
                     loggerEvents?.OnDiscoveredTests(new DiscoveredTestsEventArgs(dcp.LastDiscoveredTests));
@@ -406,19 +470,19 @@ Android specific (ignored if using remoteIp):
                     System.Console.WriteLine($"\t Failed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed]} ");
                     System.Console.WriteLine($"\t Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
                     loggerEvents?.OnTestRunComplete(trc.TestRunCompleteArgs);
-                    KillProcess();
+                    await KillProcess();
                     return;
                 }
                 else if (msg.MessageType == MessageType.AbortTestRun)
                 {
                     System.Console.WriteLine("Test Run Aborted!");
-                    KillProcess();
+                    await KillProcess();
                     return;
                 }
                 else if(msg.MessageType == MessageType.CancelTestRun)
                 {
                     System.Console.WriteLine("Test Run Cancelled!");
-                    KillProcess();
+                    await KillProcess();
                     return;
                 }
                 else if(msg.MessageType == MessageType.TestMessage)
@@ -431,9 +495,10 @@ Android specific (ignored if using remoteIp):
                     System.Console.WriteLine($"Received: {msg.MessageType} -> {msg.Payload}");
                 }
             }
+            loggerEvents = null;
         }
 
-        private static async void KillProcess()
+        private static async Task KillProcess()
         {
             socket.StopClient();
             if (monitor != null)
@@ -462,7 +527,11 @@ Android specific (ignored if using remoteIp):
 
             if (processID < 0)
             {
-                if (msg.Contains("Start proc") && msg.Contains($":{apk_id}") && !msg.Contains(" for backup ") && msg.Contains(":"))
+                if(e.Tag == "ActivityManager" && 
+                        msg.StartsWith("Start proc ") &&
+                        msg.Contains($":{apk_id}") &&
+                        msg.Contains($" for activity {apk_id}/{activityName}")
+                        && !msg.Contains(" for backup "))
                 {
                     string processIDStr = msg.Substring(11, msg.IndexOf(":") - 11);
                     if (!int.TryParse(processIDStr, out processID))
@@ -480,10 +549,24 @@ Android specific (ignored if using remoteIp):
             {
                 File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\r{e.Type}\r{e.Tag}\t{e.DataString}{Environment.NewLine}");
             }
+            if(e.Tag == "ActivityManager")
+            {
 
+            }
             if (e.Tag == "ActivityManager" && msg.StartsWith($"Displayed {apk_id}/{activityName}"))
             {
                 OnApplicationLaunched(); //Detect app launched and start VSTest connection
+                return;
+            }
+            if (processID > 0 && e.Tag == "ActivityManager" && msg == $"Process {apk_id} (pid {processID}) has died.")
+            {
+                // Application died
+                System.Console.WriteLine($"{Environment.NewLine}Android application process has died. Exiting...");
+                processExitCancellationTokenSource.Cancel();
+                OnTestRunAborted("Android application process has died");
+                if (Debugger.IsAttached)
+                    System.Console.ReadKey();
+                testRunCompleted.TrySetResult(1);
                 return;
             }
             if (processID > 0 && e.ProcessId == processID)
@@ -505,10 +588,9 @@ Android specific (ignored if using remoteIp):
                         {
                             if (t.Result.Length == 0)
                             {
-                                processExitCancellationTokenSource.Cancel();
                                 System.Console.WriteLine($"{Environment.NewLine}Android application process killed. Exiting...");
-                                if (Debugger.IsAttached)
-                                    System.Console.ReadKey();
+                                processExitCancellationTokenSource.Cancel();
+                                OnTestRunAborted("Android application process killed");
                                 testRunCompleted.TrySetResult(1);
                             }
                         }
@@ -517,7 +599,16 @@ Android specific (ignored if using remoteIp):
                 }
             }
         }
-        
+
+        private static void OnTestRunAborted(string errorMessage)
+        {
+            if (loggerEvents != null)
+            {
+                var result = new TestRunCompleteEventArgs(null, false, true, null, null, TimeSpan.Zero); //TRXLogger doesn't use these values anyway
+                loggerEvents?.OnTestRunComplete(result);
+            }
+        }
+
         private static Dictionary<string, string> ParseArguments(string[] args)
         {
             var result = new Dictionary<string, string>();

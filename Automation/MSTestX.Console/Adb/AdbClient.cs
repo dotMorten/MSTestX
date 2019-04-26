@@ -16,6 +16,7 @@ namespace MSTestX.Console.Adb
     internal class AdbClient
     {
         private int port;
+        private int APILevel = 0;
 
         public AdbClient(int port=5037)
         {
@@ -49,6 +50,41 @@ namespace MSTestX.Console.Adb
         }
 
         internal static Encoding Encoding { get; } = Encoding.GetEncoding("ISO-8859-1");
+
+        public async Task<int> GetAPILevelAsync(string deviceId)
+        {
+            if (APILevel == 0)
+            {
+                var APILevelData = await SendCommandAndReceiveDataAsync("shell: getprop ro.build.version.sdk", deviceId).ConfigureAwait(false);
+                int.TryParse(Encoding.ASCII.GetString(APILevelData), out APILevel);
+            }
+            return APILevel;
+        }
+
+        public async Task<int> GetProcessId(string apk_id, string deviceId)
+        {
+            var level = await GetAPILevelAsync(deviceId).ConfigureAwait(false);
+            if (level >= 24)
+            {
+                var pid = await SendCommandAndReceiveDataAsync($"shell: pidof {apk_id}", deviceId);
+
+                if (pid.Length > 0 && int.TryParse(Encoding.UTF8.GetString(pid), out int id))
+                    return id;
+            }
+            else
+            {
+                var ps = Encoding.UTF8.GetString(await SendCommandAndReceiveDataAsync("shell: ps", deviceId));
+                var processes = ps.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                var process = processes.Where(p => p.Trim().EndsWith(apk_id)).FirstOrDefault();
+                if(process != null)
+                {
+                    var data = process.Split(' ', '\t', StringSplitOptions.RemoveEmptyEntries);
+                    if (data.Length > 1 && int.TryParse(data[1], out int id))
+                        return id;
+                }
+            }
+            return -1;
+        }
 
         public Task SendShellCommandAsync(string command, string deviceId)
         {
