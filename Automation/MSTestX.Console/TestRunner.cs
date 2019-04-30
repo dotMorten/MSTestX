@@ -101,6 +101,7 @@ namespace MSTestX.Console
             while (!cancellationToken.IsCancellationRequested)
             {
                 msg = await ReceiveMessageAsync(cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (msg == null)
                 {
                     continue;
@@ -202,6 +203,7 @@ namespace MSTestX.Console
                     System.Console.WriteLine($"Received: {msg.MessageType} -> {msg.Payload}");
                 }
             }
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         private Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
@@ -215,6 +217,7 @@ namespace MSTestX.Console
                     try
                     {
                         msg = socket.ReceiveMessage();
+                        cancellationToken.ThrowIfCancellationRequested();
                         if (msg != null)
                         {
                             return msg;
