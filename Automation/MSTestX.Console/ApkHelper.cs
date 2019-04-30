@@ -28,7 +28,6 @@ namespace MSTestX.Console
                     }
                 }
                 var reader = new AndroidXmlReader(ms);
-                //reader.MoveToContent();
                 while (reader.Read())
                 {
                     if (reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == "manifest")
@@ -47,12 +46,6 @@ namespace MSTestX.Console
                         }
                     }
                 }
-                //XDocument doc = new XDocument(reader);
-                //var rootNode = doc.FirstNode;
-                //System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
-                //doc.Load(reader);
-                //var manifest = doc.SelectSingleNode("manifest");
-                //apk_id = manifest.Attributes["package"].Value;
             }
         }
     }
