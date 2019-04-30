@@ -4,10 +4,22 @@
     <OutputType>Exe</OutputType>
 	  <RootNamespace>MSTestX.Console</RootNamespace>
     <AssemblyName>MSTestX.Console</AssemblyName>
+    <PackageId>MSTestX.Console</PackageId>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>mstestx.console</ToolCommandName>
+    <PackageOutputPath>./../nupkg</PackageOutputPath>
+    <Version>0.1.0</Version>
     <LangVersion>7.3</LangVersion>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <OutputPath>bin\</OutputPath>
+    <Authors>Morten Nielsen</Authors>
+    <Product>MSTestX Console Runner</Product>
+    <Description>Commandline tool for deploying and running MSTestX Unit Tests</Description>
+    <Copyright>Copyright © 2019 Morten Nielsen</Copyright>
+    <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dotMorten/MSTestX</RepositoryUrl>
+    <PackageTags>MSTest Xamarin Android VSTest Test Unittest</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
