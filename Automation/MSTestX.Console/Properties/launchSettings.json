@@ -1,9 +1,8 @@
 {
   "profiles": {
-    "MSTestX.Android.ADB.DotNetCore": {
+    "MSTestX.Console.Android": {
       "commandName": "Project",
-      "commandLineArgs": "/apkpath e:\\apps\\dotnet\\dotnet-api\\src\\UITest\\Esri.ArcGISRuntime.UITests.Android\\bin\\Debug\\Esri.ArcGISRuntime.UITests-Signed.apk /apkid Esri.ArcGISRuntime.UITests /activity esri.ArcGISRuntime.UITests.Android /settings e:\\apps\\dotnet\\dotnet-api\\src\\Test\\testsettings.runsettings",
-      "nativeDebugging": true
+      "commandLineArgs": "/apkpath ..\\..\\..\\..\\src\\TestAppRunner\\TestAppRunner.Android\\bin\\Debug\\com.mstestx.TestAppRunner-Signed.apk /apkid com.mstestx.TestAppRunner /activity testAppRunner.RunTestsActivity  /pin 1323 /settings ..\\..\\testsettings.runsettings\""
     }
   }
 }

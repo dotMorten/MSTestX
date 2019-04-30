@@ -156,8 +156,8 @@ Android specific (ignored if using remoteIp):
 
                     while (!state.IsDisplayOn)
                     {
-                        state = await device.GetPowerState();
                         await Task.Delay(500);
+                        state = await device.GetPowerState();
                     }
                 }
 

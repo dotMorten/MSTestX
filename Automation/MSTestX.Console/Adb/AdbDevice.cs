@@ -176,7 +176,7 @@ namespace MSTestX.Console.Adb
             public bool HoldingDisplaySuspendBlocker => KeyHasValue("mHoldingDisplaySuspendBlocker", "true");
             public bool HoldingWakeLockSuspendBlocker => KeyHasValue("mHoldingWakeLockSuspendBlocker ", "true");
             public bool IsDisplayOn => HoldingDisplaySuspendBlocker;
-            public DisplayState DisplayState => !HoldingDisplaySuspendBlocker ? DisplayState.Off : HoldingWakeLockSuspendBlocker ? DisplayState.On : DisplayState.OnAndLocked;
+            public DisplayState DisplayState => !IsDisplayOn ? DisplayState.Off : HoldingWakeLockSuspendBlocker ? DisplayState.On : DisplayState.OnAndLocked;
 
             public string[] RawData { get; }
         }

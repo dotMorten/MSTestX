@@ -76,7 +76,7 @@ namespace MSTestX.Console
 
             //Perform version handshake
             Message msg = await ReceiveMessageAsync(cancellationToken);
-            if (msg.MessageType == MessageType.VersionCheck)
+            if (msg?.MessageType == MessageType.VersionCheck)
             {
                 var version = JsonDataSerializer.Instance.DeserializePayload<int>(msg);
                 var success = version == 1;
