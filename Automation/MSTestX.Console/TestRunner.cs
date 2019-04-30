@@ -47,7 +47,6 @@ namespace MSTestX.Console
             finally
             {
                 socket.StopClient();
-                loggerEvents = null;
             }
         }
 

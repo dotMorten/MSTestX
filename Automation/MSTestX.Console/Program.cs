@@ -40,13 +40,6 @@ namespace MSTestX.Console
             }
             await RunTest(ParseArguments(args));
             var exitCode = await testRunCompleted.Task;
-#if DEBUG
-            if (Debugger.IsAttached)
-            {
-                System.Console.WriteLine("Press any key to close");
-                System.Console.ReadKey();
-            }
-#endif
             Environment.Exit(exitCode);
         }
 
@@ -60,8 +53,8 @@ namespace MSTestX.Console
 Android specific (ignored if using remoteIp):
     /deviceid <Device Serial Number>    If more than one device is connected, specifies which device to use
     /apkpath <file path>                Path to an APK to install.
-    /apkid <id>                         Package ID of the test app
-    /activity <activity id>             Activity to launch
+    /apkid <id>                         Package ID of the test app (if not provided, auto-discovered from manifest)
+    /activity <activity id>             Activity to launch (if not provided, auto-discovered from manifest)
     /pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
 ");
         }
@@ -143,6 +136,16 @@ Android specific (ignored if using remoteIp):
                     {
                         System.Console.WriteLine("ERROR. APK Not Found: " + path);
                         testRunCompleted.TrySetResult(1);
+                    }
+                    if(apk_id == null || activityName == null)
+                    {
+                        string id;
+                        string name;
+                        ApkHelper.GetAPKInfo(path, out id, out name);
+                        if (apk_id == null)
+                            apk_id = id;
+                        if (activityName == null)
+                            activityName = name;
                     }
                     System.Console.WriteLine("Installing app...");
                     await device.InstallApk(path);
