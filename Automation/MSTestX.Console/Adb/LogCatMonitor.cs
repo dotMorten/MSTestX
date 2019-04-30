@@ -36,11 +36,22 @@ namespace MSTestX.Console.Adb
                 return false;
             }
 
-            Send($"shell:logcat " + parameters + " -T 1 -B");
+            //Send($"shell:logcat -b all -c");
+            //count = await s.ReceiveAsync(buffer, 0, 4, System.Net.Sockets.SocketFlags.None, CancellationToken.None).ConfigureAwait(true);
+            //if (!IsOkayResponse(buffer, 0, count))
+            //{
+            //    var error = await s.ReadString().ConfigureAwait(false);
+            //    Close();
+            //    return false;
+            //}
+            Send($"shell:logcat " + (!string.IsNullOrWhiteSpace(parameters) ? parameters : "") + " -B");
+            //Send($"shell:logcat -B -t 1");
             count = await s.ReceiveAsync(buffer, 0, 4, System.Net.Sockets.SocketFlags.None, CancellationToken.None).ConfigureAwait(true);
             cancellationSource = new CancellationTokenSource();
             if (!IsOkayResponse(buffer, 0, count))
             {
+                var error = await s.ReadString().ConfigureAwait(false);
+                //throw new Exception(error);
                 Close();
                 return false;
             }
@@ -67,12 +78,12 @@ namespace MSTestX.Console.Adb
       
         private async void ProcessInputs(CancellationToken token)
         {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[65536];
             int count = 0;
             while (!token.IsCancellationRequested)
             {
                 try {
-                    count = await s.ReceiveAsync(buffer, 0, 4096, System.Net.Sockets.SocketFlags.None, token).ConfigureAwait(true);
+                    count = await s.ReceiveAsync(buffer, 0, 65536, System.Net.Sockets.SocketFlags.None, token).ConfigureAwait(true);
                     if (count > 0)
                     {
                         lcs.EnqueueData(buffer, count);
@@ -107,34 +118,48 @@ namespace MSTestX.Console.Adb
                 LogEntry value = new LogEntry();
                 var payloadLength = this.ReadUInt16();
                 var headerSize = this.ReadUInt16();
+                int position = 0;
                 var pid = this.ReadInt32();
                 var tid = this.ReadInt32();
                 var sec = this.ReadInt32();
                 var nsec = this.ReadInt32();
+                position += 20;
                 uint id = 0;
                 uint uid = 0;
-                if (headerSize != 0)
+                if (headerSize == 20)
                 {
-                    if (headerSize >= 0x18)
-                    {
-                        id = ReadUInt32Async();
-                    }                                       
-                    if (headerSize >= 0x1c)
-                    {
-                        uid = ReadUInt32Async();
-                    }
-
-                    if (headerSize >= 0x20)
-                    {
-                        ReadUInt32Async(); //Skip 4 bytes
-                    }
-
-                    if (headerSize > 0x20)
-                    {
-                        //throw new AdbException($"An error occurred while reading data from the ADB stream. Although the header size was expected to be 0x18, a header size of 0x{headerSize:X} was sent by the device");
-                    }
+                    //v1
                 }
-
+                else if (headerSize == 24)
+                {
+                    //v2 and v3
+                }
+                else if (headerSize == 28)
+                {
+                    //v4
+                }
+                else
+                {
+                    //throw new AdbException($"An error occurred while reading data from the ADB stream. Although the header size was expected to be 0x18, a header size of 0x{headerSize:X} was sent by the device");
+                    headerSize = 20;
+                }
+                if (headerSize >= 0x18) //v2 and 3
+                {
+                    id = ReadUInt32Async();
+                    position += 4;
+                }
+                if (headerSize >= 0x1c) //v4
+                {
+                    uid = ReadUInt32Async();
+                    position += 4;
+                }
+                //if (headerSize >= 0x20)
+                //{
+                //    ReadUInt32Async(); //Skip 4 bytes
+                //    position += 4;
+                //}
+                if (headerSize > position)
+                    this.Skip(headerSize - position); //jump over remaining header
                 byte[] data = this.GetBytes(payloadLength);
 
                 if (data == null)
@@ -152,11 +177,20 @@ namespace MSTestX.Console.Adb
                     {
                         tagEnd++;
                     }
-                   
-                    tag = Encoding.ASCII.GetString(data, 1, tagEnd - 1);
-                    data = data.AsSpan(tagEnd + 1, data.Length - tagEnd - 2).ToArray();
-                }
+                    if (tagEnd < data.Length)
+                    {
+                        tag = Encoding.ASCII.GetString(data, 1, tagEnd - 1);
+                        data = data.AsSpan(tagEnd + 1, data.Length - tagEnd - 2).ToArray();
+                    }
+                    else
+                    {
 
+                    }
+                }
+                else
+                {
+
+                }
                 return new LogEntry()
                 {
                     Data = data,
@@ -206,6 +240,23 @@ namespace MSTestX.Console.Adb
                         buffer[i] = data.Dequeue();
                     }
                 return buffer;
+            }
+            public void Skip(int count)
+            {
+                int length = 0;
+                lock (l) length = data.Count;
+                while (length < count)
+                {
+                    lock (l) length = data.Count;
+                    autoEvent.WaitOne();
+                    if (!IsOpen)
+                        throw new TaskCanceledException();
+                }
+                lock (l)
+                    for (int i = 0; i < count; i++)
+                    {
+                        data.Dequeue();
+                    }
             }
             public override bool CanSeek => false;
             public override bool CanRead => true;
