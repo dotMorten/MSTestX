@@ -46,16 +46,16 @@ namespace MSTestX.Console
         private static void PrintUsage()
         {
             System.Console.WriteLine(@"Test Runner commandline arguments:
-    /remoteIp <ip:port>                 The IP address of a device already running the unit test app
-    /logFileName <path>                 TRX Output Filename
-    /settings <path>                    MSTest RunSettings xml file
+    -remoteIp <ip:port>                 The IP address of a device already running the unit test app
+    -logFileName <path>                 TRX Output Filename
+    -settings <path>                    MSTest RunSettings xml file
 
 Android specific (ignored if using remoteIp):
-    /deviceid <Device Serial Number>    If more than one device is connected, specifies which device to use
-    /apkpath <file path>                Path to an APK to install.
-    /apkid <id>                         Package ID of the test app (if not provided, auto-discovered from manifest)
-    /activity <activity id>             Activity to launch (if not provided, auto-discovered from manifest)
-    /pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
+    -deviceid <Device Serial Number>    If more than one device is connected, specifies which device to use
+    -apkpath <file path>                Path to an APK to install.
+    -apkid <id>                         Package ID of the test app (if not provided, auto-discovered from manifest)
+    -activity <activity id>             Activity to launch (if not provided, auto-discovered from manifest)
+    -pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
 ");
         }
 
@@ -389,10 +389,10 @@ Android specific (ignored if using remoteIp):
             {
                 string key = null;
                 string value = null;
-                if (args[i].StartsWith("-") || args[i].StartsWith("/"))
+                if (args[i].StartsWith("-"))
                 {
                     key = args[i].Substring(1);
-                    if (i < args.Length - 1 && !args[i + 1].StartsWith("-") && !args[i + 1].StartsWith("/"))
+                    if (i < args.Length - 1 && !args[i + 1].StartsWith("-"))
                     {
                         i++;
                         value = args[i];
