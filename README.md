@@ -15,9 +15,9 @@ This isn't "just another test framework". This is all based on the Microsoft MST
 1. Create a new blank Xamarin.Forms Project targeting iOS and Android (shared or .NET Standard)
 2. Add a Nuget reference to [`MSTestX.UnitTestRunner`](https://www.nuget.org/packages/MSTestX.UnitTestRunner)
 3. Delete `MainPage.xaml` and `App.xaml`
-4. In Android's MainActivity.cs file change the `LoadApplication(new App())` call to `LoadApplication(new TestAppRunner.App());`
-5. In iOS' AppDelegate.cs file, make the same change to the `LoadApplication` call
-6. In the common project add a unit test class with the following content:
+4. Android: In Android's MainActivity.cs file change the class to inherit from `MSTestX.TestRunnerActivity`
+   iOS: Change the AppDelegate to inherit from `MSTestX.TestRunnerApplicationDelegate`
+5. In the common project add a unit test class with the following content:
 
 ```cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -43,10 +43,17 @@ Note: This is not a fork. The submodule literally uses the code as-is from TestF
 
 ### Automation
 
-On Android you can build, deploy, run and generate a TRX report with the `RunMSTestX` MS Build target:
+On Android you can build, deploy, run and generate a TRX report with the the console runner:
 
 ```
-msbuild /t:RunMSTestX
+msbuild myproject.csproj
+dotnet tool install --global MSTestX.Console --version 0.16.2
+REM Deploy the app and run all tests
+mstestx.console -apkpath path-to-app-signed.apk
+REM Connect to an already running app on IP 192.168.1.200 (also works with iOS)
+mstestx.console -remoteIp 192.168.1.200:38300
+REM Connect and launch  an already installed app
+mstestx.console -apkid [package id] -activity [activity name]
 ```
 
 The NuGet package also contains a console app in the `tools\` folder useful for automating the unit test run. Android has the most capability including deploy, launch and monitoring. For both iOS and Android you can connect to an already running Unit Test app using the `/remoteIp deviceip:38300` command-line parameter.
