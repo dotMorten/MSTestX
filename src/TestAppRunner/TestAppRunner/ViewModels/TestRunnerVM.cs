@@ -328,7 +328,10 @@ namespace TestAppRunner.ViewModels
                     test.ChildResults = new System.Collections.ObjectModel.ObservableCollection<TestResult>();
                     test.OnPropertyChanged(nameof(TestResultVM.ChildResults));
                 }
-                test.ChildResults.Add(testResult);
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    test.ChildResults.Add(testResult);
+                });
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             trxWriter?.RecordResult(testResult);
