@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
+             Style="{DynamicResource backgroundStyle}"
              Title="{Binding Group}"
              x:Class="TestAppRunner.Views.GroupByClassTestsPage">
     <ContentPage.Resources>
@@ -26,16 +27,16 @@
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
-                    <Label Text="Summary: " FontAttributes="Bold" Grid.Row="0" />
+                    <Label Text="Summary: " FontAttributes="Bold" Grid.Row="0" TextColor="{StaticResource foregroundColor}" />
                     <Label Text="{Binding Percentage, StringFormat='{0}% succeeded'}" Grid.Column="1" FontAttributes="Bold" Grid.Row="0" />
-                    <Label Text="{Binding NotRunTests, StringFormat='🔷 {0} not executed'}" Margin="0,0,5,0" TextColor="Gray"  Grid.Row="1"/>
-                    <Label Text="{Binding SkippedTests, StringFormat='⚠ {0} skipped'}" Margin="0,0,5,0" TextColor="Orange"  Grid.Row="2" />
-                    <Label Text="{Binding PassedTests, StringFormat='✔ {0} passed'}" Margin="0,0,5,0" TextColor="Green" Grid.Row="1"  Grid.Column="1" />
-                    <Label Text="{Binding FailedTests, StringFormat='⛔ {0} failed'}" Margin="0,0,5,0" TextColor="Red" Grid.Row="2" Grid.Column="1" />
+                    <Label Text="{Binding NotRunTests, StringFormat='🔷 {0} not executed'}" Margin="0,0,5,0" TextColor="{StaticResource notExecutedColor}"  Grid.Row="1"/>
+                    <Label Text="{Binding SkippedTests, StringFormat='⚠ {0} skipped'}" Margin="0,0,5,0" TextColor="{StaticResource skippedColor}"  Grid.Row="2" />
+                    <Label Text="{Binding PassedTests, StringFormat='✔ {0} passed'}" Margin="0,0,5,0" TextColor="{StaticResource successColor}" Grid.Row="1"  Grid.Column="1" />
+                    <Label Text="{Binding FailedTests, StringFormat='⛔ {0} failed'}" Margin="0,0,5,0" TextColor="{StaticResource failedColor}" Grid.Row="2" Grid.Column="1" />
                 </Grid>
                 <StackLayout Margin="20,0" x:Name="currentTestView" Orientation="Horizontal" Grid.Row="3" IsVisible="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" Grid.ColumnSpan="2" >
-                    <ActivityIndicator IsRunning="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" HeightRequest="15" WidthRequest="15" />
-                    <Label Text="{Binding CurrentTestRunning.Test.FullyQualifiedName, Mode=OneWay}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Start"/>
+                    <ActivityIndicator IsRunning="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
+                    <Label Text="{Binding CurrentTestRunning.Test.FullyQualifiedName, Mode=OneWay}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{StaticResource foregroundColor}" VerticalOptions="Start"/>
                 </StackLayout>
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
             </StackLayout>
@@ -48,16 +49,16 @@
                                        TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
                                 <StackLayout Orientation="Horizontal">
                                     <Label Text=" ✔ " />
-                                    <Label Text="{Binding PassedTests}" Margin="0,0,5,0" TextColor="Green" />
+                                    <Label Text="{Binding PassedTests}" Margin="0,0,5,0" TextColor="{StaticResource successColor}" />
                                     <Label Text=" ⛔ " />
-                                    <Label Text="{Binding FailedTests}" Margin="0,0,5,0" TextColor="Red" />
+                                    <Label Text="{Binding FailedTests}" Margin="0,0,5,0" TextColor="{StaticResource failedColor}" />
                                     <Label Text=" ⚠ " TextColor="Orange" />
-                                    <Label Text="{Binding SkippedTests}" Margin="0,0,5,0" TextColor="Orange" />
+                                    <Label Text="{Binding SkippedTests}" Margin="0,0,5,0" TextColor="{StaticResource skippedColor}" />
                                     <Label Text=" 🔷 " />
-                                    <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="Gray" />
-                                    <Label Text="{Binding Percentage}" />
-                                    <Label Text="%" />
-                                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" />
+                                    <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="{StaticResource notExecutedColor}" />
+                                    <Label Text="{Binding Percentage, StringFormat='{0}%'}" TextColor="{StaticResource foregroundColor}" />
+                                    <Label Text="%" TextColor="{StaticResource foregroundColor}" />
+                                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                                 </StackLayout>
                             </StackLayout>
                         </ViewCell>

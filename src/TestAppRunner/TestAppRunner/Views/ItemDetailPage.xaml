@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TestAppRunner.Views.ItemDetailPage"
              xmlns:local="clr-namespace:TestAppRunner.Views"
+             Style="{DynamicResource backgroundStyle}"
              Title="{Binding DisplayName}"
              >
     <ContentPage.Resources>
@@ -25,28 +26,28 @@
 
                 <StackLayout>
 
-                    <Label Text="{Binding ClassName}" />
-
+                    <Label Text="{Binding ClassName}" TextColor="{StaticResource foregroundColor}" />
+                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                     <StackLayout Orientation="Horizontal" IsVisible="{Binding ChildResults, Converter={StaticResource nullToFalseConverter}, ConverterParameter=reverse}">
-                        <Label Text="Elapsed time: " FontAttributes="Bold" />
-                        <Label Text="{Binding Duration}" />
+                        <Label Text="Elapsed time: " FontAttributes="Bold" TextColor="{StaticResource foregroundColor}" />
+                        <Label Text="{Binding Duration}" TextColor="{StaticResource foregroundColor}" />
                     </StackLayout>
 
-                    <Label Text="Properties:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasProperties}" />
-                    <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" />
+                    <Label Text="Properties:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasProperties}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" TextColor="{StaticResource foregroundColor}" />
 
-                    <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" />
-                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" />
+                    <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" TextColor="{StaticResource foregroundColor}" />
 
-                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}"  />
-                    <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" />
+                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" TextColor="{StaticResource foregroundColor}" />
 
-                    <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasStacktrace}" />
+                    <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasStacktrace}" TextColor="{StaticResource foregroundColor}" />
                     <ScrollView Orientation="Horizontal" HorizontalOptions="Fill" Margin="-20,0" IsVisible="{Binding HasStacktrace}" >
-                        <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0" />
+                        <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0" TextColor="{StaticResource foregroundColor}" />
                     </ScrollView>
 
-                    <ListView ItemsSource="{Binding ChildResults}"  RowHeight="60"
+                    <ListView ItemsSource="{Binding ChildResults}" RowHeight="60"
                               IsVisible="{Binding ChildResults, Converter={StaticResource nullToFalseConverter}}"
                               SelectionMode="Single"
                               ItemSelected="list_ItemSelected">

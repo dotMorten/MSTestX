@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras/1.6.55">
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;monoandroid81;xamarinios10</TargetFrameworks>
@@ -54,21 +54,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Styles\DarkTheme.xaml.cs">
+      <DependentUpon>DarkTheme.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Styles\DefaultTheme.xaml.cs">
+      <DependentUpon>DefaultTheme.xaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\GroupByClassTestsPage.xaml.cs">
       <DependentUpon>GroupByClassTestsPage.xaml</DependentUpon>
     </Compile>
     <Compile Update="Views\AllTestsPage.xaml.cs">
       <DependentUpon>AllTestsPage.xaml</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Views\TestRunPage.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\ItemDetailPage.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

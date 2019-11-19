@@ -15,13 +15,16 @@ namespace MSTestX
     /// </summary>
 	public partial class RunnerApp : Application
 	{
+        internal static string AppTheme = "light";
+
         /// <summary>
         /// Initializes a new instance of the test runner app
         /// </summary>
         /// <param name="settings">Test options</param>
 		public RunnerApp(TestOptions settings = null)
 		{
-			InitializeComponent();
+            InitializeComponent();
+            RunnerApp.Current.Resources = new Styles.DefaultTheme();
             TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
             TestRunnerVM.Instance.HostApp = this;
             TestRunnerVM.Instance.Initialize();
