@@ -57,7 +57,6 @@
                                     <Label Text=" 🔷 " />
                                     <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="{StaticResource notExecutedColor}" />
                                     <Label Text="{Binding Percentage, StringFormat='{0}%'}" TextColor="{StaticResource foregroundColor}" />
-                                    <Label Text="%" TextColor="{StaticResource foregroundColor}" />
                                     <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                                 </StackLayout>
                             </StackLayout>
