@@ -20,7 +20,7 @@ namespace TestAppRunner.Views
 		{
 			InitializeComponent ();
             this.tests = tests;
-            list.ItemsSource = new List<TestResultGroup>(tests.GroupBy(t => t.ClassName).Select((g, t) => new TestResultGroup(g.Key, g)).OrderBy(g=>g.Group));
+            list.ItemsSource = new List<TestResultGroup>(tests.GroupBy(t => t.ClassName).Select((g, t) => new TestResultGroup(g.Key.StartsWith(tests.Group + ".") ? g.Key.Substring(tests.Group.Length + 1) : g.Key, g)).OrderBy(g=>g.Group));
             this.BindingContext = tests;
             currentTestView.BindingContext = TestRunnerVM.Instance;
         }
