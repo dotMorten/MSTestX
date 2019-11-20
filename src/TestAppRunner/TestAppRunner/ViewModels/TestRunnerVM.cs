@@ -115,6 +115,8 @@ namespace TestAppRunner.ViewModels
 
         public Task<IEnumerable<TestResult>> Run()
         {
+            if(testRunner == null || !testRunner.Tests.Any())
+                return Task.FromResult(Enumerable.Empty<TestResult>());
             return Run(testRunner.Tests, Settings);
         }
         public Task<IEnumerable<TestResult>> Run(IRunSettings runSettings)
