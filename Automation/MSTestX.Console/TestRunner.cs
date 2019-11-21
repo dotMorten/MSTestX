@@ -222,6 +222,10 @@ namespace MSTestX.Console
                             return msg;
                         }
                     }
+                    catch (EndOfStreamException endofStreamException)
+                    {
+                        throw new Exception("Test run is aborted.", endofStreamException);
+                    }
                     catch (IOException ioException)
                     {
                         var socketException = ioException.InnerException as SocketException;
