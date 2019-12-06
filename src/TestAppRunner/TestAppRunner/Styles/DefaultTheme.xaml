@@ -5,14 +5,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              x:Class="MSTestX.Styles.DefaultTheme">
-    <Color x:Key="accentColor">CornflowerBlue</Color>
+    <Color x:Key="accentColor">#FF6495ED</Color>
     <Color x:Key="backgroundColor">#FFFFFFFF</Color>
     <Color x:Key="foregroundColor">#FF000000</Color>
-    <Color x:Key="successColor">Green</Color>
-    <Color x:Key="notExecutedColor">Gray</Color>
-    <Color x:Key="failedColor">Red</Color>
-    <Color x:Key="skippedColor">Orange</Color>
-    <Color x:Key="timeoutColor">OrangeRed</Color>
+    <Color x:Key="successColor">#FF0080FF</Color>
+    <Color x:Key="notExecutedColor">#FF808080</Color>
+    <Color x:Key="failedColor">#FFFF0000</Color>
+    <Color x:Key="skippedColor">#FFFFA500</Color>
+    <Color x:Key="timeoutColor">#FFF4500</Color>
     <Style x:Key="backgroundStyle" TargetType="VisualElement">
         <Setter Property="BackgroundColor" Value="{DynamicResource backgroundColor}" />
     </Style>
