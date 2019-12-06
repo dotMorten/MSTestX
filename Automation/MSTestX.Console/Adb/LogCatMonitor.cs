@@ -69,9 +69,17 @@ namespace MSTestX.Console.Adb
 
         private void ProcessBuffer(CancellationToken token)
         {
+            LogEntry entry;
             while (!token.IsCancellationRequested)
             {
-                var entry = lcs.ReadLogEntry();
+                try
+                {
+                    entry = lcs.ReadLogEntry();
+                }
+                catch(IOException)
+                {
+                    return;
+                }
                 LogReceived?.Invoke(this, entry);
             }
         }
@@ -82,14 +90,18 @@ namespace MSTestX.Console.Adb
             int count = 0;
             while (!token.IsCancellationRequested)
             {
-                try {
+                try
+                {
                     count = await s.ReceiveAsync(buffer, 0, 65536, System.Net.Sockets.SocketFlags.None, token).ConfigureAwait(true);
                     if (count > 0)
                     {
                         lcs.EnqueueData(buffer, count);
                     }
                 }
-                catch(TaskCanceledException) { break; }
+                catch (TaskCanceledException) { break; }
+                catch {
+                    Close();
+                }
             }
         }
 
@@ -102,6 +114,13 @@ namespace MSTestX.Console.Adb
             {
                 IsOpen = true;
             }
+            protected override void Dispose(bool disposing)
+            {
+                IsOpen = false;
+                autoEvent.Set(); // Ensure in-process read is exited
+                base.Dispose(disposing);
+            }
+
             private Queue<byte> data = new Queue<byte>(4096);
             internal void EnqueueData(byte[] bytes, int count)
             {
@@ -231,7 +250,7 @@ namespace MSTestX.Console.Adb
                     lock (l) length = data.Count;
                     autoEvent.WaitOne();
                     if (!IsOpen)
-                        throw new TaskCanceledException();
+                        throw new System.IO.IOException("Log cat stream was closed");
                 }
                 byte[] buffer = new byte[count];
                 lock (l)
@@ -250,7 +269,7 @@ namespace MSTestX.Console.Adb
                     lock (l) length = data.Count;
                     autoEvent.WaitOne();
                     if (!IsOpen)
-                        throw new TaskCanceledException();
+                        return;
                 }
                 lock (l)
                     for (int i = 0; i < count; i++)
@@ -292,6 +311,7 @@ namespace MSTestX.Console.Adb
                 cancellationSource?.Cancel();
             cancellationSource = null;
             s.Dispose();
+            lcs.Dispose();
             s = null;
         }
 
