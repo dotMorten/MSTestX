@@ -26,25 +26,25 @@
 
                 <StackLayout>
 
-                    <Label Text="{Binding ClassName}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="{Binding ClassName}" TextColor="{DynamicResource foregroundColor}" />
                     <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                     <StackLayout Orientation="Horizontal" IsVisible="{Binding ChildResults, Converter={StaticResource nullToFalseConverter}, ConverterParameter=reverse}">
-                        <Label Text="Elapsed time: " FontAttributes="Bold" TextColor="{StaticResource foregroundColor}" />
-                        <Label Text="{Binding Duration}" TextColor="{StaticResource foregroundColor}" />
+                        <Label Text="Elapsed time: " FontAttributes="Bold" TextColor="{DynamicResource foregroundColor}" />
+                        <Label Text="{Binding Duration}" TextColor="{DynamicResource foregroundColor}" />
                     </StackLayout>
 
-                    <Label Text="Properties:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasProperties}" TextColor="{StaticResource foregroundColor}" />
-                    <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="Properties:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasProperties}" TextColor="{DynamicResource foregroundColor}" />
+                    <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" TextColor="{DynamicResource foregroundColor}" />
 
-                    <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" TextColor="{StaticResource foregroundColor}" />
-                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
+                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
 
-                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{StaticResource foregroundColor}" />
-                    <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
+                    <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
 
-                    <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasStacktrace}" TextColor="{StaticResource foregroundColor}" />
+                    <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasStacktrace}" TextColor="{DynamicResource foregroundColor}" />
                     <ScrollView Orientation="Horizontal" HorizontalOptions="Fill" Margin="-20,0" IsVisible="{Binding HasStacktrace}" >
-                        <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0" TextColor="{StaticResource foregroundColor}" />
+                        <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0" TextColor="{DynamicResource foregroundColor}" />
                     </ScrollView>
 
                     <ListView ItemsSource="{Binding ChildResults}" RowHeight="60"
