@@ -9,15 +9,15 @@
     <Authors>Morten Nielsen</Authors>
     <Product>MSTestX</Product>
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
-    <Copyright>Copyright 2018-2019 Morten Nielsen</Copyright>
+    <Copyright>Copyright 2018-$([System.DateTime]::Now.ToString('yyyy')) Morten Nielsen</Copyright>
     <PackageOutputPath>../../../nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX</PackageTags>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <Version>1.0.2</Version>
     <Description>A Xamarin.Forms-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <IncludeSymbols>true</IncludeSymbols>
