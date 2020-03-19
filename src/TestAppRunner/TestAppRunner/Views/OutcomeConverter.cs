@@ -53,14 +53,15 @@ namespace TestAppRunner.Views
         {
             try
             {
-                Application.Current.Resources.TryGetValue(key, out var newColor);
-                return (Color)newColor;
+                if (Application.Current.Resources.TryGetValue(key, out var newColor))
+                    return (Color)newColor;
             }
             catch
             {
-                return fallback;
             }
+            return fallback;
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
