@@ -111,6 +111,24 @@ namespace UnitTests
             Assert.AreEqual(result, value1 + value2);
         }
 
+
+        [DataTestMethod]
+        [DataRow(1, 2, 3)]
+        [DataRow(2, 2, 4)]
+        [DataRow(2, 3, 5)]
+        [DataRow(3, 1, 4)]
+        [DataRow(3, 2, 5)]
+        [DataRow(3, 3, 6)]
+        [DataRow(4, 1, 6)] //Will fail
+        [DataRow(4, 2, 6)]
+        [DataRow(4, 3, 7)]
+        [TestCategory("Miscellanous tests")]
+        public async Task TestDataTestMethodAsync(int value1, int value2, int result)
+        {
+            await Task.Delay(2000);
+            Assert.AreEqual(result, value1 + value2);
+        }
+
         [DataTestMethod]
         [DataRow(1, 2, 3)]
         [DataRow(2, 2, 9)]
