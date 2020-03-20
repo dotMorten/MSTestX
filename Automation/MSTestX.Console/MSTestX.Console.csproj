@@ -10,7 +10,7 @@
     <ToolCommandName>mstestx.console</ToolCommandName>
     <PackageOutputPath>../../nupkg</PackageOutputPath>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    <Version>0.18.0</Version>
+    <Version>0.19.0</Version>
     <LangVersion>7.3</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
@@ -28,9 +28,9 @@
   <ItemGroup>
     <PackageReference Include="AndroidXml" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.0.1" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.0.1" />
-    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="16.0.0-preview-20181205-02" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.5.0" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.5.0" />
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="16.5.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.0.1" />
   </ItemGroup>
 </Project>
