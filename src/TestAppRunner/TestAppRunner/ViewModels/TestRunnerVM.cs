@@ -182,7 +182,7 @@ namespace TestAppRunner.ViewModels
             }
             DateTime start = DateTime.Now;
             Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
-            var task = testRunner.Run(testCollection, runSettings, t.Token);
+            var task = testRunner.Run(testCollection.OrderBy(tst => tst.FullyQualifiedName), runSettings, t.Token);
             OnPropertyChanged(nameof(IsRunning));
             try
             {
