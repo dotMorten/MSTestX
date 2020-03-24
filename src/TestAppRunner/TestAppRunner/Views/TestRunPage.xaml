@@ -52,7 +52,10 @@
                                 </Grid>
                                 <StackLayout VerticalOptions="Center">
                                     <Label Text="{Binding ClassName, Mode=OneTime}" LineBreakMode="MiddleTruncation" TextColor="Gray" FontSize="10" Margin="0" />
-                                    <Label Text="{Binding Test.DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Margin="0" />
+                                    <StackLayout Orientation="Horizontal">
+                                        <Label Text="{Binding Test.DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Margin="0" />
+                                        <Label Text="{Binding DataRowCompletion, Mode=OneWay}" VerticalOptions="End" Margin="15,0,0,0" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
+                                    </StackLayout>
                                 </StackLayout>
                             </StackLayout>
                         </ViewCell>

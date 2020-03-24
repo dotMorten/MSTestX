@@ -13,6 +13,17 @@ namespace TestAppRunner.ViewModels
 
         public string DisplayName => result?.DisplayName ?? Test?.DisplayName;
 
+        public string DataRowCompletion
+        {
+            get
+            {
+                if (ChildResults == null || ChildResults.Count == 0)
+                    return string.Empty;
+
+                return $"{ChildResults.Where(t => t.Outcome == TestOutcome.Passed).Count() * 100 / ChildResults.Count}%";
+            }
+        }
+
         public TestCase Test { get; }
 
         private TestResult result;
@@ -25,11 +36,24 @@ namespace TestAppRunner.ViewModels
                 result = value;
                 inProgress = false;
                 ChildResults = null;
-                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace), nameof(IsInProgress), nameof(ChildResults));
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace), nameof(IsInProgress), nameof(ChildResults), nameof(DataRowCompletion));
             }
         }
+        public IEnumerable<TestResult> Results
+        {
+            get { return ChildResults ?? (Result != null ? new[] { Result } : Enumerable.Empty<TestResult>()); }
+        }
 
-        public IList<TestResult> ChildResults { get; set; }
+        private IList<TestResult> childResults;
+        public IList<TestResult> ChildResults
+        {
+            get => childResults;
+            set
+            {
+                childResults = value;
+                OnPropertiesChanged(nameof(ChildResults), nameof(DataRowCompletion));
+            }
+        }
 
         private bool inProgress;
         internal void SetInProgress()
