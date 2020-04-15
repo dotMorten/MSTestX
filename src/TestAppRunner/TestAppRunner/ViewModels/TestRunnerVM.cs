@@ -117,11 +117,11 @@ namespace TestAppRunner.ViewModels
         {
             if(testRunner == null || !testRunner.Tests.Any())
                 return Task.FromResult(Enumerable.Empty<TestResult>());
-            return Run(testRunner.Tests, Settings);
+            return Run(testRunner.Tests.OrderBy(tst => tst.FullyQualifiedName), Settings);
         }
         public Task<IEnumerable<TestResult>> Run(IRunSettings runSettings)
         {
-            return Run(testRunner.Tests, runSettings);
+            return Run(testRunner.Tests.OrderBy(tst => tst.FullyQualifiedName), runSettings);
         }
 
         private List<TestResult> results;

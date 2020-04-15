@@ -8,7 +8,7 @@ namespace TestAppRunner.ViewModels
 {
     internal class TestResultGroup : List<TestResultVM>, INotifyPropertyChanged
     {
-        public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests)
+        public TestResultGroup(string group, IEnumerable<TestResultVM> tests) : base(tests.OrderBy(t=>t.Test.FullyQualifiedName))
         {
             Group = group ?? "<None>";
             foreach (var t in tests)
