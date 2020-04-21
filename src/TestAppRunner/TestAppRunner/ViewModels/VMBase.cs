@@ -15,7 +15,11 @@ namespace TestAppRunner.ViewModels
         {
             Device.BeginInvokeOnMainThread(() =>
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                try
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+                catch { }
             });
         }
 
@@ -23,8 +27,12 @@ namespace TestAppRunner.ViewModels
         {
             Device.BeginInvokeOnMainThread(() =>
             {
-                foreach (var propertyName in propertyNames)
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                try
+                {
+                    foreach (var propertyName in propertyNames)
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+                catch { }
             });
         }
     }

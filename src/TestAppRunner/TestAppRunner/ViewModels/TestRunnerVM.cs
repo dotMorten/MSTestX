@@ -332,7 +332,11 @@ namespace TestAppRunner.ViewModels
                 }
                 Device.BeginInvokeOnMainThread(() =>
                 {
-                    test.ChildResults.Add(testResult);
+                    try
+                    {
+                        test.ChildResults.Add(testResult);
+                    }
+                    catch { }
                 });
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
