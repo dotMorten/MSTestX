@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;monoandroid81;xamarinios10</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;monoandroid90;xamarinios10</TargetFrameworks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
@@ -44,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="3.2.0.871581" />
+    <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <Reference Condition="'$(TargetFramework)' != 'netstandard2.0'" Include="System.Runtime.Serialization" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
