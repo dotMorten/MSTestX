@@ -53,6 +53,7 @@
 
   <ItemGroup>
     <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" />
   </ItemGroup>
 
