@@ -9,6 +9,7 @@
     <ContentPage.Resources>
         <local:OutcomeConverter x:Key="outcomeConverter" />
         <local:NullToFalseConverter x:Key="nullToFalseConverter" />
+        <local:AttachmentNameConverter x:Key="attConverter" />
     </ContentPage.Resources>
     <ContentPage.Content>
         <Grid>
@@ -39,7 +40,8 @@
                     <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
                     <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
 
-                    <Label Text="Error:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
+                    <Label Text="
+                           :" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
                     <Label Text="{Binding Result.ErrorMessage}" LineBreakMode="WordWrap" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
 
                     <Label Text="StackTrace:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasStacktrace}" TextColor="{DynamicResource foregroundColor}" />
@@ -62,6 +64,23 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
+
+                    <Label Text="Attachments:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding Attachments, Converter={StaticResource nullToFalseConverter}}" TextColor="{DynamicResource foregroundColor}" />
+                    <ListView ItemsSource="{Binding Attachments}" RowHeight="30"
+                              IsVisible="{Binding Attachments, Converter={StaticResource nullToFalseConverter}}"
+                              SelectionMode="Single"
+                              ItemSelected="attachment_Selected">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <ViewCell>
+                                    <Label Text="{Binding Mode=OneTime, Converter={StaticResource attConverter}}"
+                                           FontSize="15"
+                                           LineBreakMode="MiddleTruncation" VerticalOptions="Center" />
+                                </ViewCell>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    
                 </StackLayout>
 
             </ScrollView>

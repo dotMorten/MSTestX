@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MSTestX.UnitTestRunner.Views.AttachmentPage">
+    <ContentPage.Content>
+        <Grid>
+
+            <Label x:Name="status" />
+
+            <ScrollView Orientation="Horizontal" HorizontalOptions="Fill" Margin="20,20" x:Name="contentView" IsVisible="False">
+                <Editor x:Name="contentViewText" IsReadOnly="True" IsSpellCheckEnabled="False" 
+                        HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0"
+                        TextColor="{DynamicResource foregroundColor}" />
+            </ScrollView>
+
+            <Image x:Name="imageView" IsVisible="False" />
+
+        </Grid>
+    </ContentPage.Content>
+</ContentPage>

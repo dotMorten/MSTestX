@@ -36,7 +36,7 @@ namespace TestAppRunner.ViewModels
                 result = value;
                 inProgress = false;
                 ChildResults = null;
-                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace), nameof(IsInProgress), nameof(ChildResults), nameof(DataRowCompletion));
+                OnPropertiesChanged(nameof(Result), nameof(Duration), nameof(Messages), nameof(HasMessages), nameof(HasError), nameof(Outcome), nameof(HasStacktrace), nameof(IsInProgress), nameof(ChildResults), nameof(DataRowCompletion), nameof(Attachments));
             }
         }
         public IEnumerable<TestResult> Results
@@ -45,6 +45,7 @@ namespace TestAppRunner.ViewModels
         }
 
         private IList<TestResult> childResults;
+
         public IList<TestResult> ChildResults
         {
             get => childResults;
@@ -52,6 +53,16 @@ namespace TestAppRunner.ViewModels
             {
                 childResults = value;
                 OnPropertiesChanged(nameof(ChildResults), nameof(DataRowCompletion));
+            }
+        }
+
+        public IEnumerable<UriDataAttachment> Attachments
+        {
+            get
+            {
+                if(result != null && result.Attachments != null && result.Attachments.Any())
+                    return result.Attachments.SelectMany(t => t.Attachments);
+                return null;
             }
         }
 
