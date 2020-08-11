@@ -45,8 +45,15 @@ namespace TestAppRunner.ViewModels
             Status = $"Waiting for connection on port {port}...";
             OnPropertyChanged(nameof(Status));
             var conn = new TestAdapterConnection(port);
+            try
+            {
             await conn.StartAsync();
             connection = conn;
+        }
+            catch
+            {
+                Status = "Failed to open adapter socket";
+            }
         }
 
         private async void LoadTests()
