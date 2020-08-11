@@ -47,9 +47,9 @@ namespace TestAppRunner.ViewModels
             var conn = new TestAdapterConnection(port);
             try
             {
-            await conn.StartAsync();
-            connection = conn;
-        }
+                await conn.StartAsync();
+                connection = conn;
+            }
             catch
             {
                 Status = "Failed to open adapter socket";
@@ -281,11 +281,12 @@ namespace TestAppRunner.ViewModels
         }
 
         public bool IsRunning => testRunner.IsRunning;
-        public int PassedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
-        public int FailedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Failed).Count() ?? 0;
-        public int SkippedTests => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Skipped).Count() ?? 0;
+        public int PassedTests => Tests?.SelectMany(t=>t.Results).Where(t => t.Outcome == TestOutcome.Passed).Count() ?? 0;
+        public int PassedTestsWithoutChildren => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
+        public int FailedTests => Tests?.SelectMany(t => t.Results)?.Where(t => t?.Outcome == TestOutcome.Failed).Count() ?? 0;
+        public int SkippedTests => Tests?.SelectMany(t => t.Results)?.Where(t => t?.Outcome == TestOutcome.Skipped).Count() ?? 0;
         public int NotRunTests => Tests?.Where(t => t.Result == null).Count() ?? 0;
-        public double Percentage => Tests?.Any(t => t.Result?.Outcome == TestOutcome.Passed) == true ? (int)(PassedTests * 100d / (FailedTests + PassedTests)) : 0;
+        public double Percentage => Tests?.Any(t => t.Result?.Outcome == TestOutcome.Passed) == true ? (int)(PassedTestsWithoutChildren * 100d / (FailedTests + PassedTestsWithoutChildren)) : 0;
         public double Progress => Tests == null || Tests.Count() == 0 ? 0 : 1 - (NotRunTests / (double)Tests.Count());
 
         public IEnumerable<TestResultVM> Tests => tests?.Values;
