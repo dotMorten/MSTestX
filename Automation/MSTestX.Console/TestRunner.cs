@@ -238,8 +238,10 @@ namespace MSTestX.Console
                             if (!set.Attachments[i].Uri.IsAbsoluteUri)
                             {
                                 DirectoryInfo d = new DirectoryInfo(".");
+                                var newPath = Path.Combine(d.FullName, uri);
+                                newPath = newPath.Replace('/', System.IO.Path.DirectorySeparatorChar);
                                 set.Attachments[i] = new Microsoft.VisualStudio.TestPlatform.ObjectModel.UriDataAttachment(
-                                    new Uri(Path.Combine(d.FullName , uri), UriKind.Relative), set.Attachments[i].Description);
+                                    new Uri(newPath, UriKind.Relative), set.Attachments[i].Description);
                             }
                         }
                     }
