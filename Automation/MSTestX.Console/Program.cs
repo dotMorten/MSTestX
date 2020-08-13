@@ -305,7 +305,7 @@ Android specific (ignored if using remoteIp):
             var msg = e.DataString;
             if (msg == null) return;
             //Log anything from logcat for the process or it the APK ID is in the message
-            if (processID > 0 && e.ProcessId == processID || msg.Contains(apk_id))
+            if (processID > 0 && e.ProcessId == processID || apk_id != null && msg.Contains(apk_id))
             {
                 File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\t{e.Type}\t{e.Tag}\t{e.DataString}{Environment.NewLine}");
             }
@@ -330,7 +330,7 @@ Android specific (ignored if using remoteIp):
             }
 
             //Log anything from logcat for the process or it the APK ID is in the message
-            if (processID > 0 && e.ProcessId == processID || msg.Contains(apk_id))
+            if (processID > 0 && e.ProcessId == processID || apk_id != null && msg.Contains(apk_id))
             {
                 File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\r{e.Type}\r{e.Tag}\t{e.DataString}{Environment.NewLine}");
             }
