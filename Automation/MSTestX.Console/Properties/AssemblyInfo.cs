@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("MSTestX.Console")]
-[assembly: AssemblyCopyright("Copyright © 2019 Morten Nielsen")]
+[assembly: AssemblyCopyright("Copyright © 2019-2020 Morten Nielsen")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
