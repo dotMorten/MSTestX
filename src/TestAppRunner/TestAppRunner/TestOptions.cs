@@ -8,8 +8,21 @@ using System.Xml;
 
 namespace MSTestX
 {
+    /// <summary>
+    /// Test options
+    /// </summary>
     public class TestOptions : IRunSettings
     {
+        /// <summary>
+        /// Initializes a new instance of the test options
+        /// </summary>
+        public TestOptions()
+        {
+            if (!Directory.Exists(TestRunDirectory))
+                Directory.CreateDirectory(TestRunDirectory);
+            if (!Directory.Exists(ResultsDirectory))
+                Directory.CreateDirectory(ResultsDirectory);
+        }
         /// <summary>
         /// Start the test run when the test app launches
         /// </summary>
