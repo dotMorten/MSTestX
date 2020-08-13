@@ -131,11 +131,14 @@ namespace MSTestX.Console
                 }
                 else if (msg.MessageType == MessageType.DataCollectionTestStart)
                 {
+                    if (!System.Console.IsOutputRedirected)
+                {
                     var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
                     var testName = tcs.TestCaseName;
+                        if (string.IsNullOrEmpty(testName))
                     testName = tcs.TestElement.DisplayName;
-                    if (!System.Console.IsOutputRedirected)
-                        System.Console.Write($"Running {testName}");
+                        System.Console.Write($"    {testName}");
+                    }
                 }
                 else if (msg.MessageType == MessageType.DataCollectionTestEnd)
                 {
@@ -154,34 +157,95 @@ namespace MSTestX.Console
                         tr.TestResult.GetPropertyValue<Guid>(tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").First(), Guid.Empty) : Guid.Empty;
                     if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed)
                     {
-                        System.Console.ForegroundColor = ConsoleColor.Red;
                     }
                     else if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped)
                     {
                         System.Console.ForegroundColor = ConsoleColor.Yellow;
                     }
+                    else if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Green;
+                    }
                     if (!System.Console.IsOutputRedirected)
                     {
-                        if (parentExecId == Guid.Empty) //Not a data test child item
                             System.Console.SetCursorPosition(0, System.Console.CursorTop);
-                        else
-                            System.Console.Write("\t");
                     }
                     string testMessage = tr.TestResult?.ErrorMessage;
                     if (parentExecId == Guid.Empty || !System.Console.IsOutputRedirected)
-                        System.Console.WriteLine($"{outcome}\t{testName}\t{testMessage}");
+                    {
+                        switch(outcome)
+                        {
+                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed:
+                                System.Console.ForegroundColor = ConsoleColor.Green;
+                                System.Console.Write("  √ ");
+                                break;
+                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped:
+                                System.Console.ForegroundColor = ConsoleColor.Yellow;
+                                System.Console.Write("  ! ");
+                                break;
+                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed:
+                                System.Console.ForegroundColor = ConsoleColor.Red;
+                                System.Console.Write("  X ");
+                                break;
+                            default:
+                                System.Console.Write("    "); break;
+                        }
                     System.Console.ResetColor();
+                        System.Console.Write(testName);
+                        var d = tr.TestResult.Duration;
+                        if (d.TotalMilliseconds < 1)
+                            System.Console.WriteLine(" [< 1ms]");
+                        else if (d.TotalSeconds < 1)
+                                System.Console.WriteLine($" [{d.Milliseconds}ms]");
+                        else if (d.TotalMinutes < 1)
+                                System.Console.WriteLine($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                        else 
+                            System.Console.WriteLine($" [{d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                        if (!string.IsNullOrEmpty(testMessage))
+                        {
+                            System.Console.ForegroundColor = ConsoleColor.Red;
+                            System.Console.WriteLine("  Error Message:");
+                            System.Console.WriteLine("   " + testMessage);
+                            if (!string.IsNullOrEmpty(tr.TestResult.ErrorStackTrace))
+                            {
+                                System.Console.WriteLine("  Stack Trace:");
+                                System.Console.WriteLine("   " + tr.TestResult.ErrorStackTrace);
+                            }
+                            System.Console.ResetColor();
+                            System.Console.WriteLine();
+                            // If test failed, also output messages, if any
+                            if (tr.TestResult.Messages?.Any() == true)
+                            {
+                                System.Console.WriteLine("  Standard Output Messages:");
+                                foreach (var message in tr.TestResult.Messages)
+                                {
+                                    System.Console.WriteLine(message.Text);
+                                }
+                                System.Console.WriteLine();
+                            }
+                        }                        
+                    }
                     loggerEvents?.OnTestResult(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestResultEventArgs(tr.TestResult));
                 }
                 else if (msg.MessageType == MessageType.ExecutionComplete)
                 {
-                    System.Console.WriteLine("Test Run Complete");
                     var trc = JsonDataSerializer.Instance.DeserializePayload<TestRunCompletePayload>(msg);
-                    System.Console.WriteLine($"Result: Ran {trc.LastRunTests.TestRunStatistics.ExecutedTests} tests");
-                    System.Console.WriteLine($"\t Passed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed]} ");
-                    System.Console.WriteLine($"\t Failed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed]} ");
-                    System.Console.WriteLine($"\t Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
                     loggerEvents?.OnTestRunComplete(trc.TestRunCompleteArgs);
+                    System.Console.WriteLine();
+                    System.Console.WriteLine("Test Run Complete");
+                    System.Console.WriteLine($"Total tests: {trc.LastRunTests.TestRunStatistics.ExecutedTests} tests");
+                    System.Console.ForegroundColor = ConsoleColor.Green;
+                    System.Console.WriteLine($"     Passed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed]} ");
+                    System.Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine($"     Failed : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed]} ");
+                    System.Console.ForegroundColor = ConsoleColor.Yellow;
+                    System.Console.WriteLine($"    Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
+                    System.Console.ResetColor(); 
+                    System.Console.WriteLine($" Total time: {trc.TestRunCompleteArgs.ElapsedTimeInRunningTests.TotalSeconds} Seconds");
+                    if (trc.RunAttachments != null && trc.RunAttachments.Count > 0)
+                    {
+                        System.Console.WriteLine($"\t Attachments : {trc.RunAttachments.SelectMany(a=>a.Attachments).Count()} ");
+                    }
                     return; //Test run is complete -> Exit message loop
                 }
                 else if (msg.MessageType == MessageType.AbortTestRun)
