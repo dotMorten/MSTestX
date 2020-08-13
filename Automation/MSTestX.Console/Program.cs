@@ -270,7 +270,7 @@ Android specific (ignored if using remoteIp):
             var runner = new TestRunner(endpoint);
             try
             {
-                await Task.Delay(1000); //Give app some time to start up
+                await Task.Delay(5000); //Give app some time to start up
                 await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource.Token);
             }
             catch(System.Exception ex)

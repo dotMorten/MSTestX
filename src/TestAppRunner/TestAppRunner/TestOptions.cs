@@ -73,48 +73,48 @@ namespace MSTestX
             }
         }
 
-        private string AppendParameters(string settingsXml)
+        internal string AppendParameters(string settingsXml)
         {
             if (string.IsNullOrWhiteSpace(settingsXml))
                 settingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings />";
+            XmlDocument xmlDoc = new XmlDocument();
             try
             {
-                XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(settingsXml);
-                var runsettings = xmlDoc.SelectSingleNode("RunSettings");
-                if (runsettings == null)
-                {
-                    runsettings = xmlDoc.CreateElement("RunSettings");
-                    xmlDoc.AppendChild(runsettings);
-                }
-                var testRunParameters = runsettings.SelectSingleNode("TestRunParameters");
-                if (testRunParameters == null)
-                {
-                    testRunParameters = xmlDoc.CreateElement("TestRunParameters");
-                    runsettings.AppendChild(testRunParameters);
-                }
-                AddParameter(testRunParameters, "DeploymentDirectory", DeploymentDirectory);
-                AddParameter(testRunParameters, "ResultsDirectory", ResultsDirectory);
-                AddParameter(testRunParameters, "TestDeploymentDir", DeploymentDirectory);
-                AddParameter(testRunParameters, "TestDir", TestRunDirectory);
-                AddParameter(testRunParameters, "TestLogsDir", TestRunResultsDirectory);
-                AddParameter(testRunParameters, "TestResultsDirectory", TestResultsDirectory);
-                AddParameter(testRunParameters, "TestRunDirectory", TestRunDirectory);
-                AddParameter(testRunParameters, "TestRunResultsDirectory", TestRunResultsDirectory);
-                
-                using (var tw = new StringWriter())
-                {
-                    xmlDoc.Save(tw);
-                    var xml = tw.ToString();
-                    return xml;
-                }
             }
             catch
             {
-                return settingsXml;
+                xmlDoc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings />");
             }
+            var runsettings = xmlDoc.SelectSingleNode("RunSettings");
+            if (runsettings == null)
+            {
+                runsettings = xmlDoc.CreateElement("RunSettings");
+                xmlDoc.AppendChild(runsettings);
+            }
+            var testRunParameters = runsettings.SelectSingleNode("TestRunParameters");
+            if (testRunParameters == null)
+            {
+                testRunParameters = xmlDoc.CreateElement("TestRunParameters");
+                runsettings.AppendChild(testRunParameters);
+            }
+            AddParameter(testRunParameters, "DeploymentDirectory", DeploymentDirectory);
+            AddParameter(testRunParameters, "ResultsDirectory", ResultsDirectory);
+            AddParameter(testRunParameters, "TestDeploymentDir", DeploymentDirectory);
+            AddParameter(testRunParameters, "TestDir", TestRunDirectory);
+            AddParameter(testRunParameters, "TestLogsDir", TestRunResultsDirectory);
+            AddParameter(testRunParameters, "TestResultsDirectory", TestResultsDirectory);
+            AddParameter(testRunParameters, "TestRunDirectory", TestRunDirectory);
+            AddParameter(testRunParameters, "TestRunResultsDirectory", TestRunResultsDirectory);
 
+            using (var tw = new StringWriter())
+            {
+                xmlDoc.Save(tw);
+                var xml = tw.ToString();
+                return xml;
+            }
         }
+        
         private static void AddParameter(XmlNode parametersNode, string name, string value)
         {
             foreach (var node in parametersNode.SelectNodes("Parameter").OfType<XmlElement>())

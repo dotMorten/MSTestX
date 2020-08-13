@@ -348,6 +348,11 @@ namespace TestAppRunner.ViewModels
                 });
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
+            if (testResult.Attachments.Count > 0)
+            {
+                connection?.SendAttachments(testResult.Attachments, Settings.TestRunDirectory);
+                Settings.TestRecorder?.RecordAttachments(testResult.Attachments);
+            }
             trxWriter?.RecordResult(testResult);
             Logger.LogResult(testResult);
             connection?.SendTestEndResult(testResult);
@@ -385,7 +390,7 @@ namespace TestAppRunner.ViewModels
 
         void ITestExecutionRecorder.RecordAttachments(IList<AttachmentSet> attachmentSets)
         {
-            connection?.SendAttachments(attachmentSets);
+            connection?.SendAttachments(attachmentSets, Settings.TestRunDirectory);
             Settings.TestRecorder?.RecordAttachments(attachmentSets);
         }
 

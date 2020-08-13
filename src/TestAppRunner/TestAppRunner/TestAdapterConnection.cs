@@ -8,9 +8,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TestAppRunner.ViewModels;
 
 namespace TestAppRunner
 {
@@ -117,8 +119,8 @@ namespace TestAppRunner
                         if (trr.TestCases != null)
                         {
                             var testsToRun = ViewModels.TestRunnerVM.Instance.Tests.Select(t => t.Test).Where(t => trr.TestCases.Any(t2 => t2.Id == t.Id)).ToList();
-                            DateTime start = DateTime.Now;
-                            var _ = ViewModels.TestRunnerVM.Instance.Run(testsToRun, new SettingsXmlImpl(trr.RunSettings)).ContinueWith(task =>
+                            DateTime start = DateTime.Now;                            
+                            var _ = ViewModels.TestRunnerVM.Instance.Run(testsToRun, new SettingsXmlImpl(ViewModels.TestRunnerVM.Instance.Settings.AppendParameters(trr.RunSettings))).ContinueWith(task =>
                               {
                                   TimeSpan elapsedTime = DateTime.Now - start;
                                   if (task.IsCanceled)
@@ -199,6 +201,23 @@ namespace TestAppRunner
 
         internal void SendTestEndResult(TestResult testResult)
         {
+            // Make attachment paths relative
+            foreach (var set in testResult.Attachments)
+            {
+                for (int i = 0; i < set.Attachments.Count; i++)
+                {
+                    var uri = set.Attachments[i].Uri.OriginalString;
+
+                    var rootDirectory = TestRunnerVM.Instance.Settings.TestRunDirectory;
+                    if (uri.StartsWith(rootDirectory))
+                    {
+                        uri = uri.Substring(rootDirectory.Length);
+                        if (rootDirectory.Last() != System.IO.Path.PathSeparator && uri[0] == System.IO.Path.PathSeparator)
+                            uri = uri.Substring(1);
+                        set.Attachments[i] = new UriDataAttachment(new Uri(uri, UriKind.Relative), set.Attachments[i].Description);
+                    }
+                }
+            }
             SendMessage(MessageType.DataCollectionTestEndResult, new Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection.TestResultEventArgs(testResult));
         }
 
@@ -207,8 +226,61 @@ namespace TestAppRunner
             SendMessage(MessageType.DataCollectionTestEnd, new TestCaseEndEventArgs(testCase, outcome));
         }
 
-        internal void SendAttachments(IList<AttachmentSet> attachmentSets)
+
+        internal void SendAttachments(IList<AttachmentSet> attachmentSets, string rootDirectory)
         {
+            foreach (var set in attachmentSets)
+            {
+                SendMessage("AttachmentSet", new FileAttachmentSet(set, rootDirectory));
+            }
+        }
+
+        [DataContract]
+        private class FileAttachmentSet
+        {
+            [DataMember]
+            public Uri Uri { get; private set; }
+
+            [DataMember]
+            public string DisplayName { get; private set; }
+
+            [DataMember]
+            public IList<FileDataAttachment> Attachments { get; private set; }
+
+            public FileAttachmentSet(AttachmentSet set, string rootDirectory)
+            {
+                Uri = set.Uri;
+                DisplayName = set.DisplayName;
+                Attachments = set.Attachments.Select(a => new FileDataAttachment(a, rootDirectory)).ToList();
+            }
+        }
+        [DataContract]
+        private class FileDataAttachment
+        {
+            [DataMember]
+            public string Description { get; private set; }
+            [DataMember]
+            public string Uri { get; private set; }
+            private byte[] data;
+            [DataMember]
+            public byte[] Data
+            { 
+                get => data ?? System.IO.File.ReadAllBytes(path); 
+                private set => data = value; 
+            }
+            string path = null;
+            public FileDataAttachment(UriDataAttachment a, string rootDirectory)
+            {
+                path = a.Uri.LocalPath;
+                Uri = a.Uri.OriginalString;
+                if (Uri.StartsWith(rootDirectory))
+                {
+                    Uri = Uri.Substring(rootDirectory.Length);
+                    if (rootDirectory.Last() != System.IO.Path.PathSeparator && Uri[0] == System.IO.Path.PathSeparator)
+                        Uri = Uri.Substring(1);
+                }
+                Description = a.Description;
+            }
         }
 
         private static int GetProcessId()

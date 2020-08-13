@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -132,11 +133,11 @@ namespace MSTestX.Console
                 else if (msg.MessageType == MessageType.DataCollectionTestStart)
                 {
                     if (!System.Console.IsOutputRedirected)
-                {
-                    var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
-                    var testName = tcs.TestCaseName;
+                    {
+                        var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
+                        var testName = tcs.TestCaseName;
                         if (string.IsNullOrEmpty(testName))
-                    testName = tcs.TestElement.DisplayName;
+                            testName = tcs.TestElement.DisplayName;
                         System.Console.Write($"    {testName}");
                     }
                 }
@@ -168,7 +169,7 @@ namespace MSTestX.Console
                     }
                     if (!System.Console.IsOutputRedirected)
                     {
-                            System.Console.SetCursorPosition(0, System.Console.CursorTop);
+                        System.Console.SetCursorPosition(0, System.Console.CursorTop);
                     }
                     string testMessage = tr.TestResult?.ErrorMessage;
                     if (parentExecId == Guid.Empty || !System.Console.IsOutputRedirected)
@@ -190,7 +191,7 @@ namespace MSTestX.Console
                             default:
                                 System.Console.Write("    "); break;
                         }
-                    System.Console.ResetColor();
+                        System.Console.ResetColor();
                         System.Console.Write(testName);
                         var d = tr.TestResult.Duration;
                         if (d.TotalMilliseconds < 1)
@@ -225,6 +226,23 @@ namespace MSTestX.Console
                             }
                         }                        
                     }
+
+
+                    // Make attachment paths absolute
+                    foreach (var set in tr.TestResult.Attachments)
+                    {
+                        for (int i = 0; i < set.Attachments.Count; i++)
+                        {
+                            var uri = set.Attachments[i].Uri.OriginalString;
+
+                            if (!set.Attachments[i].Uri.IsAbsoluteUri)
+                            {
+                                DirectoryInfo d = new DirectoryInfo(".");
+                                set.Attachments[i] = new Microsoft.VisualStudio.TestPlatform.ObjectModel.UriDataAttachment(
+                                    new Uri(Path.Combine(d.FullName , uri), UriKind.Relative), set.Attachments[i].Description);
+                            }
+                        }
+                    }
                     loggerEvents?.OnTestResult(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestResultEventArgs(tr.TestResult));
                 }
                 else if (msg.MessageType == MessageType.ExecutionComplete)
@@ -242,10 +260,6 @@ namespace MSTestX.Console
                     System.Console.WriteLine($"    Skipped : {trc.LastRunTests.TestRunStatistics.Stats[Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped]} ");
                     System.Console.ResetColor(); 
                     System.Console.WriteLine($" Total time: {trc.TestRunCompleteArgs.ElapsedTimeInRunningTests.TotalSeconds} Seconds");
-                    if (trc.RunAttachments != null && trc.RunAttachments.Count > 0)
-                    {
-                        System.Console.WriteLine($"\t Attachments : {trc.RunAttachments.SelectMany(a=>a.Attachments).Count()} ");
-                    }
                     return; //Test run is complete -> Exit message loop
                 }
                 else if (msg.MessageType == MessageType.AbortTestRun)
@@ -260,6 +274,22 @@ namespace MSTestX.Console
                 {
                     var tm = JsonDataSerializer.Instance.DeserializePayload<TestMessagePayload>(msg);
                     System.Console.WriteLine($"{tm.MessageLevel}: {tm.Message}");
+                }
+                else if (msg.MessageType == "AttachmentSet")
+                {
+                    var set = JsonDataSerializer.Instance.DeserializePayload<FileAttachmentSet>(msg);
+                    foreach(var attachment in set.Attachments)
+                    {
+                        var path = attachment.Uri.OriginalString;
+                        try
+                        {
+                            var dir = Path.GetDirectoryName(path);
+                            if (!Directory.Exists(dir))
+                                Directory.CreateDirectory(dir);
+                            File.WriteAllBytes(path, attachment.Data);
+                        }
+                        catch { }
+                    }
                 }
                 else
                 {
@@ -342,6 +372,31 @@ namespace MSTestX.Console
 
             public void OnDiscoveryComplete(DiscoveryCompleteEventArgs e) => DiscoveryComplete?.Invoke(this, e);
             public override event EventHandler<DiscoveryCompleteEventArgs> DiscoveryComplete;
+        }
+
+
+        [DataContract]
+        private class FileAttachmentSet
+        {
+            [DataMember]
+            public string Uri { get; set; }
+
+            [DataMember]
+            public string DisplayName { get; set; }
+
+            [DataMember]
+            public IList<FileDataAttachment> Attachments { get; set; }
+        }
+        [DataContract]
+        private class FileDataAttachment
+        {
+            [DataMember]
+            public string Description { get; set; }
+            [DataMember]
+            public Uri Uri { get; set; }
+            private byte[] data;
+            [DataMember]
+            public byte[] Data { get; set; }
         }
     }
 }
