@@ -151,7 +151,11 @@ namespace MSTestX
         {
             get
             {
+#if __ANDROID__
+                return Android.App.Application.Context.FilesDir.Path;
+#else
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create));
+#endif
             }
         }
 
@@ -189,6 +193,6 @@ namespace MSTestX
         public string TestResultsDirectory => Path.Combine(TestRunDirectory, "TestResults");
 
 
-        #endregion
+#endregion
     }
 }
