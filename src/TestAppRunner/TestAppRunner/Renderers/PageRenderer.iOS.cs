@@ -33,9 +33,9 @@ namespace MSTestX.Renderers
         public override void TraitCollectionDidChange(UITraitCollection previousTraitCollection)
         {
             base.TraitCollectionDidChange(previousTraitCollection);
-            Console.WriteLine($"TraitCollectionDidChange: {TraitCollection.UserInterfaceStyle} != {previousTraitCollection.UserInterfaceStyle}");
+            Console.WriteLine($"TraitCollectionDidChange: {TraitCollection.UserInterfaceStyle} != {previousTraitCollection?.UserInterfaceStyle}");
 
-            if (this.TraitCollection.UserInterfaceStyle != previousTraitCollection.UserInterfaceStyle)
+            if (this.TraitCollection.UserInterfaceStyle != previousTraitCollection?.UserInterfaceStyle)
             {
                 SetAppTheme();
             }
