@@ -197,11 +197,15 @@ namespace MSTestX.Console
                         if (d.TotalMilliseconds < 1)
                             System.Console.WriteLine(" [< 1ms]");
                         else if (d.TotalSeconds < 1)
-                                System.Console.WriteLine($" [{d.Milliseconds}ms]");
+                            System.Console.WriteLine($" [{d.Milliseconds}ms]");
                         else if (d.TotalMinutes < 1)
-                                System.Console.WriteLine($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
-                        else 
+                            System.Console.WriteLine($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                        else if (d.TotalHours < 1)
                             System.Console.WriteLine($" [{d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                        else if (d.TotalDays < 1)
+                            System.Console.WriteLine($" [{d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                        else
+                            System.Console.WriteLine($" [{Math.Floor(d.TotalDays)}d {d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]"); // I sure hope your tests won't ever need this line of code
                         if (!string.IsNullOrEmpty(testMessage))
                         {
                             System.Console.ForegroundColor = ConsoleColor.Red;
