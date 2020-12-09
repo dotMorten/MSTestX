@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console.Adb
 {
-    // Good command-reference overview here: https://android.googlesource.com/platform/system/core/+/master/adb/SERVICES.TXT
-    // ADB Source: https://github.com/aosp-mirror/platform_system_core/tree/master/adb
+    // Good command-reference overview here: https://android.googlesource.com/platform/packages/modules/adb/+/HEAD/SERVICES.TXT
+    // ADB Source and overview: https://android.googlesource.com/platform/packages/modules/adb/
     internal class AdbClient
     {
         private int port;
@@ -158,7 +158,7 @@ namespace MSTestX.Console.Adb
         private static async Task WriteCommandToSocket(Socket s, string command)
         {
             System.Diagnostics.Debug.WriteLine($"Sending command {command}");
-            string resultStr = string.Format("{0}{1}\n", command.Length.ToString("X4"), command);
+            string resultStr = string.Format("{0}{1}", command.Length.ToString("X4"), command);
             var buffer = Encoding.UTF8.GetBytes(resultStr);
             s.Send(buffer, 0, buffer.Length, SocketFlags.None);
             buffer = Encoding.UTF8.GetBytes(resultStr);
