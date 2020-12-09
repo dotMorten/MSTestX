@@ -17,7 +17,7 @@
     <Authors>Morten Nielsen</Authors>
     <Product>MSTestX Console Runner</Product>
     <Description>Commandline tool for deploying, running and monitoring MSTestX Unit Tests on Android and iOS devices, and generating TRX TestResult reports.</Description>
-    <Copyright>Copyright © 2019 Morten Nielsen</Copyright>
+    <Copyright>Copyright © 2019-$([System.DateTime]::Now.ToString('yyyy')) Morten Nielsen</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
