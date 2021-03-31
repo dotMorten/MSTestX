@@ -29,6 +29,14 @@ namespace TestAppRunner.ViewModels
 
         private TestResult result;
 
+        /// <summary>
+        ///  Gets the number of child results based on the test result property, or -1 if no test result is available at this point.
+        /// </summary>
+        public int ChildResultCount
+        {
+            get => Result is null ? -1 : Result.GetProperty<int>("InnerResultsCount", 0);
+        }
+
         public TestResult Result
         {
             get { return result; }

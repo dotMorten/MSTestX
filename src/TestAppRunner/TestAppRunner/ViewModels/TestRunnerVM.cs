@@ -147,13 +147,13 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        public void SaveProgress()
+        public void SaveProgress(IEnumerable<TestResultVM> tests, bool append = true)
         {
             try
             {
                 var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
-                var tests = Tests.Where(t => t.Result != null);
-                using (var f = new System.IO.StreamWriter(progressPath))
+                tests = tests.Where(t => t.Result != null);
+                using (var f = new System.IO.StreamWriter(progressPath, append))
                 {
                     foreach (var test in tests)
                     {
@@ -285,6 +285,7 @@ namespace TestAppRunner.ViewModels
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
                 trxWriter.InitializeReport();
             }
+            SaveProgress(Tests, false);
             DateTime start = DateTime.Now;
             Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
             var task = testRunner.Run(testCollection.OrderBy(tst => tst.FullyQualifiedName), runSettings, t.Token);
@@ -422,7 +423,7 @@ namespace TestAppRunner.ViewModels
             if (parentExecId == Guid.Empty) // We don't report child result in the UI
             {
                 test.Result = testResult;
-               
+
                 OnPropertyChanged(nameof(Progress));
                 OnPropertyChanged(nameof(Percentage));
                 OnPropertyChanged(nameof(TestStatus));
@@ -430,22 +431,13 @@ namespace TestAppRunner.ViewModels
                 OnPropertyChanged(nameof(PassedTests));
                 OnPropertyChanged(nameof(FailedTests));
                 OnPropertyChanged(nameof(SkippedTests));
+                if (innerResultsCount > 0) // Prep the child results getting reported immediately after this one
+                    test.ChildResults = new List<TestResult>(innerResultsCount);
             }
             else
             {
-                if (test.ChildResults == null)
-                {
-                    test.ChildResults = new System.Collections.ObjectModel.ObservableCollection<TestResult>();
-                    test.OnPropertyChanged(nameof(TestResultVM.ChildResults));
-                }
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    try
-                    {
-                        test.ChildResults.Add(testResult);
-                    }
-                    catch { }
-                });
+                test.ChildResults.Add(testResult);
+                test.OnPropertyChanged(nameof(TestResultVM.ChildResults));
             }
             Log($"Completed test '{testResult.TestCase.FullyQualifiedName}': {testResult.Outcome} {testResult.ErrorMessage}");
             if (testResult.Attachments.Count > 0)
@@ -457,7 +449,12 @@ namespace TestAppRunner.ViewModels
             Logger.LogResult(testResult);
             connection?.SendTestEndResult(testResult);
             Settings.TestRecorder?.RecordResult(testResult);
-            SaveProgress();
+            
+            if (test.ChildResults == null || test.ChildResults.Count == test.ChildResultCount)
+            {
+                // Single test or complete set of datarows: Save
+                SaveProgress(new TestResultVM[] { test }, true);
+            }
         }
 
         private void Log(string message)
