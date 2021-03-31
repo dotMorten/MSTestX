@@ -117,10 +117,10 @@ namespace MSTestX
                 testOptions.TerminateAfterExecution = result;
             }
 
-            if (arguments.ContainsKey("AutoResume") && bool.TryParse(arguments["AutoResume"], out bool result))
+            if (arguments.ContainsKey("AutoResume") && bool.TryParse(arguments["AutoResume"], out bool result2))
             {
-                testOptions.AutoResume = result;
-                testOptions.TerminateAfterExecution = result;
+                testOptions.AutoResume = result2;
+                testOptions.TerminateAfterExecution = result2;
             }
 
             if (arguments.ContainsKey("ReportFile"))
