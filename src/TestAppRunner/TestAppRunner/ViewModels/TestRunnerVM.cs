@@ -73,9 +73,41 @@ namespace TestAppRunner.ViewModels
                         tests[item.Id] = new TestResultVM(item);
                     }
                     alltests = this.tests = tests;
+
+                    var previousResults = LoadProgress();
+                    try
+                    {
+                        if (previousResults != null)
+                        {
+                            foreach (var previousResult in previousResults)
+                            {
+                                var t = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.TestCase.FullyQualifiedName).Select(tt => tt.Value).FirstOrDefault();
+                                if (t != null)
+                                {
+                                    var parentExecId = GetProperty<Guid>("ParentExecId", previousResult, Guid.Empty);
+                                    if (parentExecId != Guid.Empty)
+                                    {
+                                        if (t.ChildResults is null)
+                                            t.ChildResults = new List<TestResult>();
+                                        t.ChildResults.Add(previousResult);
+                                    }
+                                    else
+                                        t.Result = previousResult;
+
+                                }
+                            }
+                        }
+                    }
+                    catch { return; }
+
+
                     this.HostApp.RaiseTestsDiscovered(testRunner.Tests);
                 });
-                if (Settings.AutoRun)
+                if (Settings.AutoResume)
+                {
+                    var _ = RunRemainingTests(Settings);
+                }
+                else if (Settings.AutoRun)
                 {
                     var _ = Run(Settings);
                 }
@@ -86,6 +118,59 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(NotRunTests));
             Status = $"{tests.Count} tests found.";
             OnPropertyChanged(nameof(Status));
+        }
+
+        private readonly string progressPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unittest_progress.bin");
+
+        public IEnumerable<TestResult> LoadProgress()
+        {
+            if (System.IO.File.Exists(progressPath))
+            {
+                var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
+                using (var f = new System.IO.StreamReader(progressPath))
+                {
+                    while (!f.EndOfStream)
+                    {
+                        var str = f.ReadLine();
+                        TestResult result;
+                        try
+                        {
+                            result = s.Deserialize<TestResult>(str);
+                        }
+                        catch { continue; }
+                        yield return result;
+                    }
+                }
+            }
+        }
+
+        public void SaveProgress()
+        {
+            try
+            {
+                var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
+                var tests = Tests.Where(t => t.Result != null);
+                using (var f = new System.IO.StreamWriter(progressPath))
+                {
+                    foreach (var test in tests)
+                    {
+                        var parentExecId = GetProperty<Guid>("ParentExecId", test.Result, Guid.Empty);
+                        var str = s.Serialize<TestResult>(test.Result);
+                        f.WriteLine(str);
+                        if (test.Results != null)
+                        {
+                            foreach (var childtest in test.Results)
+                            {
+                                parentExecId = GetProperty<Guid>("ParentExecId", childtest, Guid.Empty);
+
+                                str = s.Serialize<TestResult>(childtest);
+                                f.WriteLine(str);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         private string _grouping;
@@ -136,6 +221,16 @@ namespace TestAppRunner.ViewModels
         public Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection)
         {
             return Run(testCollection, Settings);
+        }
+
+        public Task<IEnumerable<TestResult>> RunRemainingTests(IRunSettings runSettings = null)
+        {
+            return Run(Tests.Where(t => t.Result is null && (t.ChildResults is null || t.ChildResults.Count == 0)).Select(t => t.Test), runSettings ?? Settings);
+        }
+
+        public Task<IEnumerable<TestResult>> RunFailedTests(IRunSettings runSettings = null)
+        {
+            return Run(Tests.Where(t => t.Result?.Outcome == TestOutcome.Failed).Select(t => t.Test), runSettings ?? Settings);
         }
 
         public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
@@ -357,6 +452,7 @@ namespace TestAppRunner.ViewModels
             Logger.LogResult(testResult);
             connection?.SendTestEndResult(testResult);
             Settings.TestRecorder?.RecordResult(testResult);
+            SaveProgress();
         }
 
         private void Log(string message)

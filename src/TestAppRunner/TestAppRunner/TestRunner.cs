@@ -25,7 +25,7 @@ namespace TestAppRunner
 
         IRunSettings IDiscoveryContext.RunSettings => settings;
 
-        public IEnumerable<TestCase> Tests => sink.Tests;
+        public IEnumerable<TestCase> Tests => sink?.Tests ?? System.Linq.Enumerable.Empty<TestCase>();
 
         internal Task Run(IRunSettings runSettings = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {

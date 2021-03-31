@@ -117,6 +117,12 @@ namespace MSTestX
                 testOptions.TerminateAfterExecution = result;
             }
 
+            if (arguments.ContainsKey("AutoResume") && bool.TryParse(arguments["AutoResume"], out bool result))
+            {
+                testOptions.AutoResume = result;
+                testOptions.TerminateAfterExecution = result;
+            }
+
             if (arguments.ContainsKey("ReportFile"))
             {
                 testOptions.TrxOutputPath = arguments["ReportFile"] + ".trx";

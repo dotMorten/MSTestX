@@ -22,6 +22,7 @@ namespace TestAppRunner.Views
 
             picker.ItemsSource = new string[] { "Category", "Namespace", "Outcome" };
             picker.SelectedIndex = 1;
+            this.ToolbarItems.Add(new ToolbarItem("...", null, () => { PickerPanel.IsVisible = true; }));
         }
 
         private void Instance_OnTestRunException(object sender, Exception e)
@@ -65,6 +66,33 @@ namespace TestAppRunner.Views
         private void Error_Close_Button_Clicked(object sender, EventArgs e)
         {
             ErrorPanel.IsVisible = false;
+        }
+
+        private void Picker_Close_Button_Clicked(object sender, EventArgs e)
+        {
+            PickerPanel.IsVisible = false;
+        }
+
+        private void RunRemaining_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsRunning) return;
+            TestRunnerVM.Instance.RunRemainingTests();
+            PickerPanel.IsVisible = false;
+        }
+
+        private void RunFailed_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsRunning) return;
+            TestRunnerVM.Instance.RunFailedTests();
+            PickerPanel.IsVisible = false;
+        }
+
+        private void StopRun_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsRunning)
+            {
+                TestRunnerVM.Instance.Cancel();
+            }
         }
     }
 }

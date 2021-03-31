@@ -104,6 +104,7 @@ namespace MSTestX
             // Once test run is complete you can copy the report back:
             // adb exec -out run -as com.mstestx.TestAppRunner cat/data/data/com.mstestx.TestAppRunner/files/TestReport.trx > TestReport.trx
             testOptions.AutoRun = Intent.GetBooleanExtra("AutoRun", false);
+            testOptions.AutoResume = Intent.GetBooleanExtra("AutoResume", false);
             string path = Intent.GetStringExtra("ReportFile");
             // Or generate a new time-stamped log file path on each run:
             // if (string.IsNullOrEmpty(path))
@@ -115,7 +116,7 @@ namespace MSTestX
                 testOptions.TrxOutputPath = path + ".trx";
                 testOptions.ProgressLogPath = path + ".log";
             }
-            testOptions.TerminateAfterExecution = testOptions.AutoRun;
+            testOptions.TerminateAfterExecution = testOptions.AutoRun || testOptions.AutoResume;
 
             // Get the MSTest Settings as documented here: https://docs.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2017
             // Example setting default timeout to 10000ms:

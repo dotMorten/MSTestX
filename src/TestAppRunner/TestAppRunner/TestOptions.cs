@@ -27,9 +27,14 @@ namespace MSTestX
         /// Start the test run when the test app launches
         /// </summary>
         public bool AutoRun { get; set; }
-        
+
         /// <summary>
-        /// Shuts the app down when the test run completes (only applies when <see cref="AutoRun"/> is enabled)
+        /// Start the test run only running tests not yet executed (useful for resuming a crashed test-run)
+        /// </summary>
+        public bool AutoResume { get; set; }
+
+        /// <summary>
+        /// Shuts the app down when the test run completes (only applies when <see cref="AutoRun"/> || <see cref="AutoResume"/> is enabled)
         /// </summary>
         public bool TerminateAfterExecution { get; set; }
 
