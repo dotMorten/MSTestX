@@ -96,6 +96,9 @@ namespace TestAppRunner.ViewModels
 
                                 }
                             }
+                            OnPropertyChanged(nameof(PassedTests));
+                            OnPropertyChanged(nameof(FailedTests));
+                            OnPropertyChanged(nameof(SkippedTests));
                         }
                     }
                     catch { return; }

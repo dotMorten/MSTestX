@@ -16,9 +16,9 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX</PackageTags>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
-    <Version>1.3.0</Version>
+    <AssemblyVersion>1.3.1.0</AssemblyVersion>
+    <FileVersion>1.3.1.0</FileVersion>
+    <Version>1.3.1</Version>
     <Description>A Xamarin.Forms-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
