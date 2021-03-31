@@ -228,12 +228,12 @@ namespace TestAppRunner.ViewModels
 
         public Task<IEnumerable<TestResult>> RunRemainingTests(IRunSettings runSettings = null)
         {
-            return Run(Tests.Where(t => t.Result is null && (t.ChildResults is null || t.ChildResults.Count == 0)).Select(t => t.Test), runSettings ?? Settings);
+            return Run(Tests.Where(t => t.Result is null).Select(t => t.Test).ToArray(), runSettings ?? Settings);
         }
 
         public Task<IEnumerable<TestResult>> RunFailedTests(IRunSettings runSettings = null)
         {
-            return Run(Tests.Where(t => t.Result?.Outcome == TestOutcome.Failed).Select(t => t.Test), runSettings ?? Settings);
+            return Run(Tests?.Where(t => t.Result?.Outcome == TestOutcome.Failed).Select(t => t.Test).ToArray(), runSettings ?? Settings);
         }
 
         public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
@@ -324,15 +324,17 @@ namespace TestAppRunner.ViewModels
                 trxWriter = null;
                 Logger.Log($"TRXREPORT LOCATION: {Settings.TrxOutputPath}");
             }
+            var childResults = results.Where(tt => GetProperty<int>("InnerResultsCount", tt, 0) == 0); // Avoid counting parent tests
             DiagnosticsInfo += $"\nLast run duration: {(end - start).ToString("c")}";
-            DiagnosticsInfo += $"\n{results.Where(a => a.Outcome == TestOutcome.Passed).Count()} passed - {results.Where(a => a.Outcome == TestOutcome.Failed).Count()} failed";
+            DiagnosticsInfo += $"\n{childResults.Where(a => a.Outcome == TestOutcome.Passed).Count()} passed - {childResults.Where(a => a.Outcome == TestOutcome.Failed).Count()} failed";
             if (Settings.ProgressLogPath != null) DiagnosticsInfo += $"\nLog: {Settings.ProgressLogPath}";
             if (Settings.TrxOutputPath != null) DiagnosticsInfo += $"\nTRX Report: {Settings.TrxOutputPath}";
             OnPropertyChanged(nameof(DiagnosticsInfo));
             OnPropertyChanged(nameof(IsRunning));
             OnPropertyChanged(nameof(Status));
             HostApp?.RaiseTestRunCompleted(results);
-            Logger.Log($"COMPLETED TESTRUN Total:{results.Count()} Failed:{results.Where(a => a.Outcome == TestOutcome.Failed).Count()} Passed:{results.Where(a => a.Outcome == TestOutcome.Passed).Count()}  Skipped:{results.Where(a => a.Outcome == TestOutcome.Skipped).Count()}");
+
+            Logger.Log($"COMPLETED TESTRUN Total:{childResults.Count()} Failed:{childResults.Where(a => a.Outcome == TestOutcome.Failed).Count()} Passed:{childResults.Where(a => a.Outcome == TestOutcome.Passed).Count()}  Skipped:{childResults.Where(a => a.Outcome == TestOutcome.Skipped).Count()}");
             if (Settings.TerminateAfterExecution)
             {
                 Terminate();

@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace TestAppRunner.ViewModels
 {
+    [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
     internal class TestResultVM : VMBase
     {
         public TestResultVM(TestCase test)
@@ -41,7 +42,7 @@ namespace TestAppRunner.ViewModels
         }
         public IEnumerable<TestResult> Results
         {
-            get { return ChildResults ?? (Result != null ? new[] { Result } : Enumerable.Empty<TestResult>()); }
+            get { return ChildResults ?? (Result != null ? Enumerable.Repeat(Result, 1) : Enumerable.Empty<TestResult>()); }
         }
 
         private IList<TestResult> childResults;
@@ -147,6 +148,7 @@ namespace TestAppRunner.ViewModels
         public bool HasStacktrace => !string.IsNullOrEmpty(Result?.ErrorStackTrace);
 
         public override string ToString() => Test.FullyQualifiedName;
+        private string DebuggerDisplay => $"{Test.FullyQualifiedName} - {Outcome}" + (ChildResults?.Count > 0 ? $" ({ChildResults.Count} children)" : "");
     }
 
     internal static class PropertyExtensions
