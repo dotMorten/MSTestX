@@ -8,9 +8,13 @@ using Xamarin.Forms.Platform.iOS;
 
 namespace MSTestX.Renderers
 {
+    /// <summary>
+    /// Overrides the default iOS Page Renderer to add support for themes
+    /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class PageRenderer : Xamarin.Forms.Platform.iOS.PageRenderer
     {
+        /// <inheritdoc />
         protected override void OnElementChanged(VisualElementChangedEventArgs e)
         {
             base.OnElementChanged(e);
@@ -30,6 +34,7 @@ namespace MSTestX.Renderers
             }
         }
 
+        /// <inheritdoc />
         public override void TraitCollectionDidChange(UITraitCollection previousTraitCollection)
         {
             base.TraitCollectionDidChange(previousTraitCollection);

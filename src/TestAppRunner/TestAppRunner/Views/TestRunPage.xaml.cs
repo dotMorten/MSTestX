@@ -10,6 +10,9 @@ using Xamarin.Forms.Xaml;
 
 namespace TestAppRunner.Views
 {
+    /// <summary>
+    /// Shows the test results for a single test
+    /// </summary>
 	[XamlCompilation(XamlCompilationOptions.Compile)]
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public partial class TestRunPage : ContentPage

@@ -7,9 +7,13 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.Views
 {
+    /// <summary>
+    /// Converts the outcome value to a color or readable name
+    /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class OutcomeConverter : IValueConverter
     {
+        /// <inheritdoc />
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var v = value as TestResult;
@@ -62,15 +66,20 @@ namespace TestAppRunner.Views
             return fallback;
         }
 
+        /// <inheritdoc />
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
     }
 
+    /// <summary>
+    /// Converts the outcome value to a color
+    /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class Outcome2Converter : IValueConverter
     {
+        /// <inheritdoc />
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var outcome = (TestOutcome)value;
@@ -89,6 +98,7 @@ namespace TestAppRunner.Views
             return OutcomeConverter.LookupColor("notExecutedColor", Color.Gray);
         }
 
+        /// <inheritdoc />
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

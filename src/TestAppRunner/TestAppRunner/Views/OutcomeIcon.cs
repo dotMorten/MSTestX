@@ -6,12 +6,21 @@ using Xamarin.Forms;
 
 namespace TestAppRunner.Views
 {
+    /// <summary>
+    /// Generates the proper icon to show for a test result
+    /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public class OutcomeIcon : Label
     {
+        /// <summary>
+        /// Identifies the <see cref="Result"/> Bindable property.
+        /// </summary>
         public static readonly BindableProperty ResultProperty =
             BindableProperty.Create(nameof(Result), typeof(TestResult), typeof(OutcomeIcon), null, BindingMode.OneWay, null, OnResultPropertyChanged);
 
+        /// <summary>
+        /// Gets or sets the test result
+        /// </summary>
         public TestResult Result
         {
             get { return (TestResult)GetValue(ResultProperty); }

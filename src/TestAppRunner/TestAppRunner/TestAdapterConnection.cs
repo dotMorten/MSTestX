@@ -169,7 +169,7 @@ namespace TestAppRunner
                 }
             }
             comm.StopServer();
-            StartAsync();
+            _ = StartAsync();
         }
 
         internal void SendMessage(string messageType, object payload)

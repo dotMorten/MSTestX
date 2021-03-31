@@ -10,6 +10,9 @@ using Xamarin.Forms.Xaml;
 
 namespace TestAppRunner.Views
 {
+    /// <summary>
+    /// Shows all tests grouped by namespace. This is the startup/main page
+    /// </summary>
 	[XamlCompilation(XamlCompilationOptions.Compile)]
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public partial class AllTestsPage : ContentPage

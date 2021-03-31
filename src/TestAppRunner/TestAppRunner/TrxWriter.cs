@@ -37,13 +37,13 @@ namespace TestAppRunner
         private XmlElement testEntries;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TrxResultChannel"/> class.
+        /// Initializes a new instance of the <see cref="TrxWriter"/> class.
         /// </summary>
         /// <param name="filename">The name of the file to write the report to.</param>
         public TrxWriter(string filename) : this(System.IO.File.Open(filename, System.IO.FileMode.Create), true) { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TrxResultChannel"/> class.
+        /// Initializes a new instance of the <see cref="TrxWriter"/> class.
         /// </summary>
         /// <param name="outputStream">The stream to write the report to.</param>
         /// <param name="disposeStream">Whether this instance should dispose the provided stream on completion</param>

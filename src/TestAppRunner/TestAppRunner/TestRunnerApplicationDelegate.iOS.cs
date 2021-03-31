@@ -16,6 +16,7 @@ namespace MSTestX
     {
         private MSTestX.RunnerApp testApp;
 
+        /// <inheritdoc />
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             global::Xamarin.Forms.Forms.Init();
