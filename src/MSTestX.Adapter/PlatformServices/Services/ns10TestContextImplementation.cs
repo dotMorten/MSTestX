@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Linq;
     using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -27,13 +26,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class TestContextImplementation : UTF.TestContext, ITestContext
     {
-        private static readonly string FullyQualifiedTestClassNameLabel = "FullyQualifiedTestClassName";
-        private static readonly string TestNameLabel = "TestName";
-
-        /// <summary>
-        /// List of result files associated with the test
-        /// </summary>
-        private readonly IList<string> testResultFiles;
+        private static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
+        private static readonly string ManagedTypeLabel = nameof(ManagedType);
+        private static readonly string ManagedMethodLabel = nameof(ManagedMethod);
+        private static readonly string TestNameLabel = nameof(TestName);
 
         /// <summary>
         /// Properties
@@ -69,7 +65,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.stringWriter = writer;
             this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
-            this.testResultFiles = new List<string>();
         }
 
         #region TestContext impl
@@ -148,12 +143,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </param>
         public override void AddResultFile(string fileName)
         {
-            if (string.IsNullOrEmpty(fileName))
-            {
-                throw new ArgumentException(nameof(fileName));
-            }
-
-            this.testResultFiles.Add(Path.GetFullPath(fileName));
+            // No-op function
+            // will be replaced at runtime time by PlatformServices Desktop/NetCore
+            // depending the target framework
         }
 
         /// <summary>
@@ -195,24 +187,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             this.properties.Add(propertyName, propertyValue);
-        }
-
-        /// <summary>
-        /// Result files attached
-        /// </summary>
-        /// <returns>List of result files generated in run.</returns>
-        public IList<string> GetResultFiles()
-        {
-            if (this.testResultFiles.Count == 0)
-            {
-                return null;
-            }
-
-            IList<string> results = this.testResultFiles.ToList();
-
-            this.testResultFiles.Clear();
-
-            return results;
         }
 
         /// <summary>
@@ -310,6 +284,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Returns null as this feature is not supported in ASP .net and UWP
+        /// </summary>
+        /// <returns>List of result files. Null presently.</returns>
+        public IList<string> GetResultFiles()
+        {
+            return null;
+        }
+
+        /// <summary>
         /// Gets messages from the testContext writeLines
         /// </summary>
         /// <returns>The test context messages added so far.</returns>
@@ -346,8 +329,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private object GetPropertyValue(string propertyName)
         {
-            object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            this.properties.TryGetValue(propertyName, out var propertyValue);
 
             return propertyValue;
         }
@@ -358,6 +340,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
+            this.properties[ManagedTypeLabel] = this.testMethod.ManagedTypeName;
+            this.properties[ManagedMethodLabel] = this.testMethod.ManagedMethodName;
             this.properties[TestNameLabel] = this.testMethod.Name;
         }
     }
