@@ -33,8 +33,19 @@ namespace MSTestX
             TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
             TestRunnerVM.Instance.HostApp = this;
             TestRunnerVM.Instance.Initialize();
+            
             MainPage = new NavigationPage(new AllTestsPage());
-		}
+
+#if MAUI
+#if __ANDROID__
+            TestRunStarted += (a, testCases) => { Dispatcher.BeginInvokeOnMainThread(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.AddFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+            TestRunCompleted += (a, results) => { Dispatcher.BeginInvokeOnMainThread(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.ClearFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+#elif __IOS__
+            TestRunStarted += (a, testCases) => { Dispatcher.BeginInvokeOnMainThread(() => UIApplication.SharedApplication.IdleTimerDisabled = true); };
+            TestRunCompleted += (a, results) => { Dispatcher.BeginInvokeOnMainThread(() => UIApplication.SharedApplication.IdleTimerDisabled = false); };
+#endif
+#endif
+        }
 
         /// <inheritdoc />
         protected override void OnStart ()
