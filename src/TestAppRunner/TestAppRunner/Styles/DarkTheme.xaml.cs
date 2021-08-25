@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+#if MAUI
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Xaml;
+#else
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
+#endif
 
 namespace MSTestX.Styles
 {

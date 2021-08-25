@@ -2,7 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+#if MAUI
+using Microsoft.Maui.Controls;
+#else
 using Xamarin.Forms;
+#endif
+
 
 namespace TestAppRunner.ViewModels
 {

@@ -4,8 +4,13 @@ using System.Collections.Generic;
 using TestAppRunner;
 using TestAppRunner.ViewModels;
 using TestAppRunner.Views;
+#if MAUI
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Xaml;
+#else
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
+#endif
 
 [assembly: XamlCompilation (XamlCompilationOptions.Compile)]
 namespace MSTestX

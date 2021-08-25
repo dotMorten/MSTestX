@@ -3,7 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+#if MAUI
+using Microsoft.Maui.Controls;
+#else
 using Xamarin.Forms;
+#endif
 
 namespace TestAppRunner.Views
 {
