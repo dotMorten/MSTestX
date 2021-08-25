@@ -77,7 +77,7 @@
             <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" />
 
             <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
-                  IsVisible="False">
+                  IsVisible="False" BorderColor="{DynamicResource foregroundColor}">
                 <StackLayout Padding="20" >
                     <Label x:Name="ErrorHeader" FontAttributes="Bold" TextColor="{DynamicResource foregroundColor}" />
                     <Label x:Name="ErrorMessage" LineBreakMode="WordWrap" TextColor="{DynamicResource foregroundColor}" />
