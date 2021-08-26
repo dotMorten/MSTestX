@@ -14,7 +14,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
 
-    runs-on: runs-on: windows-2022
+    runs-on: windows-2022
 
     steps:
     - name: Checkout
