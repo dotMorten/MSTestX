@@ -26,7 +26,7 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1.0.2
 
-  - name: Build
+    - name: Build
       run: |
         msbuild /restore /t:Build;Pack src/MSTestX.sln /p:Configuration=Release
 
