@@ -3,7 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
+#if MAUI
+using Microsoft.Maui.Controls;
+#else
 using Xamarin.Forms;
+#endif
+
 
 namespace TestAppRunner.ViewModels
 {

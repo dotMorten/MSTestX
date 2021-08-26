@@ -2,7 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+#if MAUI
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Colors = Microsoft.Maui.Graphics.Colors;
+#else
 using Xamarin.Forms;
+using Colors = Xamarin.Forms.Color;
+#endif
 
 namespace TestAppRunner.Views
 {
@@ -44,22 +51,22 @@ namespace TestAppRunner.Views
                 {
                     case TestOutcome.NotFound:
                         Text = "❔";
-                        TextColor = Color.Orange;
+                        TextColor = Colors.Orange;
                         break;
                     case TestOutcome.Failed:
                         if (Result.ErrorStackTrace == null && Result.ErrorMessage != null &&  Result.ErrorMessage.Contains("timeout"))
                             Text = "⏱";
                         else
                             Text = "⛔"; //⛔⨯"
-                        TextColor = Color.Red;
+                        TextColor = Colors.Red;
                         break;
                     case TestOutcome.Passed:
                         Text = "✔";
-                        TextColor = Color.Green;
+                        TextColor = Colors.Green;
                         break;
                     case TestOutcome.Skipped:
                         Text = "⚠"; 
-                        TextColor = Color.Gray;
+                        TextColor = Colors.Gray;
                         break;
                     case TestOutcome.None:
                     default:

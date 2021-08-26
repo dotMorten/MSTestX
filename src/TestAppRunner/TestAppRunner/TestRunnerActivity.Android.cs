@@ -1,4 +1,4 @@
-﻿#if __ANDROID__
+﻿#if __ANDROID__ && !MAUI
 using System;
 using Android.App;
 using Android.Content.PM;

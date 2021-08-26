@@ -1,4 +1,4 @@
-﻿#if __IOS__
+﻿#if __IOS__ && !MAUI
 using Foundation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;

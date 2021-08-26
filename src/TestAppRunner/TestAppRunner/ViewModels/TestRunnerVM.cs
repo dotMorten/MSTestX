@@ -6,7 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+#if MAUI
+using Microsoft.Maui.Controls;
+#else
 using Xamarin.Forms;
+#endif
+
 using MessageType = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType;
 
 namespace TestAppRunner.ViewModels
