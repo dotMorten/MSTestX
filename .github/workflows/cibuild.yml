@@ -30,7 +30,7 @@ jobs:
 
     - name: Build
       run: |
-        msbuild /restore /t:Build;Pack src/MSTestX.sln /p:Configuration=Release
+        msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release /p:GeneratePackageOnBuild=True
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
