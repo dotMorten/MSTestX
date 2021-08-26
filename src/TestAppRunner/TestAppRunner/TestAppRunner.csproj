@@ -26,6 +26,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <PackageReleaseNotes>Added support for .NET MAUI</PackageReleaseNotes>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net6.0'))">
@@ -106,16 +107,17 @@
     <MauiXaml Include="**\*.MAUI.xaml" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseMaui)'!='true'">
-    <EmbeddedResource Remove="**\*.MAUI.xaml"  />
+    <EmbeddedResource Remove="**\*.MAUI.xaml" />
   </ItemGroup>
 
-  <Target Name="GenerateMauiXaml" BeforeTargets="DispatchToInnerBuilds">
+  <Target Name="GenerateMauiXaml" BeforeTargets="BeforeBuild;BeforeRebuild">
     <ItemGroup>
       <XamlFiles Include="**\*.xaml" Exclude="**\*.MAUI.xaml" />
     </ItemGroup>
-    <TextReplaceTask Items="@(XamlFiles)"
-                     OldText="http://xamarin.com/schemas/2014/forms" 
-                     NewText="http://schemas.microsoft.com/dotnet/2021/maui" />
+    <TextReplaceTask Items="@(XamlFiles)" OldText="http://xamarin.com/schemas/2014/forms" NewText="http://schemas.microsoft.com/dotnet/2021/maui" />
+    <ItemGroup >
+      <MauiXaml Include="**\*.MAUI.xaml" Condition="'$(UseMaui)'=='true'" />
+    </ItemGroup>
   </Target>
 
   <UsingTask TaskName="TextReplaceTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
