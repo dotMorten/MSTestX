@@ -102,7 +102,6 @@
 
 
   <ItemGroup Condition="'$(UseMaui)'=='true'">
-    <EmbeddedResource Remove="**\*.xaml"  />
     <MauiXaml Remove="**\*.xaml" />
     <MauiXaml Include="**\*.MAUI.xaml" />
   </ItemGroup>

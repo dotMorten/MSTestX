@@ -11,6 +11,7 @@ namespace TestAppRunner.Maui
 		public MainApplication(IntPtr handle, JniHandleOwnership ownership)
 			: base(handle, ownership)
 		{
+			Microsoft.Maui.Essentials.Platform.Init(this);
 		}
 	}
 }

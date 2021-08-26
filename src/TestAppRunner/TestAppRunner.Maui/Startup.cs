@@ -12,12 +12,7 @@ namespace TestAppRunner.Maui
 	{
 		public void Configure(IAppHostBuilder appBuilder)
 		{
-			appBuilder
-				.UseMauiApp<RunnerApp>()
-				.ConfigureFonts(fonts =>
-				{
-					fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-				});
+			appBuilder.UseMauiApp<RunnerApp>();
 			var preserve = typeof(UnitTests.AttachmentTests).Assembly;
 		}
 	}
