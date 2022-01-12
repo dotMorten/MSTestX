@@ -1,16 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-#if MAUI
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
-using Colors = Microsoft.Maui.Graphics.Colors;
-#else
-using Xamarin.Forms;
-using Colors = Xamarin.Forms.Color;
-#endif
+﻿using System.Globalization;
 
 namespace TestAppRunner.Views
 {

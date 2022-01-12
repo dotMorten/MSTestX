@@ -38,11 +38,11 @@ namespace MSTestX
 
 #if MAUI
 #if __ANDROID__
-            TestRunStarted += (a, testCases) => { Dispatcher.BeginInvokeOnMainThread(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.AddFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
-            TestRunCompleted += (a, results) => { Dispatcher.BeginInvokeOnMainThread(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.ClearFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+            TestRunStarted += (a, testCases) => { Dispatcher.Dispatch(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.AddFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+            TestRunCompleted += (a, results) => { Dispatcher.Dispatch(() => Microsoft.Maui.Essentials.Platform.CurrentActivity.Window?.ClearFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
 #elif __IOS__
-            TestRunStarted += (a, testCases) => { Dispatcher.BeginInvokeOnMainThread(() => UIApplication.SharedApplication.IdleTimerDisabled = true); };
-            TestRunCompleted += (a, results) => { Dispatcher.BeginInvokeOnMainThread(() => UIApplication.SharedApplication.IdleTimerDisabled = false); };
+            TestRunStarted += (a, testCases) => { Dispatcher.Dispatch(() => UIKit.UIApplication.SharedApplication.IdleTimerDisabled = true); };
+            TestRunCompleted += (a, results) => { Dispatcher.Dispatch(() => UIKit.UIApplication.SharedApplication.IdleTimerDisabled = false); };
 #endif
 #endif
         }

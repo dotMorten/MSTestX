@@ -1,17 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TestAppRunner.ViewModels;
-#if MAUI
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Controls.Xaml;
-#else
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-#endif
+﻿using TestAppRunner.ViewModels;
 
 namespace TestAppRunner.Views
 {

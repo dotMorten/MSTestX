@@ -1,17 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Text;
-#if MAUI
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
-using Colors = Microsoft.Maui.Graphics.Colors;
-#else
-using Xamarin.Forms;
-using Colors = Xamarin.Forms.Color;
-#endif
-
-namespace TestAppRunner.Views
+﻿namespace TestAppRunner.Views
 {
     /// <summary>
     /// Generates the proper icon to show for a test result
