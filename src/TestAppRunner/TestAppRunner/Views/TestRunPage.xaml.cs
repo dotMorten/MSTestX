@@ -12,8 +12,8 @@ namespace TestAppRunner.Views
         internal TestRunPage (TestResultGroup testCases)
 		{
 			InitializeComponent();
-            this.BindingContext = testCases;
             currentTestView.BindingContext = TestRunnerVM.Instance;
+            this.BindingContext = testCases;
         }
 
         private void Button_Clicked(object sender, EventArgs e)
