@@ -70,16 +70,16 @@ namespace TestAppRunner.Views
 
         private void RunRemaining_Clicked(object sender, EventArgs e)
         {
+            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunRemainingTests();
-            PickerPanel.IsVisible = false;
         }
 
         private void RunFailed_Clicked(object sender, EventArgs e)
         {
+            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunFailedTests();
-            PickerPanel.IsVisible = false;
         }
 
         private void StopRun_Clicked(object sender, EventArgs e)

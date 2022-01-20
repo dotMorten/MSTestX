@@ -23,7 +23,7 @@
 	<key>MinimumOSVersion</key>
 	<string>8.0</string>
 	<key>CFBundleDisplayName</key>
-	<string>TestAppRunner</string>
+	<string>MSTestX.Forms</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.companyname.TestAppRunner</string>
 	<key>CFBundleVersion</key>

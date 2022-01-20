@@ -11,7 +11,7 @@
 		<EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
 
 		<!-- Display name -->
-		<ApplicationTitle>TestAppRunner.Maui</ApplicationTitle>
+		<ApplicationTitle>MSTestX.Maui</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.testapprunner.maui</ApplicationId>

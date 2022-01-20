@@ -10,7 +10,18 @@ public static class MauiProgram
 
 		var builder = MauiApp.CreateBuilder();
 		builder
-			.UseMauiApp<RunnerApp>()
+			.UseTestApp((testOptions) => 
+            {
+				// configure default timeout
+				testOptions.SettingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
+				   "<RunSettings>" +
+				   "<!--MSTest adapter-->" +
+				   "<MSTestV2><!--If no timeout is specified on a test, use this as default-->" +
+				   "<TestTimeout>30000</TestTimeout>" +
+				   "</MSTestV2>" +
+				   "</RunSettings>";
+				return testOptions;
+            })
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
