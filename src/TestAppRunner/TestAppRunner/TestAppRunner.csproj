@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;monoandroid90;xamarinios10</TargetFrameworks>
-    <TargetFrameworks Condition="$(MSBuildVersion) &gt;= 17.0.0">$(TargetFrameworks);net6.0-ios;net6.0-android;net6.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$(MSBuildVersion) &gt;= 17.0.0">$(TargetFrameworks);net6.0-ios14.2;net6.0-android31.0;net6.0-maccatalyst</TargetFrameworks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
