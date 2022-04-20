@@ -5,7 +5,7 @@
     <RootNamespace>MSTestX.Console</RootNamespace>
     <AssemblyName>MSTestX.Console</AssemblyName>
     <PackageId>MSTestX.Console</PackageId>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mstestx.console</ToolCommandName>
     <PackageOutputPath>../../nupkg</PackageOutputPath>
@@ -23,14 +23,15 @@
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dotMorten/MSTestX</RepositoryUrl>
     <PackageTags>MSTest Xamarin Android VSTest Test Unittest</PackageTags>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AndroidXml" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.5.0" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.5.0" />
-    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="16.5.0" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.1.0" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.1.0" />
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.1.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.0.1" />
   </ItemGroup>
 </Project>
