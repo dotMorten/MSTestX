@@ -19,7 +19,7 @@
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0-preview2</Version>
+    <Version>2.0.0-preview3</Version>
     <Description>A Xamarin.Forms / Maui-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -29,16 +29,17 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <LangVersion>10</LangVersion>
 
-	<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-ios'">14.2</SupportedOSPlatformVersion>
-	<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
-	<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-android'">21.0</SupportedOSPlatformVersion>
-	<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
-	<TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-ios'">14.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net6.0'))">
     <UseMaui>true</UseMaui>
     <DefineConstants>$(DefineConstants);MAUI</DefineConstants>
+    <SingleProject>true</SingleProject>
   </PropertyGroup>
   
   <!-- The Microsoft.TestPlatform.TestHost has all this, but unfortunately doens't currently compile for .NET Standard targets.
@@ -62,7 +63,7 @@
     <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" Condition="'$(UseMaui)'!='true'" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" Condition="'$(UseMaui)'!='true'" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" Condition="'$(UseMaui)'=='true'" />
-    <Reference Condition="'$(TargetFramework)' != 'netstandard2.0'" Include="System.Runtime.Serialization" />
+    <Reference Condition="'$(TargetFramework)' == 'monoandroid90' OR '$(TargetFramework)'=='xamarinios10'" Include="System.Runtime.Serialization" />
     <!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
   </ItemGroup>
 
