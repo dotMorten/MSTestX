@@ -64,7 +64,7 @@
       </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Desktop\Services\DesktopThreadOperations.cs" Link="DesktopThreadOperations.cs" />
+    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="PlatformServices\Services\ns10ThreadOperations.cs" />
     <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs" Link="PlatformServices\Services\ns10ThreadSafeStringWriter.cs" />
     <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="PlatformServices\Services\ns13TraceListener.cs" />
     <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="PlatformServices\Services\ns13TraceListenerManager.cs" />
