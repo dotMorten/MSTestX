@@ -5,7 +5,8 @@
     <RootNamespace>MSTestX.Console</RootNamespace>
     <AssemblyName>MSTestX.Console</AssemblyName>
     <PackageId>MSTestX.Console</PackageId>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <RollForward>Major</RollForward>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mstestx.console</ToolCommandName>
     <PackageOutputPath>../../nupkg</PackageOutputPath>
@@ -23,7 +24,6 @@
     <PackageProjectUrl>https://github.com/dotMorten/MSTestX</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dotMorten/MSTestX</RepositoryUrl>
     <PackageTags>MSTest Xamarin Android VSTest Test Unittest</PackageTags>
-    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

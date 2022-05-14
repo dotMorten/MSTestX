@@ -38,7 +38,7 @@ namespace MSTestX.Console
                         }
                         
                     }
-                    else if(reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == "activity")
+                    else if(reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == "activity" && activity == "")
                     {
                         if (reader.MoveToAttribute("name", "http://schemas.android.com/apk/res/android"))
                         {
