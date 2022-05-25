@@ -100,10 +100,10 @@
 
   <Target Name="BuildAndPublishConsoleRunner" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp3.1</PublishConsoleRunnerCmd>
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\MSTestX.Console.csproj" -c $(Configuration) -f net5.0</PublishConsoleRunnerCmd>
     </PropertyGroup>
     <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp3.1</PublishConsoleRunnerCmd>
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f net5.0</PublishConsoleRunnerCmd>
     </PropertyGroup>
     <Exec ConsoleToMsBuild="true" Command="$(PublishConsoleRunnerCmd)" />
   </Target>
