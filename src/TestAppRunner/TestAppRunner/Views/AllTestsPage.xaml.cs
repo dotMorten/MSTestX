@@ -1,12 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TestAppRunner.ViewModels;
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
+﻿using TestAppRunner.ViewModels;
 
 namespace TestAppRunner.Views
 {
@@ -78,16 +70,16 @@ namespace TestAppRunner.Views
 
         private void RunRemaining_Clicked(object sender, EventArgs e)
         {
+            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunRemainingTests();
-            PickerPanel.IsVisible = false;
         }
 
         private void RunFailed_Clicked(object sender, EventArgs e)
         {
+            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunFailedTests();
-            PickerPanel.IsVisible = false;
         }
 
         private void StopRun_Clicked(object sender, EventArgs e)

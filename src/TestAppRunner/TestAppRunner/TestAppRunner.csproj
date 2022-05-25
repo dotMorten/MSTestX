@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;monoandroid90;xamarinios10</TargetFrameworks>
+    <TargetFrameworks Condition="$(MSBuildVersion) &gt;= 17.0.0">$(TargetFrameworks);net6.0-ios14.2;net6.0-android31.0;net6.0-maccatalyst</TargetFrameworks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
@@ -15,18 +16,32 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX</PackageTags>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
-    <Version>1.4.0</Version>
-    <Description>A Xamarin.Forms-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
+    <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.0-preview3</Version>
+    <Description>A Xamarin.Forms / Maui-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>Added support for .NET MAUI</PackageReleaseNotes>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <LangVersion>10</LangVersion>
+
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net6.0'))">
+    <UseMaui>true</UseMaui>
+    <DefineConstants>$(DefineConstants);MAUI</DefineConstants>
+    <SingleProject>true</SingleProject>
+  </PropertyGroup>
+  
   <!-- The Microsoft.TestPlatform.TestHost has all this, but unfortunately doens't currently compile for .NET Standard targets.
        See https://github.com/Microsoft/vstest/issues/1790 -->
   <ItemGroup>
@@ -45,10 +60,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <Reference Condition="'$(TargetFramework)' != 'netstandard2.0'" Include="System.Runtime.Serialization" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" Condition="'$(UseMaui)'!='true'" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" Condition="'$(UseMaui)'!='true'" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" Condition="'$(UseMaui)'=='true'" />
+    <Reference Condition="'$(TargetFramework)' == 'monoandroid90' OR '$(TargetFramework)'=='xamarinios10'" Include="System.Runtime.Serialization" />
+    <!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
   </ItemGroup>
 
   <ItemGroup>
@@ -84,11 +100,64 @@
 
   <Target Name="BuildAndPublishConsoleRunner" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp2.1</PublishConsoleRunnerCmd>
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)..\..\..\Automation\MSTestX.Console\MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp3.1</PublishConsoleRunnerCmd>
     </PropertyGroup>
     <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp2.1</PublishConsoleRunnerCmd>
+      <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f netcoreapp3.1</PublishConsoleRunnerCmd>
     </PropertyGroup>
     <Exec ConsoleToMsBuild="true" Command="$(PublishConsoleRunnerCmd)" />
   </Target>
+
+
+  <ItemGroup Condition="'$(UseMaui)'=='true'">
+    <MauiXaml Remove="**\*.xaml" />
+    <MauiXaml Include="**\*.MAUI.xaml" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseMaui)'!='true'">
+    <EmbeddedResource Remove="**\*.MAUI.xaml" />
+  </ItemGroup>
+
+  <Target Name="GenerateMauiXaml" BeforeTargets="BeforeBuild;BeforeRebuild">
+    <ItemGroup>
+      <XamlFiles Include="**\*.xaml" Exclude="**\*.MAUI.xaml" />
+    </ItemGroup>
+    <TextReplaceTask Items="@(XamlFiles)" OldText="http://xamarin.com/schemas/2014/forms" NewText="http://schemas.microsoft.com/dotnet/2021/maui" />
+    <!--<ItemGroup>
+      <MauiXaml Include="**\*.MAUI.xaml" Condition="'$(UseMaui)'=='true'" />
+    </ItemGroup>-->
+  </Target>
+
+  <UsingTask TaskName="TextReplaceTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OldText ParameterType="System.String" Required="true" />
+      <NewText ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core" />
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          foreach (var item in Items)     
+          {
+              FileInfo fileInfo = new FileInfo(item.ItemSpec);
+              if (!fileInfo.Exists)
+              {
+                  Log.LogError("The file '" + fileInfo.FullName + "' was not found");
+              }
+              else
+              {
+                  string of = Path.Combine(fileInfo.Directory.FullName, Path.GetFileNameWithoutExtension(fileInfo.Name) + ".MAUI.xaml");
+                  File.WriteAllText(of, File.ReadAllText(fileInfo.FullName).Replace(OldText, NewText));
+                  File.SetCreationTime(of, fileInfo.CreationTime);
+                  File.SetLastWriteTime(of, fileInfo.LastWriteTime);
+                  Log.LogMessage(MessageImportance.High, "Replacement of string '" + OldText + "' saved to file '" + of + "'");
+              }
+          }
+          ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
 </Project>

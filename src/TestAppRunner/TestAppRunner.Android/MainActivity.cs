@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TestAppRunner.Droid
 {
-    [Activity(Name = "testAppRunner.RunTestsActivity", Label = "MSTestX Test Runner", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(Name = "testAppRunner.RunTestsActivity", Label = "MSTestX.Forms", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class MainActivity : MSTestX.TestRunnerActivity
     {
         protected override void OnCreate(Bundle bundle)
@@ -21,6 +21,15 @@ namespace TestAppRunner.Droid
         {
             var testOptions = base.GenerateTestOptions(); // Creates default test options and initializes some values based on intent arguments.
             // Set/override test settings...
+
+            // Set default timeout to 30 seconds
+            testOptions.SettingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
+                   "<RunSettings>" +
+                   "<!--MSTest adapter-->" +
+                   "<MSTestV2><!--If no timeout is specified on a test, use this as default-->" +
+                   "<TestTimeout>30000</TestTimeout>" +
+                   "</MSTestV2>" +
+                   "</RunSettings>";
             return testOptions;
         }
 

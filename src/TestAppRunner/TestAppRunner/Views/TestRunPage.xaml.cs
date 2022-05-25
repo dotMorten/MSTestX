@@ -1,12 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TestAppRunner.ViewModels;
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
+﻿using TestAppRunner.ViewModels;
 
 namespace TestAppRunner.Views
 {
@@ -20,8 +12,8 @@ namespace TestAppRunner.Views
         internal TestRunPage (TestResultGroup testCases)
 		{
 			InitializeComponent();
-            this.BindingContext = testCases;
             currentTestView.BindingContext = TestRunnerVM.Instance;
+            this.BindingContext = testCases;
         }
 
         private void Button_Clicked(object sender, EventArgs e)

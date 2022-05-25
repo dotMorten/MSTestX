@@ -1,0 +1,50 @@
+name: CI Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: windows-2022
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+        
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+        include-prerelease: true
+
+    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+            vs-prerelease: true
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui
+
+    - name: Build
+      run: |
+        msbuild /restore /t:GenerateMauiXaml src\TestAppRunner\TestAppRunner\TestAppRunner.csproj /p:Configuration=Release
+        msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release /p:GeneratePackageOnBuild=True
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: NuGet Packages
+        path: nupkg

@@ -1,9 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using Xamarin.Forms;
+﻿using System.Globalization;
 
 namespace TestAppRunner.Views
 {
@@ -24,22 +19,22 @@ namespace TestAppRunner.Views
                     if(v.ErrorStackTrace == null && v.ErrorMessage?.Contains("timeout") == true)
                     {
                         if (targetType == typeof(Color))
-                            return LookupColor("timeoutColor", Color.OrangeRed);
+                            return LookupColor("timeoutColor", Colors.OrangeRed);
                         return "Timed out";
                     }
                     if (targetType == typeof(Color))
-                        return LookupColor("failedColor", Color.Red);
+                        return LookupColor("failedColor", Colors.Red);
                 }
                 if(v.Outcome == TestOutcome.Passed)
                 {
                     if (targetType == typeof(Color))
-                        return LookupColor("successColor", Color.Green);
+                        return LookupColor("successColor", Colors.Green);
                     return "Passed";
                 }
                 if (v.Outcome == TestOutcome.Skipped)
                 {
                     if (targetType == typeof(Color))
-                        return LookupColor("skippedColor", Color.Orange);
+                        return LookupColor("skippedColor", Colors.Orange);
                     return "Skipped";
                 }
                 return v.Outcome.ToString();
@@ -47,7 +42,7 @@ namespace TestAppRunner.Views
             if (v == null)
             {
                 if (targetType == typeof(Color))
-                    return LookupColor("notExecutedColor", Color.Gray);
+                    return LookupColor("notExecutedColor", Colors.Gray);
                 return "Not Executed";
             }
             return value;
@@ -85,17 +80,17 @@ namespace TestAppRunner.Views
             var outcome = (TestOutcome)value;
             if (outcome == TestOutcome.Failed)
             {
-                return OutcomeConverter.LookupColor("failedColor", Color.Red);
+                return OutcomeConverter.LookupColor("failedColor", Colors.Red);
             }
             if (outcome == TestOutcome.Passed)
             {
-                return OutcomeConverter.LookupColor("successColor", Color.Green);
+                return OutcomeConverter.LookupColor("successColor", Colors.Green);
             }
             if (outcome == TestOutcome.Skipped)
             {
-                return OutcomeConverter.LookupColor("skippedColor", Color.Orange);
+                return OutcomeConverter.LookupColor("skippedColor", Colors.Orange);
             }
-            return OutcomeConverter.LookupColor("notExecutedColor", Color.Gray);
+            return OutcomeConverter.LookupColor("notExecutedColor", Colors.Gray);
         }
 
         /// <inheritdoc />
