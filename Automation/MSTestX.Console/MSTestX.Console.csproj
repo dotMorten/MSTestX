@@ -5,7 +5,7 @@
     <RootNamespace>MSTestX.Console</RootNamespace>
     <AssemblyName>MSTestX.Console</AssemblyName>
     <PackageId>MSTestX.Console</PackageId>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RollForward>Major</RollForward>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mstestx.console</ToolCommandName>
