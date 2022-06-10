@@ -44,6 +44,10 @@
     <DefineConstants>$(DefineConstants);MAUI</DefineConstants>
     <SingleProject>true</SingleProject>
   </PropertyGroup>
+    
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
   
   <!-- The Microsoft.TestPlatform.TestHost has all this, but unfortunately doens't currently compile for .NET Standard targets.
        See https://github.com/Microsoft/vstest/issues/1790 -->

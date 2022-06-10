@@ -118,8 +118,16 @@ namespace MSTestX
                         ((RunnerApp)RunnerApp.Current).Initialize(testOptions);
                         return true;
                     }));
+#elif WINDOWS
+                    events.AddWindows(win => win.OnLaunched((app, eventArgs) =>
+                    {
+                        TestOptions testOptions = new TestOptions();
+                        //TODO: Parse eventArgs.Arguments
+                        configureTestOptions?.Invoke(testOptions);
+                        ((RunnerApp)RunnerApp.Current).Initialize(testOptions);
+                    }));
 #endif
-                });
+                    });
         }
     }
 }
