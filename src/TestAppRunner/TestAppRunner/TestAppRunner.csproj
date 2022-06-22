@@ -68,8 +68,8 @@
 
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" Condition="'$(UseMaui)'!='true'" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" Condition="'$(UseMaui)'!='true'" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" Condition="'$(UseMaui)'=='true'" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" Condition="'$(UseMaui)'!='true'" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" Condition="'$(UseMaui)'=='true'" />
     <Reference Condition="'$(TargetFramework)' == 'monoandroid90' OR '$(TargetFramework)'=='xamarinios10'" Include="System.Runtime.Serialization" />
     <!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
   </ItemGroup>
