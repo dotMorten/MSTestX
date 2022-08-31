@@ -86,7 +86,12 @@ namespace TestAppRunner.ViewModels
                         {
                             foreach (var previousResult in previousResults)
                             {
-                                var t = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.TestCase.FullyQualifiedName).Select(tt => tt.Value).FirstOrDefault();
+                                var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.TestCase.FullyQualifiedName).Select(tt => tt.Value);
+                                TestResultVM t = null;
+                                if (candidates.Count() == 1)
+                                    t = candidates.Single();
+                                else
+                                    t = candidates.Where(c => previousResult.DisplayName == c.DisplayName).FirstOrDefault();
                                 if (t != null)
                                 {
                                     var parentExecId = GetProperty<Guid>("ParentExecId", previousResult, Guid.Empty);
