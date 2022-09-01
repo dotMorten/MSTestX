@@ -67,6 +67,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.1.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" Condition="'$(UseMaui)'!='true'" />

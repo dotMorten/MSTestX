@@ -10,8 +10,8 @@ namespace TestAppRunner.Views
     public partial class AllTestsPage : ContentPage
     {
         internal AllTestsPage()
-		{
-			InitializeComponent ();
+        {
+            InitializeComponent();
             this.BindingContext = TestRunnerVM.Instance;
             TestRunnerVM.Instance.OnTestRunException += Instance_OnTestRunException;
 
@@ -82,6 +82,15 @@ namespace TestAppRunner.Views
             TestRunnerVM.Instance.RunFailedTests();
         }
 
+        private void Save_Report_Clicked(object sender, EventArgs e)
+        {
+#if MAUI
+            string path = Path.Combine(Path.GetTempPath(), DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".trx");
+            TrxWriter.GenerateReport(path, TestRunnerVM.Instance.Tests.Select(t => t.Result).Where(r=>r is not null));
+            Microsoft.Maui.ApplicationModel.DataTransfer.Share.RequestAsync(
+                new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path)));
+#endif
+        }
         private void StopRun_Clicked(object sender, EventArgs e)
         {
             if (TestRunnerVM.Instance.IsRunning)

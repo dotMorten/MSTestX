@@ -327,8 +327,8 @@ namespace TestAppRunner.ViewModels
             if (!string.IsNullOrEmpty(Settings.TrxOutputPath))
             {
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
-                trxWriter.InitializeReport();
             }
+            
             if (testCollection.Count() == Tests.Count())
                 DeleteProgress();
             else
@@ -368,7 +368,7 @@ namespace TestAppRunner.ViewModels
             }
             if (trxWriter != null)
             {
-                trxWriter.FinalizeReport();
+                trxWriter?.OnTestRunComplete(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunCompleteEventArgs(null, false, true, null, null, TimeSpan.Zero));
                 trxWriter = null;
                 Logger.Log($"TRXREPORT LOCATION: {Settings.TrxOutputPath}");
             }
@@ -492,7 +492,7 @@ namespace TestAppRunner.ViewModels
                 connection?.SendAttachments(testResult.Attachments, Settings.TestRunDirectory);
                 Settings.TestRecorder?.RecordAttachments(testResult.Attachments);
             }
-            trxWriter?.RecordResult(testResult);
+            trxWriter?.OnTestResult(new TestResultEventArgs(testResult));
             Logger.LogResult(testResult);
             connection?.SendTestEndResult(testResult);
             Settings.TestRecorder?.RecordResult(testResult);

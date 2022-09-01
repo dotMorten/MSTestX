@@ -91,6 +91,7 @@
                     <Button Text="Run Failed Tests" Clicked="RunFailed_Clicked" />
                     <Button Text="Stop Test Run" Clicked="StopRun_Clicked" />
                     <Button Text="Close" Clicked="Picker_Close_Button_Clicked"/>
+                    <Button Text="Save Report" Clicked="Save_Report_Clicked" />
                 </StackLayout>
             </Frame>
         </Grid>
