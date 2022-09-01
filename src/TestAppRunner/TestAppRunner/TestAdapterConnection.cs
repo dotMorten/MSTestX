@@ -14,6 +14,7 @@ namespace TestAppRunner
         private SocketCommunicationManager comm = new SocketCommunicationManager();
         private bool isConnected;
         private int port;
+        private System.Threading.Thread messageLoopThread;
 
         public TestAdapterConnection(int port)
         {
@@ -26,7 +27,8 @@ namespace TestAppRunner
             await comm.AcceptClientAsync();
             isConnected = true;
             var tcs = new TaskCompletionSource<object>();
-            var _ = Task.Run(() => StartMessageLoop(tcs));
+            messageLoopThread = new System.Threading.Thread(() => StartMessageLoop(tcs));
+            messageLoopThread.Start();
             await tcs.Task;
         }
 
