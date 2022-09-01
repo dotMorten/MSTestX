@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 #else
 using Xamarin.Forms;
+using static SQLite.SQLite3;
 #endif
 
 using MessageType = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel.MessageType;
@@ -84,9 +86,10 @@ namespace TestAppRunner.ViewModels
                     {
                         if (previousResults != null)
                         {
+                            var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
                             foreach (var previousResult in previousResults)
                             {
-                                var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.TestCase.FullyQualifiedName).Select(tt => tt.Value);
+                                var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.FullyQualifiedName).Select(tt => tt.Value);
                                 TestResultVM t = null;
                                 if (candidates.Count() == 1)
                                     t = candidates.Single();
@@ -94,16 +97,17 @@ namespace TestAppRunner.ViewModels
                                     t = candidates.Where(c => previousResult.DisplayName == c.DisplayName).FirstOrDefault();
                                 if (t != null)
                                 {
-                                    var parentExecId = GetProperty<Guid>("ParentExecId", previousResult, Guid.Empty);
-                                    if (parentExecId != Guid.Empty)
+                                    TestResult result;
+                                    try
                                     {
-                                        if (t.ChildResults is null)
-                                            t.ChildResults = new List<TestResult>();
-                                        t.ChildResults.Add(previousResult);
+                                        result = s.Deserialize<TestResult>(previousResult.Json);
                                     }
-                                    else
-                                        t.Result = previousResult;
-
+                                    catch { continue; }
+                                    t.Result = result;
+                                }
+                                else
+                                {
+                                    // TODO: Remove from sql database
                                 }
                             }
                             OnPropertyChanged(nameof(PassedTests));
@@ -134,56 +138,86 @@ namespace TestAppRunner.ViewModels
         }
 
         private readonly string progressPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unittest_progress.bin");
+        private readonly string progressSqlPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "unittest_progress.sql");
 
-        public IEnumerable<TestResult> LoadProgress()
+        public IEnumerable<TestProgress> LoadProgress()
         {
-            if (System.IO.File.Exists(progressPath))
+            if (System.IO.File.Exists(progressSqlPath))
             {
-                var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
-                using (var f = new System.IO.StreamReader(progressPath))
+                using (var conn = new SQLiteConnection(progressSqlPath))
                 {
-                    while (!f.EndOfStream)
+                    conn.CreateTable<TestProgress>();
+                    foreach(var row in conn.Table<TestProgress>())
                     {
-                        var str = f.ReadLine();
-                        TestResult result;
-                        try
-                        {
-                            result = s.Deserialize<TestResult>(str);
-                        }
-                        catch { continue; }
-                        yield return result;
+                        yield return row;
                     }
                 }
             }
         }
+        [Table("TestProgress")]
+        public class TestProgress
+        {
+            [PrimaryKey, AutoIncrement, Column("_id")]
+            public int Id { get; set; }
 
+            [MaxLength(250)]
+            public string FullyQualifiedName { get; set; }
+            [MaxLength(250)]
+            public string DisplayName { get; set; }
+
+            [MaxLength(2500), Unique]
+            public string Json { get; set; }
+        }
+
+        public void DeleteProgress()
+        {
+            try
+            {
+                using (var conn = new SQLiteConnection(progressSqlPath))
+                {
+                    conn.DropTable<TestProgress>();
+                }
+            }
+            catch { }
+        }
+
+        public void DeleteProgress(IEnumerable<TestCase> tests)
+        {
+            try
+            {
+                //var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
+                using (var conn = new SQLiteConnection(progressSqlPath))
+                {
+                    conn.CreateTable<TestProgress>();
+
+                    foreach (var test in tests)
+                    {
+                        //var str = s.Serialize<TestResult>(test.Result);
+                        int count = conn.Table<TestProgress>().Delete(p => p.FullyQualifiedName == test.FullyQualifiedName && test.DisplayName == test.DisplayName);
+                    }
+                }
+            }
+            catch (System.Exception ex) { }
+        }
         public void SaveProgress(IEnumerable<TestResultVM> tests, bool append = true)
         {
             try
             {
                 var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
                 tests = tests.Where(t => t.Result != null);
-                using (var f = new System.IO.StreamWriter(progressPath, append))
+                using (var conn = new SQLiteConnection(progressSqlPath))
                 {
+                    conn.CreateTable<TestProgress>();
+
                     foreach (var test in tests)
                     {
-                        var parentExecId = GetProperty<Guid>("ParentExecId", test.Result, Guid.Empty);
                         var str = s.Serialize<TestResult>(test.Result);
-                        f.WriteLine(str);
-                        if (test.Results != null)
-                        {
-                            foreach (var childtest in test.Results)
-                            {
-                                parentExecId = GetProperty<Guid>("ParentExecId", childtest, Guid.Empty);
-
-                                str = s.Serialize<TestResult>(childtest);
-                                f.WriteLine(str);
-                            }
-                        }
+                        conn.Table<TestProgress>().Delete(p => p.FullyQualifiedName == test.Test.FullyQualifiedName && p.DisplayName == test.Test.DisplayName);
+                        conn.Insert(new TestProgress() { FullyQualifiedName = test.Test.FullyQualifiedName, DisplayName = test.DisplayName, Json = str });
                     }
                 }
             }
-            catch { }
+            catch(System.Exception ex) { }
         }
 
         private string _grouping;
@@ -295,7 +329,10 @@ namespace TestAppRunner.ViewModels
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
                 trxWriter.InitializeReport();
             }
-            SaveProgress(Tests, false);
+            if (testCollection.Count() == Tests.Count())
+                DeleteProgress();
+            else
+                DeleteProgress(testCollection);
             DateTime start = DateTime.Now;
             Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
             var task = testRunner.Run(testCollection.OrderBy(tst => tst.FullyQualifiedName), runSettings, t.Token);
