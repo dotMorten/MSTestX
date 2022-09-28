@@ -5,6 +5,8 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 #if MAUI
@@ -51,6 +53,7 @@ namespace TestAppRunner.ViewModels
         {
             Status = $"Waiting for connection on port {port}...";
             OnPropertyChanged(nameof(Status));
+            //TODO: Get iOS mlaunch port number
             var conn = new TestAdapterConnection(port);
             try
             {
@@ -86,7 +89,6 @@ namespace TestAppRunner.ViewModels
                     {
                         if (previousResults != null)
                         {
-                            var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
                             foreach (var previousResult in previousResults)
                             {
                                 var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.FullyQualifiedName).Select(tt => tt.Value);
@@ -97,13 +99,12 @@ namespace TestAppRunner.ViewModels
                                     t = candidates.Where(c => previousResult.DisplayName == c.DisplayName).FirstOrDefault();
                                 if (t != null)
                                 {
-                                    TestResult result;
                                     try
                                     {
-                                        result = s.Deserialize<TestResult>(previousResult.Json);
+                                        t.Result = MSTestX.UnitTestRunner.TestResultSerializer.Deserialize(previousResult.Result, t.Test);
+                                    }
                                     }
                                     catch { continue; }
-                                    t.Result = result;
                                 }
                                 else
                                 {
@@ -166,7 +167,7 @@ namespace TestAppRunner.ViewModels
             public string DisplayName { get; set; }
 
             [MaxLength(2500), Unique]
-            public string Json { get; set; }
+            public byte[] Result { get; set; }
         }
 
         public void DeleteProgress()
@@ -203,7 +204,6 @@ namespace TestAppRunner.ViewModels
         {
             try
             {
-                var s = Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.JsonDataSerializer.Instance;
                 tests = tests.Where(t => t.Result != null);
                 using (var conn = new SQLiteConnection(progressSqlPath))
                 {
@@ -211,9 +211,10 @@ namespace TestAppRunner.ViewModels
 
                     foreach (var test in tests)
                     {
-                        var str = s.Serialize<TestResult>(test.Result);
                         conn.Table<TestProgress>().Delete(p => p.FullyQualifiedName == test.Test.FullyQualifiedName && p.DisplayName == test.Test.DisplayName);
-                        conn.Insert(new TestProgress() { FullyQualifiedName = test.Test.FullyQualifiedName, DisplayName = test.DisplayName, Json = str });
+                        using var s = new MemoryStream();
+                        MSTestX.UnitTestRunner.TestResultSerializer.Serialize(s, test.Result);
+                        conn.Insert(new TestProgress() { FullyQualifiedName = test.Test.FullyQualifiedName, DisplayName = test.DisplayName, Result = s.ToArray() });
                     }
                 }
             }
@@ -428,7 +429,7 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        public bool IsRunning => testRunner.IsRunning;
+        public bool IsRunning => testRunner?.IsRunning ?? false;
         public int PassedTests => Tests?.SelectMany(t=>t.Results).Where(t => t.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int PassedTestsWithoutChildren => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int FailedTests => Tests?.SelectMany(t => t.Results)?.Where(t => t?.Outcome == TestOutcome.Failed).Count() ?? 0;
