@@ -41,27 +41,25 @@
                 </StackLayout>
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
             </StackLayout>
-            <ListView x:Name="list" ItemSelected="list_ItemSelected" ItemsSource="{Binding}" RowHeight="50" Grid.Row="1">
-                <ListView.ItemTemplate>
+            <CollectionView x:Name="list" SelectionChanged="list_ItemSelected" ItemsSource="{Binding}" Grid.Row="1" SelectionMode="Single">
+                <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <ViewCell>
-                            <StackLayout Orientation="Horizontal" HorizontalOptions="StartAndExpand" Margin="15,0,0,0">
-                                <Grid VerticalOptions="Fill">
-                                    <local:OutcomeIcon Result="{Binding Result}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="30" FontSize="20" />
-                                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" VerticalOptions="Center" Color="{DynamicResource accentColor}" />
-                                </Grid>
-                                <StackLayout VerticalOptions="Center">
-                                    <Label Text="{Binding ClassName, Mode=OneTime}" LineBreakMode="MiddleTruncation" TextColor="Gray" FontSize="10" Margin="0" />
-                                    <StackLayout Orientation="Horizontal">
-                                        <Label Text="{Binding Test.DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Margin="0" />
-                                        <Label Text="{Binding DataRowCompletion, Mode=OneWay}" VerticalOptions="End" Margin="15,0,0,0" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
-                                    </StackLayout>
+                        <StackLayout Orientation="Horizontal" HorizontalOptions="StartAndExpand" Margin="15,0,0,0" HeightRequest="60">
+                            <Grid VerticalOptions="Fill">
+                                <local:OutcomeIcon Result="{Binding Result}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="30" FontSize="20" />
+                                <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" VerticalOptions="Center" Color="{DynamicResource accentColor}" />
+                            </Grid>
+                            <StackLayout VerticalOptions="Center">
+                                <Label Text="{Binding ClassName, Mode=OneTime}" LineBreakMode="MiddleTruncation" TextColor="Gray" FontSize="10" Margin="0" />
+                                <StackLayout Orientation="Horizontal">
+                                    <Label Text="{Binding Test.DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" Margin="0" />
+                                    <Label Text="{Binding DataRowCompletion, Mode=OneWay}" VerticalOptions="End" Margin="15,0,0,0" TextColor="{Binding Result, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
                                 </StackLayout>
                             </StackLayout>
-                        </ViewCell>
+                        </StackLayout>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="2" />
         </Grid>
     </ContentPage.Content>

@@ -45,16 +45,16 @@ namespace TestAppRunner.Views
             }
         }
 
-        private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
+        private async void list_ItemSelected(object sender, SelectionChangedEventArgs args)
         {
-            var item = args.SelectedItem as TestResultGroup;
+            var item = args.CurrentSelection?.FirstOrDefault() as TestResultGroup;
             if (item == null)
                 return;
 
             await Navigation.PushAsync(new TestRunPage(item));
 
             // Manually deselect item.
-            (sender as ListView).SelectedItem = null;
+            (sender as CollectionView).SelectedItem = null;
         }
     }
 }

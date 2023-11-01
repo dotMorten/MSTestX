@@ -49,37 +49,33 @@
                         <Editor Text="{Binding Result.ErrorStackTrace}" IsEnabled="False" IsSpellCheckEnabled="False" HorizontalOptions="FillAndExpand" FontFamily="Courier" FontSize="12" Margin="0" TextColor="{DynamicResource foregroundColor}" />
                     </ScrollView>
 
-                    <ListView ItemsSource="{Binding ChildResults}" RowHeight="60"
+                    <CollectionView ItemsSource="{Binding ChildResults}"
                               IsVisible="{Binding ChildResults, Converter={StaticResource nullToFalseConverter}}"
                               SelectionMode="Single"
-                              ItemSelected="list_ItemSelected">
-                        <ListView.ItemTemplate>
+                              SelectionChanged="list_ItemSelected">
+                        <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <ViewCell>
-                                    <StackLayout Orientation="Horizontal" VerticalOptions="Center">
-                                        <local:OutcomeIcon Result="{Binding}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="20"/>
-                                        <Label Text="{Binding DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center" />
-                                    </StackLayout>
-                                </ViewCell>
+                                <StackLayout Orientation="Horizontal" VerticalOptions="Center" HeightRequest="60">
+                                    <local:OutcomeIcon Result="{Binding}" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="20"/>
+                                    <Label Text="{Binding DisplayName, Mode=OneTime}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{Binding Mode=OneWay, Converter={StaticResource outcomeConverter}}" VerticalOptions="Center" />
+                                </StackLayout>
                             </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
 
                     <Label Text="Attachments:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding Attachments, Converter={StaticResource nullToFalseConverter}}" TextColor="{DynamicResource foregroundColor}" />
-                    <ListView ItemsSource="{Binding Attachments}" RowHeight="30"
+                    <CollectionView ItemsSource="{Binding Attachments}"
                               IsVisible="{Binding Attachments, Converter={StaticResource nullToFalseConverter}}"
                               SelectionMode="Single"
-                              ItemSelected="attachment_Selected">
-                        <ListView.ItemTemplate>
+                              SelectionChanged="attachment_Selected">
+                        <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <ViewCell>
-                                    <Label Text="{Binding Mode=OneTime, Converter={StaticResource attConverter}}"
-                                           FontSize="15"
-                                           LineBreakMode="MiddleTruncation" VerticalOptions="Center" />
-                                </ViewCell>
+                                <Label Text="{Binding Mode=OneTime, Converter={StaticResource attConverter}}"
+                                        FontSize="15" HeightRequest="30"
+                                        LineBreakMode="MiddleTruncation" VerticalOptions="Center" />
                             </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                     
                 </StackLayout>
 
