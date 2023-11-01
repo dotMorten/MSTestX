@@ -103,7 +103,6 @@ namespace TestAppRunner.ViewModels
                                     {
                                         t.Result = MSTestX.UnitTestRunner.TestResultSerializer.Deserialize(previousResult.Result, t.Test);
                                     }
-                                    }
                                     catch { continue; }
                                 }
                                 else

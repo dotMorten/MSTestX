@@ -1,9 +1,8 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.23">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;monoandroid90;xamarinios10</TargetFrameworks>
-    <TargetFrameworks Condition="$(MSBuildVersion) &gt;= 17.2.0">$(TargetFrameworks);net6.0-ios14.2;net6.0-android31.0;net6.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition="$(MSBuildVersion) &gt;= 17.2.0 AND $([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net6.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net7.0-ios;net7.0-android;net7.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
@@ -20,8 +19,8 @@
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0-preview5</Version>
-    <Description>A Xamarin.Forms / Maui-based UnitTest Runner to execute MSTests on Android and iOS. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
+    <Version>2.0.0-preview6</Version>
+    <Description>A .NET MAUI-based UnitTest Runner to execute MSTests on Android, iOS and MacCatalyst. The app supports custom test logging, and has built-in support for outputting a TRX test report.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
@@ -58,7 +57,6 @@
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Serialization\**\*.cs">
       <Link>CommunicationUtilities\Serialization\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <None Remove="build\monoandroid10\MSTestX.UnitTestRunner.targets" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
@@ -70,10 +68,7 @@
     <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.1.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
-    <PackageReference Include="Xamarin.Forms" Version="4.7.0.968" Condition="'$(UseMaui)'!='true'" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" Condition="'$(UseMaui)'!='true'" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" Condition="'$(UseMaui)'=='true'" />
-    <Reference Condition="'$(TargetFramework)' == 'monoandroid90' OR '$(TargetFramework)'=='xamarinios10'" Include="System.Runtime.Serialization" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
   </ItemGroup>
 
@@ -82,24 +77,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Styles\DarkTheme.xaml.cs">
-      <DependentUpon>DarkTheme.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Styles\DefaultTheme.xaml.cs">
-      <DependentUpon>DefaultTheme.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\GroupByClassTestsPage.xaml.cs">
-      <DependentUpon>GroupByClassTestsPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\AllTestsPage.xaml.cs">
-      <DependentUpon>AllTestsPage.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\..\Automation\MSTestX.Console\bin\net5.0\publish\*.dll" Pack="true" Link="tools\TestConsole\%(Filename)%(Extension)" PackagePath="tools\TestConsole\%(Filename)%(Extension)" />
-    <None Include="..\..\..\Automation\MSTestX.Console\bin\net5.0\publish\MSTestX.Console.runtimeconfig.json" Pack="true" Link="tools\TestConsole\MSTestX.Console.runtimeconfig.json" PackagePath="tools\TestConsole" />    
-    <None Include="build\monoandroid81\MSTestX.UnitTestRunner.targets" Pack="true" PackagePath="build\monoandroid81" />
+    <None Include="..\..\..\Automation\MSTestX.Console\bin\net5.0\publish\MSTestX.Console.runtimeconfig.json" Pack="true" Link="tools\TestConsole\MSTestX.Console.runtimeconfig.json" PackagePath="tools\TestConsole" />
   </ItemGroup>
 
   <ItemGroup>
@@ -116,25 +95,6 @@
       <PublishConsoleRunnerCmd>dotnet publish "$(MSBuildThisFileDirectory)../../../Automation/MSTestX.Console/MSTestX.Console.csproj" -c $(Configuration) -f net5.0</PublishConsoleRunnerCmd>
     </PropertyGroup>
     <Exec ConsoleToMsBuild="true" Command="$(PublishConsoleRunnerCmd)" />
-  </Target>
-
-
-  <ItemGroup Condition="'$(UseMaui)'=='true'">
-    <MauiXaml Remove="**\*.xaml" />
-    <MauiXaml Include="**\*.MAUI.xaml" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UseMaui)'!='true'">
-    <EmbeddedResource Remove="**\*.MAUI.xaml" />
-  </ItemGroup>
-
-  <Target Name="GenerateMauiXaml" BeforeTargets="BeforeBuild;BeforeRebuild">
-    <ItemGroup>
-      <XamlFiles Include="**\*.xaml" Exclude="**\*.MAUI.xaml" />
-    </ItemGroup>
-    <TextReplaceTask Items="@(XamlFiles)" OldText="http://xamarin.com/schemas/2014/forms" NewText="http://schemas.microsoft.com/dotnet/2021/maui" />
-    <!--<ItemGroup>
-      <MauiXaml Include="**\*.MAUI.xaml" Condition="'$(UseMaui)'=='true'" />
-    </ItemGroup>-->
   </Target>
 
   <UsingTask TaskName="TextReplaceTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
