@@ -84,12 +84,12 @@ namespace TestAppRunner.ViewModels
                     }
                     alltests = this.tests = tests;
 
-                    var previousResults = LoadProgress();
+                    var previousResults = LoadProgress().ToArray();
                     try
                     {
                         if (previousResults != null)
                         {
-                            foreach (var previousResult in previousResults)
+                            Parallel.ForEach(previousResults, (previousResult) =>
                             {
                                 var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.FullyQualifiedName).Select(tt => tt.Value);
                                 TestResultVM t = null;
@@ -103,13 +103,13 @@ namespace TestAppRunner.ViewModels
                                     {
                                         t.Result = MSTestX.UnitTestRunner.TestResultSerializer.Deserialize(previousResult.Result, t.Test);
                                     }
-                                    catch { continue; }
+                                    catch { return; }
                                 }
                                 else
                                 {
                                     // TODO: Remove from sql database
                                 }
-                            }
+                            });
                             OnPropertyChanged(nameof(PassedTests));
                             OnPropertyChanged(nameof(FailedTests));
                             OnPropertyChanged(nameof(SkippedTests));
