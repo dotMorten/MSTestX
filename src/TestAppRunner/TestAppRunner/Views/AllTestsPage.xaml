@@ -71,8 +71,8 @@
                     <Label Text="{Binding DiagnosticsInfo}" Margin="20,0" TextColor="Gray" />
                 </CollectionView.Footer>
             </CollectionView>
-            
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" />
+
+            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" IsEnabled="{Binding IsInitialized, Mode=OneWay}" />
 
             <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
                   IsVisible="False" BorderColor="{DynamicResource foregroundColor}">

@@ -135,6 +135,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(NotRunTests));
             Status = $"{tests.Count} tests found.";
             OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(IsInitialized));
         }
 
         private readonly string progressPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unittest_progress.bin");
@@ -429,6 +430,7 @@ namespace TestAppRunner.ViewModels
         }
 
         public bool IsRunning => testRunner?.IsRunning ?? false;
+        public bool IsInitialized => Tests?.Any() == true;
         public int PassedTests => Tests?.SelectMany(t=>t.Results).Where(t => t.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int PassedTestsWithoutChildren => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int FailedTests => Tests?.SelectMany(t => t.Results)?.Where(t => t?.Outcome == TestOutcome.Failed).Count() ?? 0;
