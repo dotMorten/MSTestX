@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var runSettingsXml = this.RunSettingsXml;
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
-
+            object testLock = new object();
             Assembly assembly;
             if (assemblyFileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
@@ -113,7 +113,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
 
                 var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
-                tests.AddRange(testsInType);
+                lock (testLock)
+                    tests.AddRange(testsInType);
             });
 
             warnings = warningMessages;
