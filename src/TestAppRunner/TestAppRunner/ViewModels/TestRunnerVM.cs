@@ -75,7 +75,7 @@ namespace TestAppRunner.ViewModels
                 await Task.Run(() =>
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
-                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
+                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.Location)).ToArray();
                     //references = references.Where(r => !r.StartsWith("Microsoft.") && !r.StartsWith("Xamarin.Android.") && r != "mscorlib.dll" && !r.StartsWith("System.")).ToArray();
                     testRunner = new TestRunner(references, this);
                     foreach (var item in testRunner.Tests)
@@ -396,40 +396,14 @@ namespace TestAppRunner.ViewModels
 
         private void Terminate()
         {
-            switch (Device.RuntimePlatform)
-            {
-                case Device.iOS:
-                    {
 #if __IOS__
-                        var selector = new ObjCRuntime.Selector("terminateWithSuccess");
-                        UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+            var selector = new ObjCRuntime.Selector("terminateWithSuccess");
+            UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+#elif __ANDROID__
+            Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+#else
+            Environment.Exit(0);
 #endif
-                        /*
-                        // We'll just use reflection here, rather than having to start doing multi-targeting just for this one platform specific thing
-                        // Reflection code equivalent to:
-                        // var selector = new ObjCRuntime.Selector("terminateWithSuccess");
-                        // UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
-                        var selectorType = Type.GetType("ObjCRuntime.Selector, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var cnst = selectorType.GetConstructor(new Type[] { typeof(string) });
-                        var selector = cnst.Invoke(new object[] { "terminateWithSuccess" });
-                        var UIAppType = Type.GetType("UIKit.UIApplication, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var prop = UIAppType.GetProperty("SharedApplication");
-                        var app = prop.GetValue(null);
-                        var nsObjectType = Type.GetType("Foundation.NSObject, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var psMethod = UIAppType.GetMethod("PerformSelector", new Type[] { selector.GetType(), nsObjectType, typeof(double) });
-                        psMethod.Invoke(app, new object[] { selector, app, 0d });
-                        */
-                    }
-                    break;
-                case Device.Android:
-#if __ANDROID__
-                   Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
-#endif
-                    break;
-                default:
-                    Environment.Exit(0);
-                    break;
-            }
         }
 
         public bool IsRunning => testRunner?.IsRunning ?? false;

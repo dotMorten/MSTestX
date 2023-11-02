@@ -8,13 +8,29 @@ using System.Text;
 
 namespace MSTestX
 {
+    /// <summary>
+    /// MSTextX Maui configuration extensions
+    /// </summary>
     public static class MauiExtensions
     {
+        /// <summary>
+        /// Configures the MSTestX Application
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="configureTestOptions"></param>
+        /// <returns></returns>
         public static MauiAppBuilder UseTestApp(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null)
         {
             return builder.UseTestApp<RunnerApp>(configureTestOptions);
         }
-        
+
+        /// <summary>
+        /// Configures the MSTestX Application
+        /// </summary>
+        /// <typeparam name="T">The MSTextX Runner app to use</typeparam>
+        /// <param name="builder"></param>
+        /// <param name="configureTestOptions"></param>
+        /// <returns></returns>
         public static MauiAppBuilder UseTestApp<T>(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null) where T : RunnerApp
         {
             return builder.UseMauiApp<T>()
