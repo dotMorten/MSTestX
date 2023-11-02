@@ -28,7 +28,7 @@ jobs:
 
     - name: Build
       run: |
-        msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release /p:GeneratePackageOnBuild=True /p:SkipWindows=True
+        msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
