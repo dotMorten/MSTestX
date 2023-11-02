@@ -18,7 +18,7 @@
     <PackageTags>Unit Test, Xamarin, Android, iOS, Test, Testing, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0-rc.1</Version>
+    <Version>2.0.0-rc.2</Version>
     <Description>A .NET MAUI-based UnitTest Runner to execute MSTests on Android, iOS and MacCatalyst. The app supports custom test logging, and has built-in support for outputting a TRX test report and being remote controlled from commandline.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -64,15 +64,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.1.0" />
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.5.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!--<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />-->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MSTestX.Adapter\MSTestX.Adapter.csproj" />
+    <ProjectReference Include="..\..\MSTestX.Adapter\MSTestX.Adapter.csproj" PrivateAssets="Analyzers" />
   </ItemGroup>
 
 </Project>
