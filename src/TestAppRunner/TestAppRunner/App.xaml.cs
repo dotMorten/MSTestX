@@ -66,6 +66,18 @@ namespace MSTestX
 #endif
 
         /// <summary>
+        /// Navigate to a page with a custom set of tests.
+        /// </summary>
+        /// <param name="name">Page name</param>
+        /// <param name="testCases">List of tests</param>
+        protected void NavigateToTestList(string name, IEnumerable<TestCase> testCases)
+        {
+            var cases = TestRunnerVM.Instance.Tests.IntersectBy(testCases, (t) => t.Test).ToArray();
+            TestResultGroup group = new TestResultGroup(name, cases);
+            _ = MainPage.Navigation.PushAsync(new TestRunPage(group));
+        }
+
+        /// <summary>
         /// Called when the settings menu is opened
         /// </summary>
         protected internal virtual void OnSettingsMenuLoaded(List<Tuple<string, Action>> menuItems)
@@ -100,6 +112,11 @@ namespace MSTestX
         {
             return TestRunnerVM.Instance.Run(testCases, settings);
         }
+
+        /// <summary>
+        /// Gets a list of tests discovered
+        /// </summary>
+        protected IEnumerable<TestCase> TestCases => TestRunnerVM.Instance.Tests.Select(t => t.Test);
 
         internal void RaiseTestRunStarted(IEnumerable<TestCase> tests) => TestRunStarted?.Invoke(this, tests);
 
