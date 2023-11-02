@@ -75,7 +75,7 @@ namespace TestAppRunner.ViewModels
                 await Task.Run(() =>
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
-                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.CodeBase)).ToArray();
+                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.Location)).ToArray();
                     //references = references.Where(r => !r.StartsWith("Microsoft.") && !r.StartsWith("Xamarin.Android.") && r != "mscorlib.dll" && !r.StartsWith("System.")).ToArray();
                     testRunner = new TestRunner(references, this);
                     foreach (var item in testRunner.Tests)
@@ -84,12 +84,14 @@ namespace TestAppRunner.ViewModels
                     }
                     alltests = this.tests = tests;
 
-                    var previousResults = LoadProgress();
+                    if (!this.Settings.AutoRun || this.Settings.AutoResume)
+                    {
+                    var previousResults = LoadProgress().ToArray();
                     try
                     {
                         if (previousResults != null)
                         {
-                            foreach (var previousResult in previousResults)
+                            Parallel.ForEach(previousResults, (previousResult) =>
                             {
                                 var candidates = tests.Where(tt => tt.Value.Test.FullyQualifiedName == previousResult.FullyQualifiedName).Select(tt => tt.Value);
                                 TestResultVM t = null;
@@ -103,20 +105,20 @@ namespace TestAppRunner.ViewModels
                                     {
                                         t.Result = MSTestX.UnitTestRunner.TestResultSerializer.Deserialize(previousResult.Result, t.Test);
                                     }
-                                    }
-                                    catch { continue; }
+                                    catch { return; }
                                 }
                                 else
                                 {
                                     // TODO: Remove from sql database
                                 }
-                            }
+                            });
                             OnPropertyChanged(nameof(PassedTests));
                             OnPropertyChanged(nameof(FailedTests));
                             OnPropertyChanged(nameof(SkippedTests));
                         }
                     }
-                    catch { return; }
+                        catch { }
+                    }
 
 
                     this.HostApp.RaiseTestsDiscovered(testRunner.Tests);
@@ -136,6 +138,7 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(NotRunTests));
             Status = $"{tests.Count} tests found.";
             OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(IsInitialized));
         }
 
         private readonly string progressPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unittest_progress.bin");
@@ -393,43 +396,18 @@ namespace TestAppRunner.ViewModels
 
         private void Terminate()
         {
-            switch (Device.RuntimePlatform)
-            {
-                case Device.iOS:
-                    {
 #if __IOS__
-                        var selector = new ObjCRuntime.Selector("terminateWithSuccess");
-                        UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+            var selector = new ObjCRuntime.Selector("terminateWithSuccess");
+            UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
+#elif __ANDROID__
+            Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+#else
+            Environment.Exit(0);
 #endif
-                        /*
-                        // We'll just use reflection here, rather than having to start doing multi-targeting just for this one platform specific thing
-                        // Reflection code equivalent to:
-                        // var selector = new ObjCRuntime.Selector("terminateWithSuccess");
-                        // UIKit.UIApplication.SharedApplication.PerformSelector(selector, UIKit.UIApplication.SharedApplication, 0);
-                        var selectorType = Type.GetType("ObjCRuntime.Selector, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var cnst = selectorType.GetConstructor(new Type[] { typeof(string) });
-                        var selector = cnst.Invoke(new object[] { "terminateWithSuccess" });
-                        var UIAppType = Type.GetType("UIKit.UIApplication, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var prop = UIAppType.GetProperty("SharedApplication");
-                        var app = prop.GetValue(null);
-                        var nsObjectType = Type.GetType("Foundation.NSObject, Xamarin.iOS, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065");
-                        var psMethod = UIAppType.GetMethod("PerformSelector", new Type[] { selector.GetType(), nsObjectType, typeof(double) });
-                        psMethod.Invoke(app, new object[] { selector, app, 0d });
-                        */
-                    }
-                    break;
-                case Device.Android:
-#if __ANDROID__
-                   Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
-#endif
-                    break;
-                default:
-                    Environment.Exit(0);
-                    break;
-            }
         }
 
         public bool IsRunning => testRunner?.IsRunning ?? false;
+        public bool IsInitialized => Tests?.Any() == true;
         public int PassedTests => Tests?.SelectMany(t=>t.Results).Where(t => t.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int PassedTestsWithoutChildren => Tests?.Where(t => t.Result?.Outcome == TestOutcome.Passed).Count() ?? 0;
         public int FailedTests => Tests?.SelectMany(t => t.Results)?.Where(t => t?.Outcome == TestOutcome.Failed).Count() ?? 0;
@@ -462,6 +440,44 @@ namespace TestAppRunner.ViewModels
                 return test.GetPropertyValue<T>(prop, defaultValue);
             return defaultValue;
         }
+
+        private static string s_computerName;
+        private static string ComputerName
+        {
+            get
+            {
+                if(s_computerName is null)
+                {
+#if __ANDROID__
+                    s_computerName = $"{Android.OS.Build.Manufacturer} {Android.OS.Build.Model} v{Environment.OSVersion.Version.Major}";
+#elif __IOS__
+                    var pLen = System.Runtime.InteropServices.Marshal.AllocHGlobal(sizeof(int));
+                    sysctlbyname("hw.machine", IntPtr.Zero, pLen, IntPtr.Zero, 0);
+                    var length = System.Runtime.InteropServices.Marshal.ReadInt32(pLen);
+                    string deviceName = null;
+                    if (length > 0)
+                    {
+                        var pStr = System.Runtime.InteropServices.Marshal.AllocHGlobal(length);
+                        sysctlbyname("hw.machine", pStr, pLen, IntPtr.Zero, 0);
+                        deviceName = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(pStr);
+                        System.Runtime.InteropServices.Marshal.FreeHGlobal(pStr);
+                    }
+                    System.Runtime.InteropServices.Marshal.FreeHGlobal(pLen);
+                    if (!string.IsNullOrEmpty(deviceName))
+                        s_computerName = $"{deviceName} - {UIKit.UIDevice.CurrentDevice.SystemName} {UIKit.UIDevice.CurrentDevice.SystemVersion}";
+                    else
+                        s_computerName = $"{UIKit.UIDevice.CurrentDevice.SystemName} {UIKit.UIDevice.CurrentDevice.SystemVersion}";
+#else
+                   s_computerName = Environment.MachineName;
+#endif
+                }
+                return s_computerName;
+            }
+        }
+#if __IOS__
+        [System.Runtime.InteropServices.DllImport("libc", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        private static extern int sysctlbyname([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPStr)] string property, IntPtr output, IntPtr length, IntPtr newp, uint newlen);
+#endif
         void ITestExecutionRecorder.RecordResult(TestResult testResult)
         {
             results?.Add(testResult);
@@ -470,6 +486,7 @@ namespace TestAppRunner.ViewModels
             var test = tests[testResult.TestCase.Id];
             if (parentExecId == Guid.Empty) // We don't report child result in the UI
             {
+                testResult.ComputerName = ComputerName;
                 test.Result = testResult;
 
                 OnPropertyChanged(nameof(Progress));

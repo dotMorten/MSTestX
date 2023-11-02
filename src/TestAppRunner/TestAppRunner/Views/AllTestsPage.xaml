@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TestAppRunner.Views"
              Title="{Binding Status}" 
@@ -46,35 +46,33 @@
 
                 <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" Title="Group By" />
             </StackLayout>
-            <ListView x:Name="list" ItemsSource="{Binding GroupedTests, Mode=OneWay}" ItemSelected="list_ItemSelected" RowHeight="60" Grid.Row="2">
-                <ListView.ItemTemplate>
+            <CollectionView x:Name="list" ItemsSource="{Binding GroupedTests, Mode=OneWay}" SelectionMode="Single" Grid.Row="2" SelectionChanged="list_SelectionChanged">
+                <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <ViewCell>
-                            <StackLayout Padding="20,0">
-                                <Label Text="{Binding Group}" FontAttributes="Bold" LineBreakMode="MiddleTruncation"
-                                       TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
-                                <StackLayout Orientation="Horizontal">
-                                    <Label Text=" ✔ " />
-                                    <Label Text="{Binding PassedTests}" Margin="0,0,5,0" TextColor="{DynamicResource successColor}" />
-                                    <Label Text=" ⛔ " />
-                                    <Label Text="{Binding FailedTests}" Margin="0,0,5,0" TextColor="{DynamicResource failedColor}" />
-                                    <Label Text=" ⚠ " TextColor="Orange" />
-                                    <Label Text="{Binding SkippedTests}" Margin="0,0,5,0" TextColor="{DynamicResource skippedColor}" />
-                                    <Label Text=" 🔷 " />
-                                    <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="{DynamicResource notExecutedColor}" />
-                                    <Label Text="{Binding Percentage, StringFormat='{0}%'}" TextColor="{DynamicResource foregroundColor}" />
-                                    <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
-                                </StackLayout>
+                        <StackLayout Padding="20,0" HeightRequest="60">
+                            <Label Text="{Binding Group}" FontAttributes="Bold" LineBreakMode="MiddleTruncation"
+                                    TextColor="{Binding Outcome, Mode=OneWay, Converter={StaticResource outcomeConverter}}" />
+                            <StackLayout Orientation="Horizontal">
+                                <Label Text=" ✔ " />
+                                <Label Text="{Binding PassedTests}" Margin="0,0,5,0" TextColor="{DynamicResource successColor}" />
+                                <Label Text=" ⛔ " />
+                                <Label Text="{Binding FailedTests}" Margin="0,0,5,0" TextColor="{DynamicResource failedColor}" />
+                                <Label Text=" ⚠ " TextColor="Orange" />
+                                <Label Text="{Binding SkippedTests}" Margin="0,0,5,0" TextColor="{DynamicResource skippedColor}" />
+                                <Label Text=" 🔷 " />
+                                <Label Text="{Binding NotRunTests}" Margin="0,0,5,0" TextColor="{DynamicResource notExecutedColor}" />
+                                <Label Text="{Binding Percentage, StringFormat='{0}%'}" TextColor="{DynamicResource foregroundColor}" />
+                                <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                             </StackLayout>
-                        </ViewCell>
+                        </StackLayout>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-                <ListView.Footer>
+                </CollectionView.ItemTemplate>
+                <CollectionView.Footer>
                     <Label Text="{Binding DiagnosticsInfo}" Margin="20,0" TextColor="Gray" />
-                </ListView.Footer>
-            </ListView>
-            
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" />
+                </CollectionView.Footer>
+            </CollectionView>
+
+            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" IsEnabled="{Binding IsInitialized, Mode=OneWay}" />
 
             <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
                   IsVisible="False" BorderColor="{DynamicResource foregroundColor}">
@@ -84,15 +82,26 @@
                     <Button Text="Close" Clicked="Error_Close_Button_Clicked"/>
                 </StackLayout>
             </Frame>
-            <Frame x:Name="PickerPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
-                  IsVisible="False" >
-                <StackLayout Padding="20" >
-                    <Button Text="Run Remaining Tests" Clicked="RunRemaining_Clicked" />
-                    <Button Text="Run Failed Tests" Clicked="RunFailed_Clicked" />
-                    <Button Text="Stop Test Run" Clicked="StopRun_Clicked" />
-                    <Button Text="Close" Clicked="Picker_Close_Button_Clicked"/>
-                    <Button Text="Save Report" Clicked="Save_Report_Clicked" />
-                </StackLayout>
+            <Frame x:Name="PickerPanel" Grid.RowSpan="4" HorizontalOptions="Fill" VerticalOptions="Fill" IsVisible="False" BackgroundColor="#55ffffff">
+                <Grid>
+                    <Border Opacity=".5" Margin="-40" />
+                    <StackLayout Background="White">
+                        <Grid HorizontalOptions="Fill" BackgroundColor="{DynamicResource accentColor}" Padding="10,5">
+                            <Label Text="Settings" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" FontSize="18"/>
+                            <Button Text="X" Clicked="Picker_Close_Button_Clicked"
+                                    HorizontalOptions="End" VerticalOptions="Start" BackgroundColor="Transparent" BorderWidth="0" FontSize="24" Margin="0" Padding="0"
+                                    TextColor="White"
+                                    />
+                        </Grid>
+                        <VerticalStackLayout x:Name="SettingsButtonList" Padding="40">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Text="{Binding Item1}" Clicked="SettingsButton_Clicked" BackgroundColor="{DynamicResource accentColor}" TextColor="White" CornerRadius="5" Margin="5" Padding="10" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </StackLayout>
+                </Grid>
             </Frame>
         </Grid>
     </ContentPage.Content>

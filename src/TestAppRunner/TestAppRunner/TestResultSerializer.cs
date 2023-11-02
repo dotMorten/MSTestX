@@ -1,17 +1,39 @@
-﻿namespace MSTestX.UnitTestRunner
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+
+namespace MSTestX.UnitTestRunner
 {
     internal static class TestResultSerializer
     {
         public static void Serialize(Stream s, TestResult t)
         {
             BinaryWriter bw = new BinaryWriter(s);
-            var fields = t.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f=>f.Name != "TestCase" && f.GetValue(t) != null && f.GetSetMethod(true) != null);
-            bw.Write(fields.Count());
+            var fields = TestResultFields.Select(f => (f.Name, f.GetValue(t))).Where(f => f.Item2 != null).ToArray();
+            int fieldCount = fields.Count();
+            if (t.Messages.Count == 0) fieldCount--;
+            if (t.Attachments.Count == 0) fieldCount--;
+            bw.Write(fieldCount);
             foreach (var field in fields)
             {
-                var value = field.GetValue(t);
+                if (field.Name == nameof(TestResult.Messages))
+                {
+                    if (t.Messages.Count > 0)
+                    {
+                        bw.Write(field.Name);
+                        bw.Write(t.Messages.Count);
+                        foreach (var m in t.Messages)
+                        {
+                            bw.Write(m.Category);
+                            bw.Write(m.Text);
+                        }
+                    }
+                    continue;
+                }
+                if (field.Name == nameof(TestResult.Attachments) && t.Attachments.Count == 0)
+                    continue;
+                
                 bw.Write(field.Name);
-                WriteType(bw, value);
+                WriteType(bw, field.Item2);
             }
         }
 
@@ -64,7 +86,7 @@
             else if(value is object)
             {
                 bw.Write(value.GetType().AssemblyQualifiedName);
-                var fields = value.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f=>f.GetSetMethod(true) != null).Where(f => f.GetValue(value) != null);
+                var fields = value.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f=>f.GetSetMethod() != null).Where(f => f.GetValue(value) != null  || f.PropertyType.IsAssignableFrom(typeof(System.Collections.ObjectModel.Collection<>)));
                 bw.Write(fields.Count());
                 foreach (var field in fields)
                 {
@@ -86,28 +108,69 @@
             }
         }
 
+        static System.Reflection.PropertyInfo[] TestResultFields = typeof(TestResult).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f => f.Name != "TestCase" && f.GetSetMethod(true) != null).ToArray();
         public static TestResult Deserialize(byte[] data, TestCase testCase)
         {
             using var ms = new MemoryStream(data);
             var  br = new BinaryReader(ms);
 #if !NETSTANDARD2_0
             TestResult result = new TestResult(testCase);
-            var fields = result.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            
             var fieldCount = br.ReadInt32();
             for (int i = 0; i < fieldCount; i++)
             {
                 var fieldName = br.ReadString();
-                var field = fields.Where(f => f.Name == fieldName).Single();
-                var value = ReadValue(br, field.PropertyType, field.GetValue(result));
-                if (value != null)
-                    field.SetValue(result, value);
+                switch(fieldName)
+                {
+                    case nameof(TestResult.ComputerName):
+                        result.ComputerName = br.ReadString(); break;
+                    case nameof(TestResult.DisplayName):
+                        result.DisplayName = br.ReadString(); break;
+                    case nameof(TestResult.Duration):
+                        result.Duration = TimeSpan.FromTicks(br.ReadInt64()); break;
+                    case nameof(TestResult.EndTime):
+                        result.EndTime = DateTimeOffset.FromUnixTimeMilliseconds(br.ReadInt64()); break;
+                    case nameof(TestResult.ErrorMessage):
+                        result.ErrorMessage = br.ReadString(); break;
+                    case nameof(TestResult.ErrorStackTrace):
+                        result.ErrorStackTrace = br.ReadString(); break;
+                    case nameof(TestResult.Outcome):
+                        result.Outcome = (TestOutcome)br.ReadInt32(); break;
+                    case nameof(TestResult.StartTime):
+                        result.StartTime = DateTimeOffset.FromUnixTimeMilliseconds(br.ReadInt64()); break;
+                    case nameof(TestResult.Messages):
+                        int count = br.ReadInt32();
+                        for (int m = 0; m < count; m++)
+                        {
+                            result.Messages.Add(new TestResultMessage(br.ReadString(), br.ReadString()));
+                        }
+                        break;
+                    // case nameof(TestResult.Attachments):
+                    // case nameof(TestResult.Properties):
+                    // case nameof(TestResult.Traits):
+                    default:
+                        var field = TestResultFields.Where(f => f.Name == fieldName).Single();
+                        var value = ReadValue(br, field.PropertyType, field.GetValue(result));
+                        if (value != null)
+                            field.SetValue(result, value);
+                        break;
+                }
+                //Debug.WriteLine(fieldName);
             }
             return result;
 #else
             return null;
 #endif
         }
-
+        static ConcurrentDictionary<Type, System.Reflection.PropertyInfo[]> TypeInfo = new ConcurrentDictionary<Type, System.Reflection.PropertyInfo[]>();
+        private static System.Reflection.PropertyInfo[] GetTypeInfo(Type t)
+        {
+            if(TypeInfo.ContainsKey(t))
+                return TypeInfo[t];
+            var fields = t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f => f.GetSetMethod(true) != null).ToArray();
+            TypeInfo[t] = fields;
+            return fields;
+        }
         private static object ReadValue(BinaryReader br, Type fieldType, object currentValue)
         {
             if (fieldType == typeof(int))
@@ -157,7 +220,7 @@
 
 #if !NETSTANDARD2_0
                 var instance = currentValue ?? System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(Type.GetType(typeName));
-                var fields = fieldType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                var fields = GetTypeInfo(fieldType);
                 for (int i = 0; i < fieldCount; i++) {
                     var fieldName = br.ReadString();
                     var field = fields.Where(f => f.Name == fieldName).Single();

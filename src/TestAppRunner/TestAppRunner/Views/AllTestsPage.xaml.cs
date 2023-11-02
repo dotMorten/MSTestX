@@ -5,7 +5,7 @@ namespace TestAppRunner.Views
     /// <summary>
     /// Shows all tests grouped by namespace. This is the startup/main page
     /// </summary>
-	[XamlCompilation(XamlCompilationOptions.Compile)]
+    [XamlCompilation(XamlCompilationOptions.Compile)]
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public partial class AllTestsPage : ContentPage
     {
@@ -17,7 +17,31 @@ namespace TestAppRunner.Views
 
             picker.ItemsSource = new string[] { "Category", "Namespace", "Outcome" };
             picker.SelectedIndex = 1;
-            this.ToolbarItems.Add(new ToolbarItem("...", null, () => { PickerPanel.IsVisible = true; }));
+            this.ToolbarItems.Add(new ToolbarItem("...", null, ShowSettingsPanel));
+            /*
+             *                      <Button Text="Run Remaining Tests" Clicked="RunRemaining_Clicked" BackgroundColor="{DynamicResource accentColor}" TextColor="White" CornerRadius="5" Margin="5" Padding="10" />
+                            <Button Text="Run Failed Tests" Clicked="RunFailed_Clicked" BackgroundColor="{DynamicResource accentColor}" TextColor="White" CornerRadius="5" Margin="5" Padding="10" />
+                            <Button Text="Stop Test Run" Clicked="StopRun_Clicked" BackgroundColor="{DynamicResource accentColor}" TextColor="White" CornerRadius="5" Margin="5" Padding="10" />
+                            <Button Text="Save Report" Clicked="Save_Report_Clicked" BackgroundColor="{DynamicResource accentColor}" TextColor="White" CornerRadius="5" Margin="5" Padding="10" />*/
+
+        }
+        private void ShowSettingsPanel()
+        {
+            List<Tuple<string, Action>> actions = new List<Tuple<string, Action>>();
+            actions.Add(new Tuple<string, Action>("Run Remaining Tests", RunRemaining_Clicked));
+            actions.Add(new Tuple<string, Action>("Run Failed Tests", RunFailed_Clicked));
+            actions.Add(new Tuple<string, Action>("Stop Test Run", StopRun_Clicked));
+            actions.Add(new Tuple<string, Action>("Save Report", Save_Report_Clicked));
+            (Application.Current as MSTestX.RunnerApp)?.OnSettingsMenuLoaded(actions);
+            BindableLayout.SetItemsSource(SettingsButtonList, actions);
+            PickerPanel.IsVisible = true;
+        }
+
+        private void SettingsButton_Clicked(object sender, EventArgs e)
+        {
+            PickerPanel.IsVisible = false; 
+            var context = (sender as Button).BindingContext as Tuple<string, Action>;
+            context?.Item2();
         }
 
         private void Instance_OnTestRunException(object sender, Exception e)
@@ -41,16 +65,17 @@ namespace TestAppRunner.Views
             }
         }
 
-        private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
+
+        private async void list_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            var item = args.SelectedItem as TestResultGroup;
+            var item = args.CurrentSelection?.FirstOrDefault() as TestResultGroup;
             if (item == null)
                 return;
 
             await Navigation.PushAsync(new GroupByClassTestsPage(item));
 
             // Manually deselect item.
-            (sender as ListView).SelectedItem = null;
+            (sender as CollectionView).SelectedItem = null;
         }
 
         private void picker_SelectedIndexChanged(object sender, EventArgs e)
@@ -68,21 +93,19 @@ namespace TestAppRunner.Views
             PickerPanel.IsVisible = false;
         }
 
-        private void RunRemaining_Clicked(object sender, EventArgs e)
+        private void RunRemaining_Clicked()
         {
-            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunRemainingTests();
         }
 
-        private void RunFailed_Clicked(object sender, EventArgs e)
+        private void RunFailed_Clicked()
         {
-            PickerPanel.IsVisible = false;
             if (TestRunnerVM.Instance.IsRunning) return;
             TestRunnerVM.Instance.RunFailedTests();
         }
 
-        private void Save_Report_Clicked(object sender, EventArgs e)
+        private void Save_Report_Clicked()
         {
 #if MAUI
             string path = Path.Combine(Path.GetTempPath(), DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".trx");
@@ -91,7 +114,7 @@ namespace TestAppRunner.Views
                 new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path)));
 #endif
         }
-        private void StopRun_Clicked(object sender, EventArgs e)
+        private void StopRun_Clicked()
         {
             if (TestRunnerVM.Instance.IsRunning)
             {

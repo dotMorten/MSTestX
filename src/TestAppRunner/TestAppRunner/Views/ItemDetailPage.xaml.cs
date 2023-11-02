@@ -39,27 +39,27 @@ namespace TestAppRunner.Views
             }
         }
 
-        private async void list_ItemSelected(object sender, SelectedItemChangedEventArgs args)
+        private async void list_ItemSelected(object sender, SelectionChangedEventArgs args)
         {
-            var item = args.SelectedItem as TestResult;
+            var item = args.CurrentSelection?.FirstOrDefault() as TestResult;
             if (item == null)
                 return;
             await Navigation.PushAsync(new ItemDetailPage( new TestResultVM(item.TestCase) { Result = item }));
 
             // Manually deselect item.
-            (sender as ListView).SelectedItem = null;
+            (sender as CollectionView).SelectedItem = null;
         }
 
-        private async void attachment_Selected(object sender, SelectedItemChangedEventArgs e)
+        private async void attachment_Selected(object sender, SelectionChangedEventArgs e)
         {
-            var attachment = e.SelectedItem as UriDataAttachment;
+            var attachment = e.CurrentSelection?.FirstOrDefault() as UriDataAttachment;
             if(attachment != null)
             {
                 await Navigation.PushAsync(new AttachmentPage(attachment));
             }
 
             // Manually deselect item.
-            (sender as ListView).SelectedItem = null;
+            (sender as CollectionView).SelectedItem = null;
         }
     }
 

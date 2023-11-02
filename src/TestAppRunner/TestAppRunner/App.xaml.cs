@@ -4,22 +4,17 @@ using System.Collections.Generic;
 using TestAppRunner;
 using TestAppRunner.ViewModels;
 using TestAppRunner.Views;
-#if MAUI
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Xaml;
-#else
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-#endif
 
 [assembly: XamlCompilation (XamlCompilationOptions.Compile)]
 namespace MSTestX
 {
     /// <summary>
-    /// The Xamarin.Forms Test Runner Application
+    /// The .NET MAUI Test Runner Application
     /// </summary>
-	public partial class RunnerApp : Application
-	{
+    public partial class RunnerApp : Application
+    {
         internal static string AppTheme = "light";
 #if MAUI
         private bool isInitialized;
@@ -69,23 +64,43 @@ namespace MSTestX
             TestRunnerVM.Instance.Initialize();
         }
 #endif
+
+        /// <summary>
+        /// Navigate to a page with a custom set of tests.
+        /// </summary>
+        /// <param name="name">Page name</param>
+        /// <param name="testCases">List of tests</param>
+        protected void NavigateToTestList(string name, IEnumerable<TestCase> testCases)
+        {
+            var cases = TestRunnerVM.Instance.Tests.IntersectBy(testCases, (t) => t.Test).ToArray();
+            TestResultGroup group = new TestResultGroup(name, cases);
+            _ = MainPage.Navigation.PushAsync(new TestRunPage(group));
+        }
+
+        /// <summary>
+        /// Called when the settings menu is opened
+        /// </summary>
+        protected internal virtual void OnSettingsMenuLoaded(List<Tuple<string, Action>> menuItems)
+        {
+        }
+        
         /// <inheritdoc />
-        protected override void OnStart ()
-		{
-			// Handle when your app starts
-		}
+        protected override void OnStart()
+        {
+            // Handle when your app starts
+        }
 
         /// <inheritdoc />
-        protected override void OnSleep ()
-		{
-			// Handle when your app sleeps
-		}
+        protected override void OnSleep()
+        {
+            // Handle when your app sleeps
+        }
 
         /// <inheritdoc />
-		protected override void OnResume ()
-		{
-			// Handle when your app resumes
-		}
+        protected override void OnResume()
+        {
+            // Handle when your app resumes
+        }
 
         /// <summary>
         /// Runs a set of tests
@@ -97,6 +112,11 @@ namespace MSTestX
         {
             return TestRunnerVM.Instance.Run(testCases, settings);
         }
+
+        /// <summary>
+        /// Gets a list of tests discovered
+        /// </summary>
+        protected IEnumerable<TestCase> TestCases => TestRunnerVM.Instance.Tests.Select(t => t.Test);
 
         internal void RaiseTestRunStarted(IEnumerable<TestCase> tests) => TestRunStarted?.Invoke(this, tests);
 

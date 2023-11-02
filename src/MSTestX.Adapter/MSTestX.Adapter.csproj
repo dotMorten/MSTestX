@@ -33,6 +33,8 @@
     <Compile Include="..\..\testfx\src\Adapter\MSTest.CoreAdapter\**\*.cs">
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Discovery\AssemblyEnumerator.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Discovery\UnitTestDiscoverer.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Execution\TestContextImpl.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Execution\TestMethodInfo.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\GlobalAssemblyInfo.cs" />
