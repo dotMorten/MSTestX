@@ -13,8 +13,8 @@ namespace MSTestX
     /// <summary>
     /// The .NET MAUI Test Runner Application
     /// </summary>
-	public partial class RunnerApp : Application
-	{
+    public partial class RunnerApp : Application
+    {
         internal static string AppTheme = "light";
 #if MAUI
         private bool isInitialized;
@@ -64,23 +64,31 @@ namespace MSTestX
             TestRunnerVM.Instance.Initialize();
         }
 #endif
+
+        /// <summary>
+        /// Called when the settings menu is opened
+        /// </summary>
+        protected internal virtual void OnSettingsMenuLoaded(List<Tuple<string, Action>> menuItems)
+        {
+        }
+        
         /// <inheritdoc />
-        protected override void OnStart ()
-		{
-			// Handle when your app starts
-		}
+        protected override void OnStart()
+        {
+            // Handle when your app starts
+        }
 
         /// <inheritdoc />
-        protected override void OnSleep ()
-		{
-			// Handle when your app sleeps
-		}
+        protected override void OnSleep()
+        {
+            // Handle when your app sleeps
+        }
 
         /// <inheritdoc />
-		protected override void OnResume ()
-		{
-			// Handle when your app resumes
-		}
+        protected override void OnResume()
+        {
+            // Handle when your app resumes
+        }
 
         /// <summary>
         /// Runs a set of tests

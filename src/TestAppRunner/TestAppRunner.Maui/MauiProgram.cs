@@ -10,7 +10,7 @@ public static class MauiProgram
 
         var builder = MauiApp.CreateBuilder();
         builder
-            .UseTestApp((testOptions) => 
+            .UseTestApp<App>((testOptions) =>
             {
                 // configure default timeout
                 testOptions.SettingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>" +

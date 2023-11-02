@@ -12,7 +12,12 @@ namespace MSTestX
     {
         public static MauiAppBuilder UseTestApp(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null)
         {
-            return builder.UseMauiApp<RunnerApp>()
+            return builder.UseTestApp<RunnerApp>(configureTestOptions);
+        }
+        
+        public static MauiAppBuilder UseTestApp<T>(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null) where T : RunnerApp
+        {
+            return builder.UseMauiApp<T>()
                 .ConfigureLifecycleEvents((events) =>
                 {
 #if __ANDROID__
