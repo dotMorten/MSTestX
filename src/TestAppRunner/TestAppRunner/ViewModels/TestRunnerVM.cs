@@ -84,6 +84,8 @@ namespace TestAppRunner.ViewModels
                     }
                     alltests = this.tests = tests;
 
+                    if (!this.Settings.AutoRun || this.Settings.AutoResume)
+                    {
                     var previousResults = LoadProgress().ToArray();
                     try
                     {
@@ -115,7 +117,8 @@ namespace TestAppRunner.ViewModels
                             OnPropertyChanged(nameof(SkippedTests));
                         }
                     }
-                    catch { return; }
+                        catch { }
+                    }
 
 
                     this.HostApp.RaiseTestsDiscovered(testRunner.Tests);
@@ -463,6 +466,44 @@ namespace TestAppRunner.ViewModels
                 return test.GetPropertyValue<T>(prop, defaultValue);
             return defaultValue;
         }
+
+        private static string s_computerName;
+        private static string ComputerName
+        {
+            get
+            {
+                if(s_computerName is null)
+                {
+#if __ANDROID__
+                    s_computerName = $"{Android.OS.Build.Manufacturer} {Android.OS.Build.Model} v{Environment.OSVersion.Version.Major}";
+#elif __IOS__
+                    var pLen = System.Runtime.InteropServices.Marshal.AllocHGlobal(sizeof(int));
+                    sysctlbyname("hw.machine", IntPtr.Zero, pLen, IntPtr.Zero, 0);
+                    var length = System.Runtime.InteropServices.Marshal.ReadInt32(pLen);
+                    string deviceName = null;
+                    if (length > 0)
+                    {
+                        var pStr = System.Runtime.InteropServices.Marshal.AllocHGlobal(length);
+                        sysctlbyname("hw.machine", pStr, pLen, IntPtr.Zero, 0);
+                        deviceName = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(pStr);
+                        System.Runtime.InteropServices.Marshal.FreeHGlobal(pStr);
+                    }
+                    System.Runtime.InteropServices.Marshal.FreeHGlobal(pLen);
+                    if (!string.IsNullOrEmpty(deviceName))
+                        s_computerName = $"{deviceName} - {UIKit.UIDevice.CurrentDevice.SystemName} {UIKit.UIDevice.CurrentDevice.SystemVersion}";
+                    else
+                        s_computerName = $"{UIKit.UIDevice.CurrentDevice.SystemName} {UIKit.UIDevice.CurrentDevice.SystemVersion}";
+#else
+                   s_computerName = Environment.MachineName;
+#endif
+                }
+                return s_computerName;
+            }
+        }
+#if __IOS__
+        [System.Runtime.InteropServices.DllImport("libc", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        private static extern int sysctlbyname([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPStr)] string property, IntPtr output, IntPtr length, IntPtr newp, uint newlen);
+#endif
         void ITestExecutionRecorder.RecordResult(TestResult testResult)
         {
             results?.Add(testResult);
@@ -471,6 +512,7 @@ namespace TestAppRunner.ViewModels
             var test = tests[testResult.TestCase.Id];
             if (parentExecId == Guid.Empty) // We don't report child result in the UI
             {
+                testResult.ComputerName = ComputerName;
                 test.Result = testResult;
 
                 OnPropertyChanged(nameof(Progress));
