@@ -31,8 +31,8 @@ jobs:
       
     - name: Sign NuGet Package
       run: |
-        nuget sign nupkg\*.nupkg -CertificatePath ${{ steps.cert_file.outputs.filePath }} -CertificatePassword ${{ secrets.PFX_PASSWORD }}  -Timestamper http://timestamp.digicert.com -NonInteractive
-        nuget sign nupkg\*.snupkg -CertificatePath ${{ steps.cert_file.outputs.filePath }} -CertificatePassword ${{ secrets.PFX_PASSWORD }}  -Timestamper http://timestamp.digicert.com -NonInteractive
+        dotnet nuget sign nupkg\*.nupkg --certificate-path ${{ steps.cert_file.outputs.filePath }} --certificate-password ${{ secrets.PFX_PASSWORD }}  --timestamper http://timestamp.digicert.com -NonInteractive
+        dotnet nuget sign nupkg\*.snupkg --certificate-path ${{ steps.cert_file.outputs.filePath }} --certificate-password ${{ secrets.PFX_PASSWORD }}  --timestamper http://timestamp.digicert.com -NonInteractive
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
