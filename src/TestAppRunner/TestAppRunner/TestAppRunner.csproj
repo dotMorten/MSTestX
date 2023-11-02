@@ -97,37 +97,4 @@
     <Exec ConsoleToMsBuild="true" Command="$(PublishConsoleRunnerCmd)" />
   </Target>
 
-  <UsingTask TaskName="TextReplaceTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
-      <OldText ParameterType="System.String" Required="true" />
-      <NewText ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Core" />
-      <Using Namespace="System" />
-      <Using Namespace="System.IO" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-          foreach (var item in Items)     
-          {
-              FileInfo fileInfo = new FileInfo(item.ItemSpec);
-              if (!fileInfo.Exists)
-              {
-                  Log.LogError("The file '" + fileInfo.FullName + "' was not found");
-              }
-              else
-              {
-                  string of = Path.Combine(fileInfo.Directory.FullName, Path.GetFileNameWithoutExtension(fileInfo.Name) + ".MAUI.xaml");
-                  File.WriteAllText(of, File.ReadAllText(fileInfo.FullName).Replace(OldText, NewText));
-                  File.SetCreationTime(of, fileInfo.CreationTime);
-                  File.SetLastWriteTime(of, fileInfo.LastWriteTime);
-                  Log.LogMessage(MessageImportance.High, "Replacement of string '" + OldText + "' saved to file '" + of + "'");
-              }
-          }
-          ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
 </Project>
