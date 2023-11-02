@@ -85,35 +85,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var runSettingsXml = this.RunSettingsXml;
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
-            object testLock = new object();
-            Assembly assembly;
-            if (assemblyFileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-            {
-                // We only want to load the source assembly in reflection only context in UWP scenarios where it is always an exe.
-                // For normal test assemblies continue loading it in the default context since:
-                // 1. There isn't much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
-                // 2. Loading it in Reflection only context entails a bunch of custom logic to identify custom attributes which is over-kill for normal desktop users.
-                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: true);
-            }
-            else
-            {
-                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
-            }
+            object testLock = new object(); // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
+            
+            var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
-
             var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
             var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
 
-            System.Threading.Tasks.Parallel.ForEach(types, (type) =>
+            System.Threading.Tasks.Parallel.ForEach(types, (type) =>  // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
             {
                 if (type == null)
                 {
-                    return;
+                    return;  // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
                 }
 
                 var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
-                lock (testLock)
+                lock (testLock)  // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
                     tests.AddRange(testsInType);
             });
 
@@ -371,13 +359,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             foreach (var dataSource in testDataSources)
             {
                 var data = dataSource.GetData(methodInfo);
-                var discoveredTests = new List<UnitTestElement>();
+                var discoveredTests = new Dictionary<string, UnitTestElement>();
+                var discoveredIndex = new Dictionary<string, int>();
                 var serializationFailed = false;
+                var index = 0;
 
                 foreach (var d in data)
                 {
                     var discoveredTest = test.Clone();
-                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d);
+                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+                    // if we have a duplicate test name don't expand the test, bail out.
+                    if (discoveredTests.ContainsKey(discoveredTest.DisplayName))
+                    {
+                        var firstSeen = discoveredIndex[discoveredTest.DisplayName];
+                        var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstSeen, index, discoveredTest.DisplayName);
+                        warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+
+                        serializationFailed = true;
+                        break;
+                    }
 
                     try
                     {
@@ -386,22 +388,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     }
                     catch (SerializationException)
                     {
+                        var firstSeen = discoveredIndex[discoveredTest.DisplayName];
+                        var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                        warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+
                         serializationFailed = true;
                         break;
                     }
 
-                    discoveredTests.Add(discoveredTest);
+                    discoveredTests[discoveredTest.DisplayName] = discoveredTest;
+                    discoveredIndex[discoveredTest.DisplayName] = index++;
                 }
 
                 // Serialization failed for the type, bail out.
                 if (serializationFailed)
                 {
                     tests.Add(test);
-
                     break;
                 }
 
-                tests.AddRange(discoveredTests);
+                tests.AddRange(discoveredTests.Values);
             }
 
             return true;

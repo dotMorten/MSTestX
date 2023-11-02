@@ -15,7 +15,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, MSTest.TestAdapter</PackageTags>
-    <Version>2.2.9</Version>
+    <Version>2.2.10</Version>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageOutputPath>./../../nupkg</PackageOutputPath>
     <Description>The cross-platform adapter to discover and execute MSTest Framework based tests. This is a .NET Standard 2.0 compilation of the MSTest.TestAdapter for reusing the test adapter on other platforms, like Xamarin Android and iOS.</Description>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.1.0" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="17.1.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="2.2.9" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
   </ItemGroup>
