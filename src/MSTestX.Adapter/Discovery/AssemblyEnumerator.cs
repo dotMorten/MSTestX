@@ -100,9 +100,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     return;  // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
                 }
 
-                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
+                List<string> warnings2 = new List<string>();
+                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warnings2, discoverInternals, testDataSourceDiscovery);
                 lock (testLock)  // ADDED TO MSTESTX FOR FASTER TEST DISCOVERY
+                {
                     tests.AddRange(testsInType);
+                    warningMessages.AddRange(warnings2);
+                }
             });
 
             warnings = warningMessages;

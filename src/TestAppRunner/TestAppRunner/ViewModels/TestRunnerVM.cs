@@ -9,6 +9,10 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using MSTestX;
+
+
 #if MAUI
 using Microsoft.Maui.Controls;
 #else
@@ -75,8 +79,8 @@ namespace TestAppRunner.ViewModels
                 await Task.Run(() =>
                 {
                     var tests = new Dictionary<Guid, TestResultVM>();
-                    var references = AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).Select(c => System.IO.Path.GetFileName(c.Location)).ToArray();
-                    //references = references.Where(r => !r.StartsWith("Microsoft.") && !r.StartsWith("Xamarin.Android.") && r != "mscorlib.dll" && !r.StartsWith("System.")).ToArray();
+                    var asm = this.Settings.TestAssemblies ?? AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).ToArray();
+                    var references = asm.Select(c => System.IO.Path.GetFileName(c.Location)).ToArray();
                     testRunner = new TestRunner(references, this);
                     foreach (var item in testRunner.Tests)
                     {

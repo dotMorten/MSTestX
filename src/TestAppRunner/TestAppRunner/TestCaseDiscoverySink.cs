@@ -18,6 +18,7 @@ namespace TestAppRunner
         /// Gets the tests.
         /// </summary>
         public ICollection<TestCase> Tests { get; private set; } = new Collection<TestCase>();
+        private object TestsSync = new object();
 
         /// <summary>
         /// Sends the test case to the discoverer.
@@ -27,7 +28,8 @@ namespace TestAppRunner
         {
             if (discoveredTest != null)
             {
-                Tests.Add(discoveredTest);
+                lock (TestsSync)
+                    Tests.Add(discoveredTest);
             }
         }
     }

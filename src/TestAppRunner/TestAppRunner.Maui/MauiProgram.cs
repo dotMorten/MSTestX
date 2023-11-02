@@ -6,12 +6,11 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var preserve = typeof(UnitTests.AttachmentTests).Assembly;
-
         var builder = MauiApp.CreateBuilder();
         builder
             .UseTestApp<App>((testOptions) =>
             {
+                testOptions.TestAssemblies = new System.Reflection.Assembly[] { typeof(UnitTests.AttachmentTests).Assembly };
                 // configure default timeout
                 testOptions.SettingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
                     "<RunSettings>" +

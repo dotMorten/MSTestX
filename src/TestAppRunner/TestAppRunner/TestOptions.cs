@@ -34,6 +34,12 @@ namespace MSTestX
         public bool AutoResume { get; set; }
 
         /// <summary>
+        /// Gets or sets a list of assemblies that contains tests
+        /// </summary>
+        /// <remarks>If not set, will search the entire set of assemblies loaded.</remarks>
+        public IEnumerable<System.Reflection.Assembly> TestAssemblies { get; set; }
+
+        /// <summary>
         /// Shuts the app down when the test run completes (only applies when <see cref="AutoRun"/> || <see cref="AutoResume"/> is enabled)
         /// </summary>
         public bool TerminateAfterExecution { get; set; }
