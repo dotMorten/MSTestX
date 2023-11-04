@@ -46,9 +46,12 @@ namespace TestAppRunner.Views
 
         private void Instance_OnTestRunException(object sender, Exception e)
         {
-            ErrorHeader.Text = "Test Run Error";
-            ErrorMessage.Text = e.Message;
-            ErrorPanel.IsVisible = true;
+            Dispatcher.Dispatch(() =>
+            {
+                ErrorHeader.Text = "Test Run Error";
+                ErrorMessage.Text = e.Message;
+                ErrorPanel.IsVisible = true;
+            });
         }
 
         private async void Button_Clicked(object sender, EventArgs e)

@@ -19,9 +19,16 @@ namespace TestAppRunner.Maui
             menuItems.Add(new Tuple<string, Action>("Run two specific tests", async () =>
             {
                 var tests= TestCases?.Where(t => t.DisplayName == "TestOK" || t.DisplayName == "MoreTests_1");
-                var results = await RunTestsAsync(tests);
-                var count = results.Where(t => t.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed).Count();
-                _ = Current.MainPage.DisplayAlert("Test run complete", $"{count} tests passed", "OK");
+                try
+                {
+                    var results = await RunTestsAsync(tests);
+                    var count = results.Where(t => t.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed).Count();
+                    _ = Current.MainPage.DisplayAlert("Test run complete", $"{count} tests passed", "OK");
+                }
+                catch(System.Exception ex)
+                {
+                    _ = Current.MainPage.DisplayAlert("Test run exception", ex.Message, "OK");
+                }
             }));
             menuItems.Add(new Tuple<string, Action>("Custom test list", () =>
             {
