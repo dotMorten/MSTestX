@@ -377,7 +377,14 @@ namespace TestAppRunner.ViewModels
             }
             if (trxWriter != null)
             {
-                trxWriter?.OnTestRunComplete(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunCompleteEventArgs(null, false, true, null, null, TimeSpan.Zero));
+                try
+                {
+                    trxWriter?.OnTestRunComplete(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunCompleteEventArgs(null, false, false, null, null, TimeSpan.Zero));
+                }
+                catch(PlatformNotSupportedException) // Throws due to https://github.com/microsoft/vstest/issues/4736. However it's thrown after TRX is written
+                {
+                    Debug.Assert(File.Exists(Settings.TrxOutputPath));
+                }
                 trxWriter = null;
                 Logger.Log($"TRXREPORT LOCATION: {Settings.TrxOutputPath}");
             }

@@ -110,12 +110,17 @@ namespace TestAppRunner.Views
 
         private void Save_Report_Clicked()
         {
-#if MAUI
             string path = Path.Combine(Path.GetTempPath(), DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".trx");
-            TrxWriter.GenerateReport(path, TestRunnerVM.Instance.Tests.Select(t => t.Result).Where(r=>r is not null));
+            try
+            {
+                TrxWriter.GenerateReport(path, TestRunnerVM.Instance.Tests.Select(t => t.Result).Where(r => r is not null));
+            }
+            catch (PlatformNotSupportedException) // Throws due to https://github.com/microsoft/vstest/issues/4736. However it's thrown after TRX is written
+            {
+                System.Diagnostics.Debug.Assert(File.Exists(path));
+            }
             Microsoft.Maui.ApplicationModel.DataTransfer.Share.RequestAsync(
                 new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path)));
-#endif
         }
         private void StopRun_Clicked()
         {
