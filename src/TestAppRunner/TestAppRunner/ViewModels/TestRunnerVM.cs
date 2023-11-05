@@ -298,6 +298,7 @@ namespace TestAppRunner.ViewModels
             }
             catch(System.Exception ex)
             {
+                Logger.Log($"Test run failed: {ex.Message}\nStack trace: {ex.StackTrace}");
                 OnTestRunException?.Invoke(this, ex);
                 throw;
             }

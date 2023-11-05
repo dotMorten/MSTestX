@@ -49,7 +49,7 @@ namespace TestAppRunner.Views
             Dispatcher.Dispatch(() =>
             {
                 ErrorHeader.Text = "Test Run Error";
-                ErrorMessage.Text = e.Message;
+                ErrorMessage.Text = $"{e.Message}\n{e.StackTrace}";
                 ErrorPanel.IsVisible = true;
             });
         }
