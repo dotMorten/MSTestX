@@ -2,7 +2,12 @@ name: Publish MSTestX.UnitTestRunner to NuGet
 
 on:
   workflow_dispatch:
-
+    inputs:
+      publish-adapter:
+        description: Whether to also publish MSTestX.Adapter
+        type: boolean
+        required: true
+        default: false
 jobs:
   build:
 
@@ -40,7 +45,13 @@ jobs:
         name: NuGet Packages
         path: nupkg
         
-    - name: Push to NuGet
+    - name: Push MSTestX.UnitTestRunner to NuGet
       run: |
-        dotnet nuget push nupkg\*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
-        dotnet nuget push nupkg\*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+
+    - name: Push MSTestX.TestAdapter to NuGet
+      run: |
+        dotnet nuget push nupkg\MSTestX.TestAdapter.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        dotnet nuget push nupkg\MSTestX.TestAdapter.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+      if: ${{ inputs.publish-adapter }}
