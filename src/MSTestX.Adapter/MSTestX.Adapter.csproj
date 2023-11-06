@@ -16,7 +16,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, MSTest.TestAdapter</PackageTags>
-    <Version>2.2.10.2</Version>
+    <Version>$(MSTestXAdapterVersion)</Version>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageOutputPath>./../../nupkg</PackageOutputPath>
     <Description>The cross-platform adapter to discover and execute MSTest Framework based tests. This is a .NET Standard 2.0 compilation of the MSTest.TestAdapter for reusing the test adapter on other platforms, like Xamarin Android and iOS.</Description>

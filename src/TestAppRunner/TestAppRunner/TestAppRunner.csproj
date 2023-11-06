@@ -18,7 +18,7 @@
     <PackageTags>Unit Test, Xamarin, Android, iOS, Test, Testing, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0-rc.6</Version>
+    <Version>$(MSTextXRunnerVersion)</Version>
     <Description>A .NET MAUI-based UnitTest Runner to execute MSTests on Android, iOS and MacCatalyst. The app supports custom test logging, and has built-in support for outputting a TRX test report and being remote controlled from commandline.</Description>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -27,7 +27,7 @@
     <PackageReleaseNotes>Added support for .NET MAUI</PackageReleaseNotes>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <LangVersion>10</LangVersion>
-
+    <NuGetAdapter>true</NuGetAdapter>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -72,7 +72,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MSTestX.Adapter\MSTestX.Adapter.csproj" PrivateAssets="Analyzers" />
+    <ProjectReference Include="..\..\MSTestX.Adapter\MSTestX.Adapter.csproj" PrivateAssets="Analyzers" Condition="'$(NuGetAdapter)'!='true'" />
+    <PackageReference Include="MSTestX.TestAdapter" Version="$(MSTestXAdapterVersion)" PrivateAssets="Analyzers" Condition="'$(NuGetAdapter)'=='true'" />
   </ItemGroup>
 
 </Project>

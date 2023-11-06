@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <MSTestXAdapterVersion>2.2.10.1</MSTestXAdapterVersion>
+    <MSTextXRunnerVersion>2.0.0-rc.6</MSTextXRunnerVersion>
+  </PropertyGroup>
+
+</Project>
