@@ -27,7 +27,7 @@
     <PackageReleaseNotes>Added support for .NET MAUI</PackageReleaseNotes>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <LangVersion>10</LangVersion>
-    <NuGetAdapter>true</NuGetAdapter>
+    <!--<NuGetAdapter>true</NuGetAdapter>-->
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
