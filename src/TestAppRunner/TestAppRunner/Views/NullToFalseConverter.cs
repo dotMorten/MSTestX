@@ -22,6 +22,10 @@ namespace TestAppRunner.Views
         {
             if(parameter as string == "reverse")
                 return value == null;
+            if (value is System.Collections.IList list)
+            {
+                return list.Count > 0;
+            }
             return value != null;
         }
 
