@@ -51,15 +51,14 @@ jobs:
       with:
         name: NuGet Packages
         path: nupkg
-        
 
-    #- name: Push MSTestX.TestAdapter to NuGet
-    #  if: ${{ inputs.publish-adapter }}
-    #  run: |
-    #    dotnet nuget push nupkg\MSTestX.TestAdapter.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
-    #    dotnet nuget push nupkg\MSTestX.TestAdapter.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
-    #
-    #- name: Push MSTestX.UnitTestRunner to NuGet
-    #  run: |
-    #    dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
-    #    dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+    - name: Push MSTestX.TestAdapter to NuGet
+      if: ${{ inputs.publish-adapter }}
+      run: |
+        dotnet nuget push nupkg\MSTestX.TestAdapter.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        dotnet nuget push nupkg\MSTestX.TestAdapter.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+    
+    - name: Push MSTestX.UnitTestRunner to NuGet
+      run: |
+        dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        dotnet nuget push nupkg\MSTestX.UnitTestRunner.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
