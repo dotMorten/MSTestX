@@ -1,0 +1,1 @@
+﻿global using Resource = Microsoft.VisualStudio.TestTools.UnitTesting.Resource;

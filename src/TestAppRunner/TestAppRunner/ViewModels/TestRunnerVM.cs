@@ -379,11 +379,22 @@ namespace TestAppRunner.ViewModels
             {
                 try
                 {
+#if DEBUG
+                    File.Delete(Settings.TrxOutputPath);
+#endif
                     trxWriter?.OnTestRunComplete(new Microsoft.VisualStudio.TestPlatform.ObjectModel.Client.TestRunCompleteEventArgs(null, false, false, null, null, TimeSpan.Zero));
+#if DEBUG
+                    var trx = File.ReadAllText(Settings.TrxOutputPath);
+                    System.Diagnostics.Debug.WriteLine(trx);
+#endif
                 }
-                catch(PlatformNotSupportedException) // Throws due to https://github.com/microsoft/vstest/issues/4736. However it's thrown after TRX is written
+                catch (PlatformNotSupportedException) // Throws due to https://github.com/microsoft/vstest/issues/4736. However it's thrown after TRX is written
                 {
                     Debug.Assert(File.Exists(Settings.TrxOutputPath));
+#if DEBUG
+                    var trx = File.ReadAllText(Settings.TrxOutputPath);
+                    System.Diagnostics.Debug.WriteLine(trx);
+#endif
                 }
                 trxWriter = null;
                 Logger.Log($"TRXREPORT LOCATION: {Settings.TrxOutputPath}");
@@ -492,6 +503,14 @@ namespace TestAppRunner.ViewModels
 #endif
         void ITestExecutionRecorder.RecordResult(TestResult testResult)
         {
+            var execId = GetProperty<Guid>("ExecutionId", testResult, Guid.Empty);
+            if (execId == Guid.Empty)
+            {
+                var prop = testResult.Properties.Where(p => p.Id == "ExecutionId").FirstOrDefault();
+                if (prop != null)
+                    testResult.SetPropertyValue(prop, Guid.NewGuid());
+            }
+
             results?.Add(testResult);
             var innerResultsCount = GetProperty<int>("InnerResultsCount", testResult, 0);
             var parentExecId = GetProperty<Guid>("ParentExecId", testResult, Guid.Empty);

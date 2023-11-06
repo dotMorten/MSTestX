@@ -10,7 +10,8 @@ namespace TestAppRunner
         public TrxWriter(string trxOutputPath)
         {
             logger = new Microsoft.VisualStudio.TestPlatform.Extensions.TrxLogger.TrxLogger();
-            var parameters = new Dictionary<string, string>() { { "TestRunDirectory", "." } };
+            var testRunDirectory = new FileInfo(trxOutputPath).Directory.FullName;
+            var parameters = new Dictionary<string, string>() { { "TestRunDirectory", testRunDirectory } };
             if (!string.IsNullOrEmpty(trxOutputPath))
                 parameters.Add("LogFileName", trxOutputPath);
             logger.Initialize(this, parameters);

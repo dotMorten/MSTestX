@@ -6,6 +6,7 @@ using TestAppRunner.ViewModels;
 using TestAppRunner.Views;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Xaml;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 [assembly: XamlCompilation (XamlCompilationOptions.Compile)]
 namespace MSTestX
@@ -64,6 +65,7 @@ namespace MSTestX
             TestRunnerVM.Instance.Initialize();
         }
 #endif
+        public IRunSettings TestRunSettings => TestRunnerVM.Instance.Settings;
 
         /// <summary>
         /// Navigate to a page with a custom set of tests.
@@ -110,7 +112,7 @@ namespace MSTestX
         /// <returns></returns>
         public System.Threading.Tasks.Task<IEnumerable<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings settings = null)
         {
-            return TestRunnerVM.Instance.Run(testCases, settings);
+            return TestRunnerVM.Instance.Run(testCases, settings ?? TestRunnerVM.Instance.Settings);
         }
 
         /// <summary>

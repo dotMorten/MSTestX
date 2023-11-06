@@ -69,9 +69,9 @@ namespace TestAppRunner.ViewModels
         {
             get
             {
-                if(result != null && result.Attachments != null && result.Attachments.Any())
-                    return result.Attachments.SelectMany(t => t.Attachments);
-                return null;
+                if (result != null && result.Attachments != null && result.Attachments.Any())
+                    return result.Attachments.Where(t => t.Attachments is not null).SelectMany(t => t.Attachments).Where(a => a is not null);
+                return Enumerable.Empty<UriDataAttachment>();
             }
         }
 

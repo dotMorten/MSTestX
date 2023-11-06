@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
     <PackageId>MSTestX.TestAdapter</PackageId>
@@ -15,10 +15,11 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, MSTest, VSTest, TestFX, MSTest.TestAdapter</PackageTags>
-    <Version>2.2.10.1</Version>
+    <Version>2.2.10.2</Version>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageOutputPath>./../../nupkg</PackageOutputPath>
     <Description>The cross-platform adapter to discover and execute MSTest Framework based tests. This is a .NET Standard 2.0 compilation of the MSTest.TestAdapter for reusing the test adapter on other platforms, like Xamarin Android and iOS.</Description>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,6 +51,10 @@
 
     <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\**\*.cs">
       <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Condition="'$(TargetFramework)'=='net6.0'" />
+    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.NetCore\Services\NetCoreTestContextImplementation.cs"  Condition="'$(TargetFramework)'=='net6.0'">
+      <Link>PlatformServices\Services\%(Filename)%(Extension)</Link>
     </Compile>
 
   </ItemGroup>

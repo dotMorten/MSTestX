@@ -1,4 +1,5 @@
-﻿using TestAppRunner.ViewModels;
+﻿using System.IO.Compression;
+using TestAppRunner.ViewModels;
 
 namespace TestAppRunner.Views
 {
@@ -110,17 +111,71 @@ namespace TestAppRunner.Views
 
         private void Save_Report_Clicked()
         {
-            string path = Path.Combine(Path.GetTempPath(), DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".trx");
+            string filename = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string path = Path.Combine(Path.GetTempPath(), filename);
+            bool hasAttachments = false;
+            var tests = TestRunnerVM.Instance.Tests.Select(t => t.Result).Where(r => r is not null);
             try
             {
-                TrxWriter.GenerateReport(path, TestRunnerVM.Instance.Tests.Select(t => t.Result).Where(r => r is not null));
+                if (!string.IsNullOrEmpty(TestRunnerVM.Instance.Settings.TestRunResultsDirectory) &&
+                    Path.Exists(TestRunnerVM.Instance.Settings.TestRunResultsDirectory))
+                {
+                    var folders = new DirectoryInfo(TestRunnerVM.Instance.Settings.TestRunResultsDirectory);
+                    foreach (var test in tests.Where(t => t.Attachments is not null))
+                    {
+                        foreach (var a in test.Attachments.Where(a => a is not null))
+                        {
+                            foreach (var a2 in a.Attachments.Where(a2 => a2 is not null))
+                            {
+                                if (File.Exists(a2.Uri.OriginalString))
+                                {
+                                    hasAttachments = true;
+                                    goto exit_loop;
+                                }
+                            }
+                        }
+                    }
+                }
+                exit_loop:
+                TrxWriter.GenerateReport(path + ".trx", tests);
             }
             catch (PlatformNotSupportedException) // Throws due to https://github.com/microsoft/vstest/issues/4736. However it's thrown after TRX is written
             {
                 System.Diagnostics.Debug.Assert(File.Exists(path));
             }
+            if(hasAttachments)
+            {
+                // Create zip instead
+                if (Directory.Exists(TestRunnerVM.Instance.Settings.TestRunResultsDirectory))
+                {
+                    using (ZipArchive archive = ZipFile.Open(path + ".zip", ZipArchiveMode.Create))
+                    {
+                        archive.CreateEntryFromFile(path + ".trx", filename + ".trx");
+                        foreach (var test in tests.Where(t => t.Attachments is not null))
+                        {
+                            foreach (var a in test.Attachments.Where(a => a is not null))
+                            {
+                                foreach (var a2 in a.Attachments.Where(a2 => a2 is not null))
+                                {
+                                    string file = a2.Uri.OriginalString;
+                                    if (file.StartsWith(TestRunnerVM.Instance.Settings.TestRunResultsDirectory))
+                                    {
+                                        var entryName = file.Substring(TestRunnerVM.Instance.Settings.TestRunResultsDirectory.Length).TrimStart('/');
+                                        var executionId = test.GetPropertyValue(test.Properties.FirstOrDefault(t=>t.Id == "ExecutionId"))?.ToString();
+                                        var entrypath = Path.Combine("In", executionId, Environment.MachineName, entryName);
+                                        archive.CreateEntryFromFile(file, entrypath);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Microsoft.Maui.ApplicationModel.DataTransfer.Share.RequestAsync(
+                        new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path + ".zip")));
+                    return;
+                }
+            }
             Microsoft.Maui.ApplicationModel.DataTransfer.Share.RequestAsync(
-                new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path)));
+                new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("TRX Test Report", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(path + ".trx")));
         }
         private void StopRun_Clicked()
         {

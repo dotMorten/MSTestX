@@ -18,7 +18,7 @@ namespace TestAppRunner.Maui
             menuItems.Add(new Tuple<string, Action>("Custom action", () => Current.MainPage.DisplayAlert("Hello!", "You clicked a custom action", "OK")));
             menuItems.Add(new Tuple<string, Action>("Run two specific tests", async () =>
             {
-                var tests= TestCases?.Where(t => t.DisplayName == "TestOK" || t.DisplayName == "MoreTests_1");
+                var tests= TestCases?.Where(t => t.DisplayName == "TestOK" || t.DisplayName == "TestAttachments");
                 try
                 {
                     var results = await RunTestsAsync(tests);
@@ -32,7 +32,7 @@ namespace TestAppRunner.Maui
             }));
             menuItems.Add(new Tuple<string, Action>("Custom test list", () =>
             {
-                var tests = TestCases?.Where(t => t.DisplayName == "TestOK" || t.DisplayName == "MoreTests_1");
+                var tests = TestCases?.Where(t => t.DisplayName == "TestOK" || t.DisplayName == "TestAttachments");
                 NavigateToTestList("Custom Test List", tests);
             }));
             base.OnSettingsMenuLoaded(menuItems);
