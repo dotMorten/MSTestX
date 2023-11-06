@@ -67,6 +67,16 @@ namespace MSTestX.UnitTestRunner
             {
                 bw.Write(t.Ticks);
             }
+            else if (value is AttachmentSet attachmentSet) {
+                bw.Write(attachmentSet.Uri.OriginalString);
+                bw.Write(attachmentSet.DisplayName);
+                WriteType(bw, attachmentSet.Attachments);
+            }
+            else if (value is UriDataAttachment attachment)
+            {
+                bw.Write(attachment.Uri.OriginalString);
+                bw.Write(attachment.Description);
+            }
             else if(value is System.Collections.IEnumerable enumerable)
             {
                 var enumerator = enumerable.GetEnumerator();
@@ -187,6 +197,16 @@ namespace MSTestX.UnitTestRunner
                 return TimeSpan.FromTicks(br.ReadInt64());
             if (fieldType.IsEnum)
                 return br.ReadInt32();
+            if (fieldType == typeof(AttachmentSet))
+            {
+                var uri = br.ReadString();
+                Debug.WriteLine(uri);
+                var set = new AttachmentSet(new Uri(uri), br.ReadString());
+                ReadValue(br, set.Attachments.GetType(), set.Attachments);
+                return set;
+            }
+            if (fieldType == typeof(UriDataAttachment))
+                return new UriDataAttachment(new Uri(br.ReadString()), br.ReadString());
             if (fieldType.GetInterface("System.Collections.IEnumerable") != null)
             {
                 int count = br.ReadInt32();

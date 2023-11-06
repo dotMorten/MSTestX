@@ -58,12 +58,12 @@ namespace UnitTests
             ValidateDirectories();
             var folder = TestContext.TestRunResultsDirectory;
             HttpClient c = new HttpClient();
-            using (var stream = await c.GetStreamAsync("https://github.com/dotMorten/MSTestX/raw/master/src/TestAppRunner/TestAppRunner.iOS/Resources/Default.png"))
+            using (var stream = await c.GetStreamAsync("https://github.com/dotMorten/MSTestX/assets/1378165/979a60c1-2c88-4492-9a57-b2ba2cc6fbfe"))
             {
                 folder = Path.Combine(folder, nameof(TestImageAttachment));
                 var di = new DirectoryInfo(folder);
                 if (!di.Exists) di.Create();
-                var filename = Path.Combine(folder, "Xamagon.png");
+                var filename = Path.Combine(folder, "AttachedImage.png");
                 using (var output = File.OpenWrite(filename))
                 {
                     await stream.CopyToAsync(output);

@@ -109,7 +109,12 @@ namespace TestAppRunner.ViewModels
                                     {
                                         t.Result = MSTestX.UnitTestRunner.TestResultSerializer.Deserialize(previousResult.Result, t.Test);
                                     }
-                                    catch { return; }
+                                    catch(System.Exception ex)
+                                    {
+                                        Debug.WriteLine($"Failed to deserialize {t.Test.FullyQualifiedName}: " + ex.Message);
+                                        Debug.WriteLine(ex.StackTrace);
+                                        return; 
+                                    }
                                 }
                                 else
                                 {
