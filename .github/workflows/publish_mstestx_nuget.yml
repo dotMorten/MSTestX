@@ -30,13 +30,13 @@ jobs:
         fileName: 'certfile.pfx'
         encodedString: ${{ secrets.BASE64_ENCODED_PFX }}
 
-    - name: Build All
+    - name: Build Adapter and Runner
       if: ${{ inputs.publish-adapter }}
       run: |
-        dotnet nuget push nupkg\MSTestX.TestAdapter.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
-        dotnet nuget push nupkg\MSTestX.TestAdapter.*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.org
+        msbuild /restore /t:Build,Pack src/MSTestX.Adapter/MSTestX.Adapter.csproj /p:Configuration=Release /p:Configuration=Release /p:CertificatePath=${{ steps.cert_file.outputs.filePath }} /p:CertificatePassword=${{ secrets.PFX_PASSWORD }}
+        msbuild /restore /t:Build,Pack src/TestAppRunner/TestAppRunner/TestAppRunner.csproj /p:Configuration=Release /p:Configuration=Release /p:CertificatePath=${{ steps.cert_file.outputs.filePath }} /p:CertificatePassword=${{ secrets.PFX_PASSWORD }}
 
-    - name: Build
+    - name: Build Runner
       if: ${{ ! inputs.publish-adapter }}
       run: |
         msbuild /restore /t:Build,Pack src/TestAppRunner/TestAppRunner/TestAppRunner.csproj /p:NuGetAdapter=true /p:Configuration=Release /p:Configuration=Release /p:CertificatePath=${{ steps.cert_file.outputs.filePath }} /p:CertificatePassword=${{ secrets.PFX_PASSWORD }}
