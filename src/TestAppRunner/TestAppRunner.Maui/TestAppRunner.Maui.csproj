@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup >
+  <PropertyGroup>
     <TargetFrameworks>net7.0-android;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(SkipWindows)'!='True'">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
@@ -45,8 +45,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\UnitTests\UnitTests.csproj" />
       <ProjectReference Include="..\TestAppRunner\TestAppRunner.csproj" />
+      <ProjectReference Include="..\..\MSTextX.SourceGenerator\MSTextX.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
-    
+
+    <Import Project="..\..\UnitTests\UnitTests.projitems" Label="Shared" />
 </Project>

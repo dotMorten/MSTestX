@@ -81,7 +81,10 @@ namespace TestAppRunner.ViewModels
                     var tests = new Dictionary<Guid, TestResultVM>();
                     var asm = this.Settings.TestAssemblies ?? AppDomain.CurrentDomain.GetAssemblies().Where(c => !c.IsDynamic).ToArray();
                     var references = asm.Select(c => System.IO.Path.GetFileName(c.Location)).ToArray();
-                    testRunner = new TestRunner(references, this);
+                    if(Settings.TestList != null)
+                        testRunner = new TestRunner(Settings.TestList, this);
+                    else
+                        testRunner = new TestRunner(references, this);
                     foreach (var item in testRunner.Tests)
                     {
                         tests[item.Id] = new TestResultVM(item);

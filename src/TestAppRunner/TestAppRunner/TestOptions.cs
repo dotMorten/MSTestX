@@ -9,6 +9,21 @@ using System.Xml;
 namespace MSTestX
 {
     /// <summary>
+    /// Used by the source generator to generate a test list.
+    /// </summary>
+    public interface IMSTestXTestList
+    {
+        /// <summary>
+        /// List of test cases
+        /// </summary>
+        List<TestCase> TestCases { get; }
+        /// <summary>
+        /// List of classes that contain tests
+        /// </summary>
+        List<Type> TestClasses { get; }
+    }
+
+    /// <summary>
     /// Test options
     /// </summary>
     public class TestOptions : IRunSettings
@@ -23,6 +38,12 @@ namespace MSTestX
             if (!Directory.Exists(ResultsDirectory))
                 Directory.CreateDirectory(ResultsDirectory);
         }
+
+        /// <summary>
+        /// Gets or sets a list of test cases to run. Usually just set to an instance of the generated class: <c>new MSTestX.MSTestXTestList()</c>.
+        /// </summary>
+        public IMSTestXTestList TestList { get; set; }
+
         /// <summary>
         /// Start the test run when the test app launches
         /// </summary>

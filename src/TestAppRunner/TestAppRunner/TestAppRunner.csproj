@@ -76,4 +76,20 @@
     <PackageReference Include="MSTestX.TestAdapter" Version="$(MSTestXAdapterVersion)" PrivateAssets="Analyzers" Condition="'$(NuGetAdapter)'=='true'" />
   </ItemGroup>
 
+  
+  <!-- Code Generator stuff -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddCodeGeneratorsToOutput</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\MSTextX.SourceGenerator\MSTextX.SourceGenerator.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="tools" />
+  </ItemGroup>
+  <Target Name="_AddCodeGeneratorsToOutput">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutputPath)\MSTextX.SourceGenerator.dll" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
 </Project>

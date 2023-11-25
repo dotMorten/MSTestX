@@ -17,7 +17,7 @@ public static class MauiProgram
 #elif WINDOWS
                 var logsdir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UnitTests");
 #endif
-                testOptions.TestAssemblies = new System.Reflection.Assembly[] { typeof(UnitTests.AttachmentTests).Assembly };
+                //testOptions.TestAssemblies = new System.Reflection.Assembly[] { typeof(UnitTests.AttachmentTests).Assembly };
                 // configure default timeout
                 testOptions.SettingsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
                     "<RunSettings>" +
@@ -31,6 +31,7 @@ public static class MauiProgram
 
                 testOptions.TrxOutputPath = System.IO.Path.Combine(logsdir, $"UnitTests.trx");
                 testOptions.ProgressLogPath = System.IO.Path.Combine(logsdir, $"UnitTest.log");
+                testOptions.TestList = new MSTestXTestList();
                 return testOptions;
             })
             .ConfigureFonts(fonts =>

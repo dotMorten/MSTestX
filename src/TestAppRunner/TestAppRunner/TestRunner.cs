@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using MSTestX;
 
 namespace TestAppRunner
 {
@@ -21,6 +23,47 @@ namespace TestAppRunner
             sink = new TestCaseDiscoverySink();
             new MSTestDiscoverer().DiscoverTests(sources, this, this, sink);
             this.recorder = recorder;
+            foreach(var test in sink.Tests.OrderBy(t=>t.FullyQualifiedName))
+            {
+                foreach(var prop in test.Properties)
+                {
+                    var value = test.GetPropertyValue(prop);
+                    if (value is string[] arr)
+                        value = "[" + string.Join(", ", arr) + "]";
+                    else if(value is System.Collections.Generic.KeyValuePair<System.String, System.String>[] arr2)
+                    {
+                        value = "[" + string.Join(", ", arr2.Select(a => a.Key + "=" + a.Value)) + "]";
+                    }
+                    Debug.WriteLine($"{prop.Label}: {value}");
+                }
+                Debug.WriteLine("");
+            }
+        }
+
+        public TestRunner(IMSTestXTestList list, ITestExecutionRecorder recorder)
+        {
+            sink = new TestCaseDiscoverySink();
+            ITestCaseDiscoverySink isink = sink;
+            foreach (var test in list.TestCases)
+            {
+                isink.SendTestCase(test);
+            }
+            this.recorder = recorder;
+            foreach (var test in sink.Tests.OrderBy(t => t.FullyQualifiedName))
+            {
+                foreach (var prop in test.Properties)
+                {
+                    var value = test.GetPropertyValue(prop);
+                    if (value is string[] arr)
+                        value = "[" + string.Join(", ", arr) + "]";
+                    else if (value is System.Collections.Generic.KeyValuePair<System.String, System.String>[] arr2)
+                    {
+                        value = "[" + string.Join(", ", arr2.Select(a => a.Key + "=" + a.Value)) + "]";
+                    }
+                    Debug.WriteLine($"{prop.Label}: {value}");
+                }
+                Debug.WriteLine("");
+            }
         }
 
         IRunSettings IDiscoveryContext.RunSettings => settings;
@@ -41,9 +84,16 @@ namespace TestAppRunner
                 cancellationToken.Register(() => token.Cancel());
             settings = runSettings;
             MSTestSettings.PopulateSettings(this);
-            return System.Threading.Tasks.Task.Run(() => {
-                new TestExecutionManager().RunTests(tests, this, this, token);
-                token = null;
+            return System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    new TestExecutionManager().RunTests(tests, this, this, token);
+                }
+                finally
+                {
+                    token = null;
+                }
             });
         }
 
