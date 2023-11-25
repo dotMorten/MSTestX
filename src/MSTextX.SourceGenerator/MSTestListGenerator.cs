@@ -187,41 +187,13 @@ namespace MSTestX
 {
     public class MSTestXTestList : IMSTestXTestList
     {
-        private readonly static Uri _uri = new System.Uri(""executor://mstestadapter/v2"");
-
-        internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-            id: ""TestCase.ManagedType"",
-            label: ""ManagedType"",
-            category: string.Empty,
-            description: string.Empty,
-            valueType: typeof(string),
-            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
-            attributes: TestPropertyAttributes.Hidden,
-            owner: typeof(TestCase));
-
-        internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-            id: ""TestCase.ManagedMethod"",
-            label: ""ManagedMethod"",
-            category: string.Empty,
-            description: string.Empty,
-            valueType: typeof(string),
-            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
-            attributes: TestPropertyAttributes.Hidden,
-            owner: typeof(TestCase));
-        internal static readonly TestProperty TestClassNameProperty = TestProperty.Register(""MSTestDiscoverer.TestClassName"", ""ClassName"", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-        internal static readonly TestProperty HierarchyProperty = TestProperty.Register(
-            id: ""TestCase.Hierarchy"",
-            label: ""Hierarchy"",
-            category: string.Empty,
-            description: string.Empty,
-            valueType: typeof(string[]),
-            validateValueCallback: null,
-            attributes: TestPropertyAttributes.Immutable,
-            owner: typeof(TestCase));
-
-        internal static readonly TestProperty AsyncTestProperty = TestProperty.Register(""MSTestDiscoverer.IsAsync"", ""IsAsync"", typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
-        internal static readonly TestProperty TestCategoryProperty = TestProperty.Register(""MSTestDiscoverer.TestCategory"", ""TestCategory"", typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
+        private static readonly Uri _uri = new System.Uri(""executor://mstestadapter/v2"");
+        private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(""TestCase.ManagedType"", ""ManagedType"", string.Empty, string.Empty, typeof(string), o => !string.IsNullOrWhiteSpace(o as string), TestPropertyAttributes.Hidden, typeof(TestCase));
+        private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(""TestCase.ManagedMethod"", ""ManagedMethod"", string.Empty, string.Empty, typeof(string), o => !string.IsNullOrWhiteSpace(o as string), TestPropertyAttributes.Hidden, typeof(TestCase));
+        private static readonly TestProperty TestClassNameProperty = TestProperty.Register(""MSTestDiscoverer.TestClassName"", ""ClassName"", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+        private static readonly TestProperty HierarchyProperty = TestProperty.Register(""TestCase.Hierarchy"", ""Hierarchy"", string.Empty, string.Empty, typeof(string[]), null, TestPropertyAttributes.Immutable, typeof(TestCase));
+        private static readonly TestProperty AsyncTestProperty = TestProperty.Register(""MSTestDiscoverer.IsAsync"", ""IsAsync"", typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
+        private static readonly TestProperty TestCategoryProperty = TestProperty.Register(""MSTestDiscoverer.TestCategory"", ""TestCategory"", typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
 
         private static TestCase Create(string assemblyName, string className, string methodName, string name, string codeFilePath, int lineNumber, IEnumerable<KeyValuePair<string,string>> traits, string[] categories, bool isAsync, object extensionData)
         {
