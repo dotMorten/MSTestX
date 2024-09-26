@@ -31,7 +31,7 @@ jobs:
         msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release /p:SkipWindows=True
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: NuGet Packages
         path: nupkg
