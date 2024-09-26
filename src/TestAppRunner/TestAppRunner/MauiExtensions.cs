@@ -1,4 +1,5 @@
 ﻿#if MAUI
+#nullable enable
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.LifecycleEvents;
@@ -19,7 +20,7 @@ namespace MSTestX
         /// <param name="builder"></param>
         /// <param name="configureTestOptions"></param>
         /// <returns></returns>
-        public static MauiAppBuilder UseTestApp(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null)
+        public static MauiAppBuilder UseTestApp(this MauiAppBuilder builder, Func<TestOptions, TestOptions>? configureTestOptions = null)
         {
             return builder.UseTestApp<RunnerApp>(configureTestOptions);
         }
@@ -31,7 +32,7 @@ namespace MSTestX
         /// <param name="builder"></param>
         /// <param name="configureTestOptions"></param>
         /// <returns></returns>
-        public static MauiAppBuilder UseTestApp<T>(this MauiAppBuilder builder, Func<TestOptions, TestOptions> configureTestOptions = null) where T : RunnerApp
+        public static MauiAppBuilder UseTestApp<T>(this MauiAppBuilder builder, Func<TestOptions, TestOptions>? configureTestOptions = null) where T : RunnerApp
         {
             return builder.UseMauiApp<T>()
                 .ConfigureLifecycleEvents((events) =>
@@ -50,16 +51,16 @@ namespace MSTestX
                         // adb shell am start -n TestAppRunner/TestAppRunner.Android --ez AutoRun true --es TrxReportFile TestReport
                         // Once test run is complete you can copy the report back:
                         // adb exec -out run -as com.mstestx.TestAppRunner cat/data/data/com.mstestx.TestAppRunner/files/TestReport.trx > TestReport.trx
-                        testOptions.AutoRun = intent.GetBooleanExtra("AutoRun", false);
+                        testOptions.AutoRun = intent!.GetBooleanExtra("AutoRun", false);
                         testOptions.AutoResume = intent.GetBooleanExtra("AutoResume", false);
-                        string path = intent.GetStringExtra("ReportFile");
+                        string? path = intent.GetStringExtra("ReportFile");
                         // Or generate a new time-stamped log file path on each run:
                         // if (string.IsNullOrEmpty(path))
                         //     path = "TestAppRunner_" + System.DateTime.Now.ToString("yyyy_MM_dd_HH-mm-ss");
 
                         if (!string.IsNullOrEmpty(path))
                         {
-                            path = System.IO.Path.Combine(activity.ApplicationContext.FilesDir.Path, path);
+                            path = System.IO.Path.Combine(activity.ApplicationContext!.FilesDir!.Path, path);
                             testOptions.TrxOutputPath = path + ".trx";
                             testOptions.ProgressLogPath = path + ".log";
                         }
@@ -77,7 +78,7 @@ namespace MSTestX
 
                         testOptions.TestAdapterPort = (ushort)intent.GetIntExtra("TestAdapterPort", testOptions.TestAdapterPort);
                         configureTestOptions?.Invoke(testOptions);
-                        ((RunnerApp)RunnerApp.Current).Initialize(testOptions);
+                        ((RunnerApp)RunnerApp.Current!).Initialize(testOptions);
                     }));
 #elif __IOS__
                     events.AddiOS(ios => ios.FinishedLaunching((app, launchOptions) =>
@@ -85,7 +86,7 @@ namespace MSTestX
                         TestOptions testOptions = new TestOptions();
                         var procArgs = Foundation.NSProcessInfo.ProcessInfo.Arguments;
                         // Parse arguments and set up test options based on this.
-                        Dictionary<string, string> arguments = new Dictionary<string, string>();
+                        Dictionary<string, string?> arguments = new Dictionary<string, string?>();
                         if (procArgs.Length > 0)
                         {
                             for (int i = 1; i < procArgs.Length; i++)
@@ -93,7 +94,7 @@ namespace MSTestX
                                 var a = procArgs[i];
                                 if (a.StartsWith("-") && a.Length > 1)
                                 {
-                                    string value = null;
+                                    string? value = null;
                                     if (i + 1 < procArgs.Length)
                                     {
                                         var nextArg = procArgs[i + 1];
@@ -103,7 +104,7 @@ namespace MSTestX
                                             i++;
                                         }
                                     }
-                                    arguments[a.Substring(1)] = value;
+                                    arguments[a.TrimStart('-')] = value;
                                 }
                             }
                         }
@@ -136,7 +137,7 @@ namespace MSTestX
                             testOptions.SettingsXml = arguments["SettingsXml"];
                         }
                         configureTestOptions?.Invoke(testOptions);
-                        ((RunnerApp)RunnerApp.Current).Initialize(testOptions);
+                        ((RunnerApp)RunnerApp.Current!).Initialize(testOptions);
                         return true;
                     }));
 #elif WINDOWS
@@ -145,10 +146,10 @@ namespace MSTestX
                         TestOptions testOptions = new TestOptions();
                         //TODO: Parse eventArgs.Arguments
                         configureTestOptions?.Invoke(testOptions);
-                        ((RunnerApp)RunnerApp.Current).Initialize(testOptions);
+                        ((RunnerApp)RunnerApp.Current!).Initialize(testOptions);
                     }));
 #endif
-                    });
+                });
         }
     }
 }

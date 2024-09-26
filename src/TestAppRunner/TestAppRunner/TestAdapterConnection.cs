@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+﻿#nullable enable
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -14,7 +15,7 @@ namespace TestAppRunner
         private SocketCommunicationManager comm = new SocketCommunicationManager();
         private bool isConnected;
         private int port;
-        private System.Threading.Thread messageLoopThread;
+        private System.Threading.Thread? messageLoopThread;
 
         public TestAdapterConnection(int port)
         {
@@ -40,12 +41,12 @@ namespace TestAppRunner
             }
             public string SettingsXml { get; }
 
-            public ISettingsProvider GetSettings(string settingsName) => null;
+            public ISettingsProvider? GetSettings(string? settingsName) => null;
         }
 
-        private Task<Message> ReceiveMessageAsync()
+        private Task<Message?> ReceiveMessageAsync()
         {
-            return Task.Run<Message>(() =>
+            return Task.Run<Message?>(() =>
             {
                 try
                 {
@@ -80,7 +81,7 @@ namespace TestAppRunner
 
         }
             
-        private async void StartMessageLoop(TaskCompletionSource<object> tcs)
+        private async void StartMessageLoop(TaskCompletionSource<object?> tcs)
         {
             while (isConnected)
             {
@@ -253,17 +254,17 @@ namespace TestAppRunner
         private class FileDataAttachment
         {
             [DataMember]
-            public string Description { get; private set; }
+            public string? Description { get; private set; }
             [DataMember]
             public string Uri { get; private set; }
-            private byte[] data;
+            private byte[]? data;
             [DataMember]
-            public byte[] Data
+            public byte[]? Data
             { 
-                get => data ?? System.IO.File.ReadAllBytes(path); 
+                get => data ?? (path is not null ? (data = System.IO.File.ReadAllBytes(path)) : null); 
                 private set => data = value; 
             }
-            string path = null;
+            string? path = null;
             public FileDataAttachment(UriDataAttachment a, string rootDirectory)
             {
                 path = a.Uri.LocalPath;

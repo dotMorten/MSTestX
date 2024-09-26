@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -13,8 +14,8 @@ namespace TestAppRunner
     {
         private ITestExecutionRecorder recorder;
         private TestCaseDiscoverySink sink;
-        private TestRunCancellationToken token;
-        private IRunSettings settings;
+        private TestRunCancellationToken? token;
+        private IRunSettings? settings;
 
         public TestRunner(IEnumerable<string> sources, ITestExecutionRecorder recorder)
         {
@@ -23,16 +24,16 @@ namespace TestAppRunner
             this.recorder = recorder;
         }
 
-        IRunSettings IDiscoveryContext.RunSettings => settings;
+        IRunSettings? IDiscoveryContext.RunSettings => settings;
 
         public IEnumerable<TestCase> Tests => sink?.Tests ?? System.Linq.Enumerable.Empty<TestCase>();
 
-        internal Task Run(IRunSettings runSettings = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        internal Task Run(IRunSettings? runSettings = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             return Run(sink.Tests, runSettings, cancellationToken);
         }
 
-        internal Task Run(IEnumerable<TestCase> tests, IRunSettings runSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        internal Task Run(IEnumerable<TestCase> tests, IRunSettings? runSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (IsRunning)
                 throw new InvalidOperationException("Test run already running");
@@ -59,11 +60,11 @@ namespace TestAppRunner
 
         public bool IsBeingDebugged => System.Diagnostics.Debugger.IsAttached;
 
-        public string TestRunDirectory { get; set; }
+        public string? TestRunDirectory { get; set; }
 
-        public string SolutionDirectory { get; set; }
+        public string? SolutionDirectory { get; set; }
 
-        ITestCaseFilterExpression IRunContext.GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
+        ITestCaseFilterExpression? IRunContext.GetTestCaseFilter(IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider)
         {
             return null;
         }
@@ -74,7 +75,7 @@ namespace TestAppRunner
 
         bool IFrameworkHandle.EnableShutdownAfterTestRun { get; set; }
 
-        int IFrameworkHandle.LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)
+        int IFrameworkHandle.LaunchProcessWithDebuggerAttached(string filePath, string? workingDirectory, string? arguments, IDictionary<string, string?>? environmentVariables)
         {
             throw new NotImplementedException();
         }

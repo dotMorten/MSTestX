@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace MSTestX
 #endif
         {
             InitializeComponent();
-            RunnerApp.Current.Resources = new Styles.DefaultTheme();
+            RunnerApp.Current!.Resources = new Styles.DefaultTheme();
             TestRunnerVM.Instance.HostApp = this;
 #if !MAUI
             TestRunnerVM.Instance.Settings = settings ?? new TestOptions();
@@ -43,8 +44,8 @@ namespace MSTestX
 
 #if MAUI
 #if __ANDROID__
-            TestRunStarted += (a, testCases) => { Dispatcher.Dispatch(() => Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.Window?.AddFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
-            TestRunCompleted += (a, results) => { Dispatcher.Dispatch(() => Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.Window?.ClearFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+            TestRunStarted += (a, testCases) => { Dispatcher.Dispatch(() => Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window?.AddFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
+            TestRunCompleted += (a, results) => { Dispatcher.Dispatch(() => Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window?.ClearFlags(Android.Views.WindowManagerFlags.KeepScreenOn)); };
 #elif __IOS__
             TestRunStarted += (a, testCases) => { Dispatcher.Dispatch(() => UIKit.UIApplication.SharedApplication.IdleTimerDisabled = true); };
             TestRunCompleted += (a, results) => { Dispatcher.Dispatch(() => UIKit.UIApplication.SharedApplication.IdleTimerDisabled = false); };
@@ -56,7 +57,7 @@ namespace MSTestX
         /// Starts the test run test discovery with the provided test options.
         /// </summary>
         /// <param name="settings"></param>
-        public void Initialize(TestOptions settings = null)
+        public void Initialize(TestOptions? settings = null)
         {
             if (isInitialized)
                 return;
@@ -65,7 +66,7 @@ namespace MSTestX
             TestRunnerVM.Instance.Initialize();
         }
 #endif
-        public IRunSettings TestRunSettings => TestRunnerVM.Instance.Settings;
+        public IRunSettings? TestRunSettings => TestRunnerVM.Instance.Settings;
 
         /// <summary>
         /// Navigate to a page with a custom set of tests.
@@ -76,7 +77,7 @@ namespace MSTestX
         {
             var cases = TestRunnerVM.Instance.Tests.IntersectBy(testCases, (t) => t.Test).ToArray();
             TestResultGroup group = new TestResultGroup(name, cases);
-            _ = MainPage.Navigation.PushAsync(new TestRunPage(group));
+            _ = MainPage?.Navigation.PushAsync(new TestRunPage(group));
         }
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace MSTestX
         /// <param name="testCases"></param>
         /// <param name="settings"></param>
         /// <returns></returns>
-        public System.Threading.Tasks.Task<IEnumerable<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings settings = null)
+        public System.Threading.Tasks.Task<IEnumerable<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings? settings = null)
         {
             return TestRunnerVM.Instance.Run(testCases, settings ?? TestRunnerVM.Instance.Settings);
         }
@@ -129,16 +130,16 @@ namespace MSTestX
         /// <summary>
         /// Raised when a test run has started
         /// </summary>
-        public event EventHandler<IEnumerable<TestCase>> TestRunStarted;
+        public event EventHandler<IEnumerable<TestCase>>? TestRunStarted;
 
         /// <summary>
         /// Raised when a test run has completed
         /// </summary>
-        public event EventHandler<IEnumerable<TestResult>> TestRunCompleted;
+        public event EventHandler<IEnumerable<TestResult>>? TestRunCompleted;
 
         /// <summary>
         /// Raised when all tests have been discovered
         /// /// </summary>
-        public event EventHandler<IEnumerable<TestCase>> TestsDiscovered;
+        public event EventHandler<IEnumerable<TestCase>>? TestsDiscovered;
     }
 }

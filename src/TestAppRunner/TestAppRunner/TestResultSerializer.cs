@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿#nullable enable
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace MSTestX.UnitTestRunner
@@ -24,7 +25,7 @@ namespace MSTestX.UnitTestRunner
                         foreach (var m in t.Messages)
                         {
                             bw.Write(m.Category);
-                            bw.Write(m.Text);
+                            bw.Write(m.Text ?? string.Empty);
                         }
                     }
                     continue;
@@ -33,7 +34,7 @@ namespace MSTestX.UnitTestRunner
                     continue;
                 
                 bw.Write(field.Name);
-                WriteType(bw, field.Item2);
+                WriteType(bw, field.Item2!);
             }
         }
 
@@ -75,7 +76,7 @@ namespace MSTestX.UnitTestRunner
             else if (value is UriDataAttachment attachment)
             {
                 bw.Write(attachment.Uri.OriginalString);
-                bw.Write(attachment.Description);
+                bw.Write(attachment.Description ?? string.Empty);
             }
             else if(value is System.Collections.IEnumerable enumerable)
             {
@@ -95,26 +96,22 @@ namespace MSTestX.UnitTestRunner
             }
             else if(value is object)
             {
-                bw.Write(value.GetType().AssemblyQualifiedName);
+                bw.Write(value.GetType().AssemblyQualifiedName ?? string.Empty);
                 var fields = value.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(f=>f.GetSetMethod() != null).Where(f => f.GetValue(value) != null  || f.PropertyType.IsAssignableFrom(typeof(System.Collections.ObjectModel.Collection<>)));
                 bw.Write(fields.Count());
                 foreach (var field in fields)
                 {
                     try
                     {
-                        var value2 = field.GetValue(value);
+                        var value2 = field.GetValue(value)!;
                         bw.Write(field.Name);
                         WriteType(bw, value2);
                     }
-                    catch (System.Exception ex)
+                    catch (System.Exception)
                     {
 
                     }
                 }
-            }
-            else
-            {
-                throw new NotImplementedException(value.GetType().FullName);
             }
         }
 
@@ -181,7 +178,7 @@ namespace MSTestX.UnitTestRunner
             TypeInfo[t] = fields;
             return fields;
         }
-        private static object ReadValue(BinaryReader br, Type fieldType, object currentValue)
+        private static object? ReadValue(BinaryReader br, Type fieldType, object? currentValue)
         {
             if (fieldType == typeof(int))
                 return br.ReadInt32();
@@ -210,7 +207,7 @@ namespace MSTestX.UnitTestRunner
             if (fieldType.GetInterface("System.Collections.IEnumerable") != null)
             {
                 int count = br.ReadInt32();
-                object value = null;
+                object? value = null;
                 if (currentValue is null)
                 {
                     value = Activator.CreateInstance(fieldType);
@@ -218,7 +215,7 @@ namespace MSTestX.UnitTestRunner
                 }
                 if (currentValue is System.Collections.IList list)
                 {
-                    Type elementType = null;
+                    Type? elementType = null;
                     if (fieldType.IsGenericType)
                         elementType = fieldType.GenericTypeArguments[0];
                     else
@@ -227,7 +224,7 @@ namespace MSTestX.UnitTestRunner
                     }
                     for (int i = 0; i < count; i++)
                     {
-                        var itemValue = ReadValue(br, elementType, null);
+                        var itemValue = ReadValue(br, elementType!, null);
                         list.Add(itemValue);
                     }
                 }
@@ -239,13 +236,16 @@ namespace MSTestX.UnitTestRunner
                 int fieldCount = br.ReadInt32();
 
 #if !NETSTANDARD2_0
-                var instance = currentValue ?? System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(Type.GetType(typeName));
+                var type = Type.GetType(typeName);
+                if(type is null)
+                    throw new InvalidOperationException($"Type {typeName} not found");
+                var instance = currentValue ?? System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
                 var fields = GetTypeInfo(fieldType);
                 for (int i = 0; i < fieldCount; i++) {
                     var fieldName = br.ReadString();
                     var field = fields.Where(f => f.Name == fieldName).Single();
                     var value = ReadValue(br, field.PropertyType, field.GetValue(instance));
-                    field.GetSetMethod(true).Invoke(instance, new object[] { value });
+                    field.GetSetMethod(true)?.Invoke(instance, new object?[] { value });
                 }
                 return instance;
 #endif

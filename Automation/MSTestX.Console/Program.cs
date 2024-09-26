@@ -47,6 +47,7 @@ namespace MSTestX.Console
         {
             System.Console.WriteLine(@"Test Runner commandline arguments:
     -remoteIp <ip:port>                 The IP address of a device already running the unit test app
+    -waitForRemote                      If IP of device isn't known, use waitForRemote to wait for app to ping back on port 38302.
     -logFileName <path>                 TRX Output Filename
     -settings <path>                    MSTest RunSettings xml file
 
@@ -68,7 +69,25 @@ Android specific (ignored if using remoteIp):
                 settingsXml = File.ReadAllText(arguments["settings"]);
             }
 
+
             System.Net.IPEndPoint testAdapterEndpoint = null;
+            if (arguments.ContainsKey("waitForRemote"))
+            {
+                var pingTask = new TaskCompletionSource<bool>();
+                var pingListener = new TcpListener(System.Net.IPAddress.Any, 38302);
+                pingListener.Start();
+                System.Console.WriteLine("Waiting for remote ping...");
+                var pingTaskResult = await pingListener.AcceptTcpClientAsync();
+                testAdapterEndpoint = pingTaskResult.Client.RemoteEndPoint as System.Net.IPEndPoint;
+                if (testAdapterEndpoint != null)
+                {
+                    testAdapterEndpoint.Port = 38300;
+                    pingListener.Stop();
+                    System.Console.WriteLine($"Remote device connected from {testAdapterEndpoint}. Starting test run...");
+                }
+                else return;
+            }
+
             if (arguments.ContainsKey("remoteIp"))
             {
                 var val = arguments["remoteIp"];

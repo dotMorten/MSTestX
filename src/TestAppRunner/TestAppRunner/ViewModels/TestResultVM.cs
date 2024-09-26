@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+﻿#nullable enable
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,7 +13,7 @@ namespace TestAppRunner.ViewModels
             Test = test;
         }
 
-        public string DisplayName => result?.DisplayName ?? Test?.DisplayName;
+        public string DisplayName => result?.DisplayName ?? Test?.DisplayName ?? string.Empty;
 
         public string DataRowCompletion
         {
@@ -27,7 +28,7 @@ namespace TestAppRunner.ViewModels
 
         public TestCase Test { get; }
 
-        private TestResult result;
+        private TestResult? result;
 
         /// <summary>
         ///  Gets the number of child results based on the test result property, or -1 if no test result is available at this point.
@@ -37,7 +38,7 @@ namespace TestAppRunner.ViewModels
             get => Result is null ? -1 : Result.GetProperty<int>("InnerResultsCount", 0);
         }
 
-        public TestResult Result
+        public TestResult? Result
         {
             get { return result; }
             set
@@ -53,9 +54,9 @@ namespace TestAppRunner.ViewModels
             get { return ChildResults ?? (Result != null ? Enumerable.Repeat(Result, 1) : Enumerable.Empty<TestResult>()); }
         }
 
-        private IList<TestResult> childResults;
+        private IList<TestResult>? childResults;
 
-        public IList<TestResult> ChildResults
+        public IList<TestResult>? ChildResults
         {
             get => childResults;
             set
@@ -102,15 +103,15 @@ namespace TestAppRunner.ViewModels
 
         public bool IsInProgress => inProgress;
 
-        public string Category
+        public string? Category
         {
             get
             {
-                return Test.GetProperty("MSTestDiscoverer.TestCategory", new string[] { }).FirstOrDefault();
+                return Test.GetProperty("MSTestDiscoverer.TestCategory", new string[] { })?.FirstOrDefault();
             }
         }
 
-        public string Duration
+        public string? Duration
         {
             get
             {
@@ -123,13 +124,15 @@ namespace TestAppRunner.ViewModels
 
         public string Namespace => ClassName.Substring(0, ClassName.LastIndexOf("."));
 
-        public bool HasProperties => Test.GetProperty<KeyValuePair<string, string>[]>("TestObject.Traits", new KeyValuePair<string, string>[] { }).Any();
+        public bool HasProperties => (Test.GetProperty<KeyValuePair<string, string>[]>("TestObject.Traits", new KeyValuePair<string, string>[] { })?.Length ?? 0) > 0;
 
         public string Properties
         {
             get
             {
                 var traits = Test.GetProperty("TestObject.Traits", new KeyValuePair<string, string>[] { });
+                if (traits is null)
+                    return string.Empty;
                 string str = "";
                 foreach (var trait in traits)
                     str += $"{trait.Key} = {trait.Value}\n";
@@ -139,14 +142,14 @@ namespace TestAppRunner.ViewModels
 
         public bool HasMessages => Result?.Messages?.Any() == true;
 
-        public string Messages
+        public string? Messages
         {
             get
             {
                 if (Result?.Messages == null) return null;
                 string p = "";
                 foreach (var msg in Result.Messages)
-                    p += $"{msg.Category}: {msg.Text.Trim()}\n";
+                    p += $"{msg.Category}: {msg.Text?.Trim()}\n";
                 return p.Trim();
             }
         }
@@ -161,7 +164,7 @@ namespace TestAppRunner.ViewModels
 
     internal static class PropertyExtensions
     {
-        public static T GetProperty<T>(this TestObject test, string id, T defaultValue = default(T))
+        public static T? GetProperty<T>(this TestObject test, string id, T? defaultValue = default(T))
         {
             var prop = test.Properties.Where(p => p.Id == id).FirstOrDefault();
             if (prop != null)
