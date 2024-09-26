@@ -43,34 +43,69 @@ namespace TestAppRunner.ViewModels
         {   
         }
 
-        public void Initialize()
+        public async void Initialize()
         {
+            await LoadTests();
             int port = Settings.TestAdapterPort;
             if (port > 0)
             {
                 InitializeTestAdapterConnection(port);
             }
-            LoadTests();
+        }
+
+        internal static void ShowToast(string text)
+        {
+            Application.Current.Dispatcher.Dispatch(() =>
+            {
+                var duration = CommunityToolkit.Maui.Core.ToastDuration.Long;
+                double fontSize = 14;
+                var toast = CommunityToolkit.Maui.Alerts.Toast.Make(text, duration, fontSize);
+                _ = toast.Show();
+            });
+        }
+
+        private static async void PingHost(string host)
+        {
+            await Task.Delay(2000);
+            TestAppRunner.ViewModels.TestRunnerVM.ShowToast("Pinging host: " + host);
+            for (int i = 0; i < 100; i++)
+            {
+
+                using (System.Net.Sockets.TcpClient tcpScan = new System.Net.Sockets.TcpClient())
+                {
+                    try
+                    {
+                        await tcpScan.ConnectAsync(host, 38302);
+                        return;
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+            }
         }
 
         public async void InitializeTestAdapterConnection(int port)
         {
-            Status = $"Waiting for connection on port {port}...";
             OnPropertyChanged(nameof(Status));
             //TODO: Get iOS mlaunch port number
             var conn = new TestAdapterConnection(port);
+            if (!string.IsNullOrEmpty(Settings.RemoteHost))
+                PingHost(Settings.RemoteHost);
+
             try
             {
                 await conn.StartAsync();
                 connection = conn;
+                ShowToast("Remote test adapter connected!");
             }
-            catch
+            catch (System.Exception ex)
             {
-                Status = "Failed to open adapter socket";
+                ShowToast("Failed to open test adapter socket: " + ex.Message);
             }
         }
 
-        private async void LoadTests()
+        private async Task LoadTests()
         {
             Status = "Loading tests...";
             OnPropertyChanged(nameof(Status));

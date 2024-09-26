@@ -1,5 +1,6 @@
 ﻿#if MAUI
 #nullable enable
+using CommunityToolkit.Maui;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.LifecycleEvents;
@@ -35,6 +36,7 @@ namespace MSTestX
         public static MauiAppBuilder UseTestApp<T>(this MauiAppBuilder builder, Func<TestOptions, TestOptions>? configureTestOptions = null) where T : RunnerApp
         {
             return builder.UseMauiApp<T>()
+                .UseMauiCommunityToolkit()
                 .ConfigureLifecycleEvents((events) =>
                 {
 #if __ANDROID__
@@ -66,6 +68,12 @@ namespace MSTestX
                         }
                         testOptions.TerminateAfterExecution = testOptions.AutoRun || testOptions.AutoResume;
 
+                        var host = intent.GetStringExtra("RemoteHost");
+                        if (!string.IsNullOrEmpty(host))
+                        {
+                            testOptions.RemoteHost = host;
+                        }
+
                         // Get the MSTest Settings as documented here: https://docs.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2017
                         // Example setting default timeout to 10000ms:
                         // <?xml version=""1.0"" encoding=""utf-8""?>
@@ -85,6 +93,7 @@ namespace MSTestX
                     {
                         TestOptions testOptions = new TestOptions();
                         var procArgs = Foundation.NSProcessInfo.ProcessInfo.Arguments;
+
                         // Parse arguments and set up test options based on this.
                         Dictionary<string, string?> arguments = new Dictionary<string, string?>();
                         if (procArgs.Length > 0)
@@ -130,6 +139,12 @@ namespace MSTestX
                         if (arguments.ContainsKey("TestAdapterPort") && ushort.TryParse(arguments["TestAdapterPort"], out ushort port))
                         {
                             testOptions.TestAdapterPort = port;
+                        }
+
+                        if (arguments.ContainsKey("RemoteHost"))
+                        {
+                            var host = arguments["RemoteHost"];
+                            testOptions.RemoteHost = host;
                         }
 
                         if (arguments.ContainsKey("SettingsXml"))

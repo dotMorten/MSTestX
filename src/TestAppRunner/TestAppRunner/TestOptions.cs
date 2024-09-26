@@ -34,6 +34,11 @@ namespace MSTestX
         public bool AutoResume { get; set; }
 
         /// <summary>
+        /// The IP address of a remote host MSTestXConsole to ping on startup to initiate test adapter connection
+        /// </summary>
+        public string RemoteHost { get; set; }
+
+        /// <summary>
         /// Gets or sets a list of assemblies that contains tests
         /// </summary>
         /// <remarks>If not set, will search the entire set of assemblies loaded.</remarks>
