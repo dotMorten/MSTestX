@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <MSTestXAdapterVersion>2.2.10.2</MSTestXAdapterVersion>
-    <MSTextXRunnerVersion>2.0.0-rc.9</MSTextXRunnerVersion>
+    <MSTextXRunnerVersion>2.0.0</MSTextXRunnerVersion>
   </PropertyGroup>
 
 </Project>
