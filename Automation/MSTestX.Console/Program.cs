@@ -77,15 +77,39 @@ Android specific (ignored if using remoteIp):
                 var pingListener = new TcpListener(System.Net.IPAddress.Any, 38302);
                 pingListener.Start();
                 System.Console.WriteLine("Waiting for remote ping...");
-                var pingTaskResult = await pingListener.AcceptTcpClientAsync();
-                testAdapterEndpoint = pingTaskResult.Client.RemoteEndPoint as System.Net.IPEndPoint;
-                if (testAdapterEndpoint != null)
+                CancellationTokenSource cts = new CancellationTokenSource();
+                if (arguments.ContainsKey("waitForRemoteTimeout"))
                 {
-                    testAdapterEndpoint.Port = 38300;
-                    pingListener.Stop();
-                    System.Console.WriteLine($"Remote device connected from {testAdapterEndpoint}. Starting test run...");
+                    if(int.TryParse(arguments["waitForRemoteTimeout"], out int timeoutSeconds))
+                        cts.CancelAfter(timeoutSeconds * 1000);
+                    else
+                    {
+                        System.Console.WriteLine($"Invalid timeout value '{arguments["waitForRemoteTimeout"]}'.");
+                        Environment.Exit(1);
+                        return;
+                    }
                 }
-                else return;
+                else
+                    cts.CancelAfter(10 * 60 * 5); // default 5 minute timeout
+                try
+                {
+                    var pingTaskResult = await pingListener.AcceptTcpClientAsync(cts.Token);
+                    testAdapterEndpoint = pingTaskResult.Client.RemoteEndPoint as System.Net.IPEndPoint;
+                    if (testAdapterEndpoint != null)
+                    {
+                        testAdapterEndpoint.Port = 38300;
+                        pingListener.Stop();
+                        System.Console.WriteLine($"Remote device connected from {testAdapterEndpoint}. Starting test run...");
+                    }
+                    else return;
+                }
+                catch (OperationCanceledException)
+                {
+                    cts.Dispose();
+                    System.Console.WriteLine("Timeout waiting for remote device to connect");
+                    Environment.Exit(1);
+                    return;
+                }
             }
 
             if (arguments.ContainsKey("remoteIp"))
@@ -102,8 +126,16 @@ Android specific (ignored if using remoteIp):
                     return;
                 }
             }
+            if (arguments.ContainsKey("logFileName"))
+                outputFilename = arguments["logFileName"];
+
             if (testAdapterEndpoint != null)
             {
+                if (string.IsNullOrEmpty(outputFilename))
+                {
+                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                }
                 await OnApplicationLaunched(testAdapterEndpoint);
             }
             else
@@ -204,9 +236,7 @@ Android specific (ignored if using remoteIp):
                 if (File.Exists("RunLog.txt"))
                     File.Delete("RunLog.txt");
 
-                if (arguments.ContainsKey("logFileName"))
-                    outputFilename = arguments["logFileName"];
-                else
+                if (string.IsNullOrEmpty(outputFilename))
                 {
                     string defaultFilename = device.Serial + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
                     if (apk_id != null)
