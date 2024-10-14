@@ -11,7 +11,7 @@
     <ToolCommandName>mstestx.console</ToolCommandName>
     <PackageOutputPath>../../nupkg</PackageOutputPath>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    <Version>0.34.0</Version>
+    <Version>0.35.0</Version>
     <LangVersion>8.0</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
