@@ -37,14 +37,18 @@ namespace MSTestX.Console
         public static async Task<string> InstallApp(string deviceId, string appPath)
         {
             var output = await DeviceCtl($"device install app --device {deviceId} {appPath}", CancellationToken.None);
-            var idLine = output.Split(Environment.NewLine).Where(s => s.Contains("bundleID: ")).First();
-            var bundleId = idLine.Substring(idLine.IndexOf("bundleID: " + 10)).Trim();
+            var idLine = output.Split(Environment.NewLine).Where(s => s.Contains("bundleID: ")).FirstOrDefault();
+            if(string.IsNullOrEmpty(idLine))
+            {
+                throw new Exception("Failed to obtain bundle ID from install");
+            }
+            var idx = idLine.LastIndexOf("bundleID: ") + 10;
+            var bundleId = idLine.Substring(idx).Trim();
             return bundleId;
         }
-
-        public static Task LaunchApp(string deviceId, string appId, string? arguments = null, string? stdOutputFile = null)
+        public static Task LaunchApp(string deviceId, string appId, string? arguments = null, string? stdOutputFile = null, CancellationToken token = default)
         {
-            return DeviceCtl($"list device process launch --device {deviceId} --terminate-existing --console {appId} {arguments}", CancellationToken.None);
+            return DeviceCtl($"device process launch --device {deviceId} --terminate-existing --console {appId} {arguments}", token);
         }
 
         private static async Task<T> DeviceCtl<T>(string arguments, CancellationToken cancellationToken)
@@ -63,19 +67,30 @@ namespace MSTestX.Console
             if (cancellationToken.CanBeCanceled)
                 cancellationToken.Register(() => { tcs.TrySetCanceled(); xcrun.Close(); });
             xcrun.StartInfo = new ProcessStartInfo("xcrun", "devicectl " + arguments);
+            xcrun.EnableRaisingEvents = true;
+            xcrun.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            xcrun.StartInfo.UseShellExecute = false;
+            xcrun.StartInfo.RedirectStandardError = true;
+            xcrun.StartInfo.RedirectStandardOutput = true;
             StringBuilder sb = new StringBuilder();
+            
             xcrun.Exited += (s, e) =>
             {
-                tcs.TrySetResult(sb.ToString());
+                if(xcrun.ExitCode > 0)
+                    tcs.TrySetException(new Exception( sb.ToString()));
+                else
+                    tcs.TrySetResult(sb.ToString());
             };
             xcrun.ErrorDataReceived += (s, e) =>
             {
+                if(e.Data is null)
+                    return;
                 if (stdOutputFile != null)
                     File.AppendAllText(stdOutputFile, e.Data + Environment.NewLine);
-                if (e.Data.Contains("Locked"))
-                    tcs.TrySetException(new InvalidOperationException("Device is locked, unlock and try again."));
-                else
-                    tcs.TrySetException(new Exception(e.Data));
+                //if (e.Data?.Contains("Locked") == true)
+                //    tcs.TrySetException(new InvalidOperationException("Device is locked, unlock and try again."));
+                //else
+                //    tcs.TrySetException(new Exception(e.Data));
             };
             xcrun.OutputDataReceived += (s,e) =>
             {
@@ -84,6 +99,10 @@ namespace MSTestX.Console
                 if (stdOutputFile != null)
                     File.AppendAllText(stdOutputFile, e.Data + Environment.NewLine);
             };
+            xcrun.Start();
+            xcrun.BeginErrorReadLine();
+            xcrun.BeginOutputReadLine();
+
             return tcs.Task;
         }
 

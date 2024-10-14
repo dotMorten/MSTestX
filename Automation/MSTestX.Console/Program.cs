@@ -174,7 +174,7 @@ iOs specific (MacOS only):
                 var device = arguments["device"];
                 var details = await devicectl.GetDeviceDetails(device);
                 var apppath = arguments["apppath"];
-                if (!File.Exists(apppath))
+                if (!Directory.Exists(apppath) && !File.Exists(apppath))
                 {
                     System.Console.WriteLine("File not found: " + apppath);
                     testRunCompleted.TrySetResult(1);
@@ -183,9 +183,36 @@ iOs specific (MacOS only):
                 System.Console.WriteLine("Installing app...");
                 var bundleId = await devicectl.InstallApp(device, apppath);
                 System.Console.WriteLine($"App {bundleId} installed");
-                // TODO: port tunneling
-                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300", outputFilename.Replace(".trx", ".log"));
-                _ = appTask.ContinueWith(t => testRunCompleted.TrySetResult(0));
+
+                if (string.IsNullOrEmpty(outputFilename))
+                {
+                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                }
+
+                // Set up port forwarding using "mobiledevice"
+                Process.Start("pkill", "mobiledevice");
+                Process.Start(new ProcessStartInfo("chmod", "+x mobiledevice"));
+                var uuid = details.Result.HardwareProperties.Udid;
+                using var mobileDeviceProcess = Process.Start(new ProcessStartInfo("mobiledevice",$"tunnel -u {uuid} 38300 38300") { RedirectStandardOutput = true });
+                mobileDeviceProcess.EnableRaisingEvents = true;
+                mobileDeviceProcess.OutputDataReceived += (s,e) => {
+                    System.Console.WriteLine(e.Data);
+                };            
+                mobileDeviceProcess.BeginOutputReadLine();
+
+                await Task.Delay(1000);
+                if (mobileDeviceProcess.HasExited)
+                {
+                    System.Console.WriteLine("Failed set up port forwarding");
+                    testRunCompleted.TrySetResult(0);
+                }
+                CancellationTokenSource closeAppToken = new CancellationTokenSource();
+                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoRun True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
+                await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
+                closeAppToken.Cancel();
+                mobileDeviceProcess.Close();
+                testRunCompleted.TrySetResult(0);
             }
             else
             {

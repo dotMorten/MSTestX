@@ -26,6 +26,11 @@
     <PackageTags>MSTest MAUI VSTest Test Unittest</PackageTags>
   </PropertyGroup>
 
+<ItemGroup>
+    <Content Include="mobiledevice" >
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+</ItemGroup>
   <ItemGroup>
     <PackageReference Include="AndroidXml" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
