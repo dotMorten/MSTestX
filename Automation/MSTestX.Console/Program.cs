@@ -209,7 +209,7 @@ iOs specific (MacOS only):
                     testRunCompleted.TrySetResult(0);
                 }
                 CancellationTokenSource closeAppToken = new CancellationTokenSource();
-                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoRun True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
+                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
                 await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
                 closeAppToken.Cancel();
                 mobileDeviceProcess.Close();
