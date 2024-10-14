@@ -191,10 +191,11 @@ iOs specific (MacOS only):
                 }
 
                 // Set up port forwarding using "mobiledevice"
+                var path = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory.FullName;
                 Process.Start("pkill", "mobiledevice");
-                Process.Start(new ProcessStartInfo("chmod", "+x mobiledevice"));
+                Process.Start(new ProcessStartInfo("chmod", "+x " + Path.Combine(path, "mobiledevice")));
                 var uuid = details.Result.HardwareProperties.Udid;
-                using var mobileDeviceProcess = Process.Start(new ProcessStartInfo("mobiledevice",$"tunnel -u {uuid} 38300 38300") { RedirectStandardOutput = true });
+                using var mobileDeviceProcess = Process.Start(new ProcessStartInfo(Path.Combine(path, "mobiledevice"),$"tunnel -u {uuid} 38300 38300") { RedirectStandardOutput = true });
                 mobileDeviceProcess.EnableRaisingEvents = true;
                 mobileDeviceProcess.OutputDataReceived += (s,e) => {
                     System.Console.WriteLine(e.Data);
