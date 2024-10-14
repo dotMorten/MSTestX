@@ -191,7 +191,7 @@ iOs specific (MacOS only):
                 }
 
                 // Set up port forwarding using "mobiledevice"
-                var path = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory.FullName;
+                var path = new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).Directory.FullName;
                 Process.Start("pkill", "mobiledevice");
                 Process.Start(new ProcessStartInfo("chmod", "+x " + Path.Combine(path, "mobiledevice")));
                 var uuid = details.Result.HardwareProperties.Udid;
