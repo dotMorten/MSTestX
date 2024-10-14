@@ -57,6 +57,10 @@ Android specific (ignored if using remoteIp):
     -apkid <id>                         Package ID of the test app (if not provided, auto-discovered from manifest)
     -activity <activity id>             Activity to launch (if not provided, auto-discovered from manifest)
     -pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
+
+iOs specific (MacOS only):
+    -apppath <file path>                Path to app to install and launch
+    -device <uuid|ecid|serial_number|udid|name|dns_name> The identifier, ECID, serial number, UDID, user-provided name, or DNS name of the device.
 ");
         }
 
@@ -137,6 +141,51 @@ Android specific (ignored if using remoteIp):
                     outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
                 }
                 await OnApplicationLaunched(testAdapterEndpoint);
+            }
+            if(arguments.ContainsKey("apppath")) // iOS app
+            {
+                if (!OperatingSystem.IsMacOS())
+                {
+                    System.Console.WriteLine("iOS apps much be launch from a Mac");
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                var devices = await devicectl.GetConnectedAppleDevicesAsync();
+#if DEBUG
+                System.Console.WriteLine("Connected devices: ");
+                foreach (var d in devices.Result.Devices)
+                {
+                    System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
+                }
+#endif
+                if (!arguments.ContainsKey("device"))
+                {
+                    System.Console.WriteLine("device parameter missing");
+
+                    System.Console.WriteLine("Device IDs available: ");
+                    foreach (var d in devices.Result.Devices)
+                    {
+                        System.Console.WriteLine($"{d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
+                    }
+
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                var device = arguments["device"];
+                var details = await devicectl.GetDeviceDetails(device);
+                var apppath = arguments["apppath"];
+                if (!File.Exists(apppath))
+                {
+                    System.Console.WriteLine("File not found: " + apppath);
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                System.Console.WriteLine("Installing app...");
+                var bundleId = await devicectl.InstallApp(device, apppath);
+                System.Console.WriteLine($"App {bundleId} installed");
+                // TODO: port tunneling
+                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300", outputFilename.Replace(".trx", ".log"));
+                _ = appTask.ContinueWith(t => testRunCompleted.TrySetResult(0));
             }
             else
             {
