@@ -25,11 +25,12 @@ namespace MSTestX.Console
             mobileDeviceProcess.OutputDataReceived += MobileDeviceProcess_OutputDataReceived;
             mobileDeviceProcess.Exited += MobileDeviceProcess_Exited;
         }
-
+        string? lastMessage = null;
         private void MobileDeviceProcess_OutputDataReceived(object? sender, DataReceivedEventArgs e)
         {
             if (e.Data is null) return;
-            System.Console.WriteLine(e.Data);
+            lastMessage = e.Data;
+            System.Console.WriteLine("mobiledevice: " + e.Data);
             if (e.Data.Contains("Tunneling from local port") && tunnelCompletion is not null)
             {
                 tunnelCompletion.TrySetResult();
@@ -43,13 +44,17 @@ namespace MSTestX.Console
         private void MobileDeviceProcess_Exited(object? sender, EventArgs e)
         {
             mobileDeviceProcess = null!;
-            tunnelCompletion?.TrySetException(new Exception("MobileDevice exited unexpectedly"));
+            Task.Delay(1).ContinueWith(t =>
+            {
+                tunnelCompletion?.TrySetException(new Exception("MobileDevice exited unexpectedly with code " + mobileDeviceProcess.ExitCode + (string.IsNullOrEmpty(lastMessage) ? "" : ". " + lastMessage)));
+            });
             Exited?.Invoke(this, mobileDeviceProcess.ExitCode);
         }
 
-        private Task StartTunnelAsync(int fromPort, int toPort, string uuid)
+        private async Task StartTunnelAsync(int fromPort, int toPort, string uuid)
         {
             Process.Start("pkill", "mobiledevice"); // Ensure mobiledevice isn't already running
+            await Task.Delay(100);
             tunnelCompletion = new TaskCompletionSource();
             mobileDeviceProcess.StartInfo.Arguments = $"tunnel -u {uuid} {fromPort} {toPort}";
             CancellationTokenSource tcs = new CancellationTokenSource();
@@ -57,7 +62,7 @@ namespace MSTestX.Console
             tcs.Token.Register(() => tunnelCompletion.TrySetException(new TimeoutException()));
             mobileDeviceProcess.Start();
             mobileDeviceProcess.BeginOutputReadLine();
-            return tunnelCompletion.Task;
+            await tunnelCompletion.Task;
         }
 
         public static async Task<MobileDevice> CreateTunnelAsync(int fromPort, int toPort, string uuid)

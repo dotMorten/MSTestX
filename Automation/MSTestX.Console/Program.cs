@@ -157,20 +157,27 @@ iOs specific (MacOS only):
                     System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
                 }
 #endif
-                if (!arguments.ContainsKey("device") || string.IsNullOrEmpty(arguments["device"]))
+                string? device = arguments.ContainsKey("device") ? arguments["device"] : null;
+                if (device is null && devices.Result.Devices.Length == 1)
                 {
-                    System.Console.WriteLine("device parameter missing");
-
-                    System.Console.WriteLine("Device IDs available: ");
-                    foreach (var d in devices.Result.Devices)
+                    device = devices.Result.Devices[0].Identifier;
+                }
+                if (string.IsNullOrEmpty(device))
+                {
+                    if (devices.Result.Devices.Length == 0)
+                        System.Console.WriteLine("No devices found");
+                    else
                     {
-                        System.Console.WriteLine($"{d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
+                        System.Console.WriteLine("Device parameter '-device <uuid>' missing and multiple devices connected:");
+                        foreach (var d in devices.Result.Devices)
+                        {
+                            System.Console.WriteLine($"    - {d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
+                        }
                     }
 
                     testRunCompleted.TrySetResult(1);
                     return;
                 }
-                var device = arguments["device"]!;
                 var details = await devicectl.GetDeviceDetails(device);
                 var apppath = arguments["apppath"];
                 if (!Directory.Exists(apppath) && !File.Exists(apppath))
@@ -190,7 +197,17 @@ iOs specific (MacOS only):
                 }
 
                 // Set up port forwarding using "mobiledevice"
-                var tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                MobileDevice tunnel;
+                try
+                {
+                    tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                }
+                catch (System.Exception ex)
+                {
+                    System.Console.WriteLine("Failed to open tunnel: " + ex.Message);
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
                 tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
 
                 CancellationTokenSource closeAppToken = new CancellationTokenSource();
