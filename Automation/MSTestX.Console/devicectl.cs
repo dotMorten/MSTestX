@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -46,6 +47,7 @@ namespace MSTestX.Console
             var bundleId = idLine.Substring(idx).Trim();
             return bundleId;
         }
+
         public static Task LaunchApp(string deviceId, string appId, string? arguments = null, string? stdOutputFile = null, CancellationToken token = default)
         {
             return DeviceCtl($"device process launch --device {deviceId} --terminate-existing --console {appId} {arguments}", token);
@@ -57,7 +59,7 @@ namespace MSTestX.Console
             await DeviceCtl($"{arguments} --json-output \"{tmpPath}\"", cancellationToken);
             var json = System.IO.File.ReadAllText(tmpPath);
             File.Delete(tmpPath);
-            return System.Text.Json.JsonSerializer.Deserialize<T>(json);
+            return System.Text.Json.JsonSerializer.Deserialize<T>(json)!;
         }
 
         private static Task<string> DeviceCtl(string arguments, CancellationToken cancellationToken, string? stdOutputFile = null)
@@ -87,10 +89,6 @@ namespace MSTestX.Console
                     return;
                 if (stdOutputFile != null)
                     File.AppendAllText(stdOutputFile, e.Data + Environment.NewLine);
-                //if (e.Data?.Contains("Locked") == true)
-                //    tcs.TrySetException(new InvalidOperationException("Device is locked, unlock and try again."));
-                //else
-                //    tcs.TrySetException(new Exception(e.Data));
             };
             xcrun.OutputDataReceived += (s,e) =>
             {

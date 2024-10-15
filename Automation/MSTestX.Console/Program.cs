@@ -1,5 +1,4 @@
-﻿//using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-//using Newtonsoft.Json;
+﻿#nullable enable
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -21,14 +20,14 @@ namespace MSTestX.Console
 {
     class Program 
     {
-        private static Device device;
-        private static string apk_id = null;
-        private static string activityName = null;
-        private static AdbClient client;
-        private static string outputFilename;
-        private static string settingsXml = null;
-        private static LogCatMonitor monitor;
-        private static CancellationTokenSource processExitCancellationTokenSource;
+        private static Device? device;
+        private static string? apk_id = null;
+        private static string? activityName = null;
+        private static AdbClient? client;
+        private static string? outputFilename;
+        private static string? settingsXml = null;
+        private static LogCatMonitor? monitor;
+        private static CancellationTokenSource? processExitCancellationTokenSource;
         private static TaskCompletionSource<int> testRunCompleted = new TaskCompletionSource<int>();
 
         static async Task Main(string[] args)
@@ -64,17 +63,17 @@ iOs specific (MacOS only):
 ");
         }
 
-        static async Task RunTest(Dictionary<string, string> arguments)
+        static async Task RunTest(Dictionary<string, string?> arguments)
         {
             processExitCancellationTokenSource = new CancellationTokenSource();
 
             if (arguments.ContainsKey("settings") && File.Exists(arguments["settings"]))
             {
-                settingsXml = File.ReadAllText(arguments["settings"]);
+                settingsXml = File.ReadAllText(arguments["settings"]!);
             }
 
 
-            System.Net.IPEndPoint testAdapterEndpoint = null;
+            System.Net.IPEndPoint? testAdapterEndpoint = null;
             if (arguments.ContainsKey("waitForRemote"))
             {
                 var pingTask = new TaskCompletionSource<bool>();
@@ -98,7 +97,7 @@ iOs specific (MacOS only):
                 try
                 {
                     var pingTaskResult = await pingListener.AcceptTcpClientAsync(cts.Token);
-                    testAdapterEndpoint = pingTaskResult.Client.RemoteEndPoint as System.Net.IPEndPoint;
+                    testAdapterEndpoint = (System.Net.IPEndPoint)pingTaskResult.Client.RemoteEndPoint!;
                     if (testAdapterEndpoint != null)
                     {
                         testAdapterEndpoint.Port = 38300;
@@ -119,7 +118,7 @@ iOs specific (MacOS only):
             if (arguments.ContainsKey("remoteIp"))
             {
                 var val = arguments["remoteIp"];
-                if (val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress ip) && int.TryParse(val.Split(':')[1], out int port))
+                if (val is not null && val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress? ip) && int.TryParse(val.Split(':')[1], out int port))
                 {
                     testAdapterEndpoint = new System.Net.IPEndPoint(ip, port);
                 }
@@ -158,7 +157,7 @@ iOs specific (MacOS only):
                     System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
                 }
 #endif
-                if (!arguments.ContainsKey("device"))
+                if (!arguments.ContainsKey("device") || string.IsNullOrEmpty(arguments["device"]))
                 {
                     System.Console.WriteLine("device parameter missing");
 
@@ -171,7 +170,7 @@ iOs specific (MacOS only):
                     testRunCompleted.TrySetResult(1);
                     return;
                 }
-                var device = arguments["device"];
+                var device = arguments["device"]!;
                 var details = await devicectl.GetDeviceDetails(device);
                 var apppath = arguments["apppath"];
                 if (!Directory.Exists(apppath) && !File.Exists(apppath))
@@ -191,28 +190,14 @@ iOs specific (MacOS only):
                 }
 
                 // Set up port forwarding using "mobiledevice"
-                var path = new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).Directory.FullName;
-                Process.Start("pkill", "mobiledevice");
-                Process.Start(new ProcessStartInfo("chmod", "+x " + Path.Combine(path, "mobiledevice")));
-                var uuid = details.Result.HardwareProperties.Udid;
-                using var mobileDeviceProcess = Process.Start(new ProcessStartInfo(Path.Combine(path, "mobiledevice"),$"tunnel -u {uuid} 38300 38300") { RedirectStandardOutput = true });
-                mobileDeviceProcess.EnableRaisingEvents = true;
-                mobileDeviceProcess.OutputDataReceived += (s,e) => {
-                    System.Console.WriteLine(e.Data);
-                };            
-                mobileDeviceProcess.BeginOutputReadLine();
+                using var tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
 
-                await Task.Delay(1000);
-                if (mobileDeviceProcess.HasExited)
-                {
-                    System.Console.WriteLine("Failed set up port forwarding");
-                    testRunCompleted.TrySetResult(0);
-                }
                 CancellationTokenSource closeAppToken = new CancellationTokenSource();
+                closeAppToken.Token.Register(t => tunnel.Dispose(), null);
                 var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
                 await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
                 closeAppToken.Cancel();
-                mobileDeviceProcess.Close();
                 testRunCompleted.TrySetResult(0);
             }
             else
@@ -296,7 +281,7 @@ iOs specific (MacOS only):
                 {
                     if (arguments.ContainsKey("pin"))
                     {
-                        string pin = null;
+                        string? pin = null;
                         if (int.TryParse(arguments["pin"], out int numericPin)) //Ensures it's numeric
                         {
                             pin = arguments["pin"];
@@ -358,7 +343,7 @@ iOs specific (MacOS only):
                     {
                         launched = true;
                         System.Console.WriteLine($"Test Host Launched. Process ID '{pid}'");
-                        OnApplicationLaunched();
+                        _ = OnApplicationLaunched();
                         break;
                     }
                     else
@@ -373,6 +358,7 @@ iOs specific (MacOS only):
 
         private static async Task ShutdownApp()
         {
+            if (device is null) return;
             var id = await device.GetProcessId(apk_id);
             if (id > 0)
             {
@@ -387,7 +373,7 @@ iOs specific (MacOS only):
 
         private static bool appLaunchDetected;
 
-        private static async Task OnApplicationLaunched(System.Net.IPEndPoint endpoint = null)
+        private static async Task OnApplicationLaunched(System.Net.IPEndPoint? endpoint = null)
         {
             if (appLaunchDetected)
                 return;
@@ -397,7 +383,7 @@ iOs specific (MacOS only):
             try
             {
                 await Task.Delay(5000); //Give app some time to start up
-                await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource.Token);
+                await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource?.Token ?? CancellationToken.None);
             }
             catch(System.Exception ex)
             {
@@ -426,7 +412,7 @@ iOs specific (MacOS only):
 
         private static int processID = -1;
         
-        private static void Monitor_LogReceived(object sender, LogCatMonitor.LogEntry e)
+        private static void Monitor_LogReceived(object? sender, LogCatMonitor.LogEntry e)
         {
             var msg = e.DataString;
             if (msg == null) return;
@@ -466,14 +452,14 @@ iOs specific (MacOS only):
             }
             if (e.Tag == "ActivityManager" && msg.StartsWith($"Displayed {apk_id}/{activityName}"))
             {
-                OnApplicationLaunched(); //Detect app launched and start VSTest connection
+                _ = OnApplicationLaunched(); //Detect app launched and start VSTest connection
                 return;
             }
             if (processID > 0 && e.Tag == "ActivityManager" && msg == $"Process {apk_id} (pid {processID}) has died.")
             {
                 // Application died
                 System.Console.WriteLine($"{Environment.NewLine}Android application process has died. Exiting...");
-                processExitCancellationTokenSource.Cancel();
+                processExitCancellationTokenSource?.Cancel();
                 //OnTestRunAborted("Android application process has died");
                 //testRunCompleted.TrySetResult(1);
                 return;
@@ -492,14 +478,14 @@ iOs specific (MacOS only):
                 if (msg.StartsWith("Successfully killed process") && msg.Contains($" pid {processID}")) 
                 {
                     //App likely exited. Check if it's still alive
-                    var _ = device.GetProcessId(apk_id).ContinueWith(t => 
+                    var _ = device!.GetProcessId(apk_id).ContinueWith(t => 
                     {
                         if (t.IsCompletedSuccessfully)
                         {
                             if (t.Result == 0)
                             {
                                 System.Console.WriteLine($"{Environment.NewLine}Android application process killed. Exiting...");
-                                processExitCancellationTokenSource.Cancel();
+                                processExitCancellationTokenSource?.Cancel();
                             }
                         }
                     });
@@ -508,13 +494,13 @@ iOs specific (MacOS only):
             }
         }
 
-        private static Dictionary<string, string> ParseArguments(string[] args)
+        private static Dictionary<string, string?> ParseArguments(string[] args)
         {
-            var result = new Dictionary<string, string>();
+            var result = new Dictionary<string, string?>();
             for (int i = 0; i < args.Length; i++)
             {
-                string key = null;
-                string value = null;
+                string? key = null;
+                string? value = null;
                 if (args[i].StartsWith("-"))
                 {
                     key = args[i].Substring(1);
