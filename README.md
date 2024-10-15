@@ -43,10 +43,10 @@ Note: if you put your tests in a class library, the iOS app, will need to refere
 Note: This is not a fork. The submodule literally uses the code as-is from TestFX but compiled so it can run and be referenced by a .NET MAUI app.
 
 ## Automation
+`MSTestX.Console` is a dotnet tool that helps with deploying and running monitoring the unit test application, while outputting a TRX test report to the host machine.
 
-### Android
-On Android you can build, deploy, run and generate a TRX report with the the console runner:
-
+### Android (Windows and MacOS)
+Deploy and run the application:
 ```
 dotnet build myproject.csproj -f net8.0-android
 dotnet tool install --global MSTestX.Console --version 0.36.0
@@ -57,14 +57,14 @@ or connect and launch an already installed app
 MSTestX.Console -apkid [package id] -activity [activity name]
 ```
 
-### iOS
+### iOS (MacOS only)
 ```
 dotnet build myproject.csproj -f net8.0-ios -r ios-arm64
 dotnet tool install --global MSTestX.Console --version 0.36.0
 MSTestX.Console -apppath [path-to-generated .app application] 
 ```
 
-### Mac-Catalyst
+### Mac-Catalyst (MacOS only)
 With MacCatalyst you simply launch the app and connect to local-host using the `-remoteIp` parameter pointing to localhost, which will also work with any remote device running the unit test app.
 ```
 dotnet build myproject.csproj -f net8.0-maccatalyst -r maccatalyst-arm64
@@ -72,6 +72,11 @@ dotnet tool install --global MSTestX.Console --version 0.36.0
 open [path-to-generated .app application]
 MSTestX.Console -remoteIp 127.0.0.1:38300
 ```
+### Other parameters
+ - `-logFileName <path to file>` : The path of the TRX file that gets generated (defaults to current date/time).
+ - `-settings <path to file>` : Path to an XML runsettings file. See [Configure unit tests by using a .runsettings file](https://learn.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2022) for details.
+ - `-deviceid <Android Device Serial Number>`    Android: If more than one device is connected, specifies which device to use
+ - `-device <uuid|ecid|serial_number|udid|name|dns_name>`   iOS: The identifier, ECID, serial number, UDID, user-provided name, or DNS name of the device, if more than one device is connected.
 
 run `MSTestX.Console` to get a list of all parameters.
 
