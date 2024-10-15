@@ -190,13 +190,14 @@ iOs specific (MacOS only):
                 }
 
                 // Set up port forwarding using "mobiledevice"
-                using var tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                var tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
                 tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
 
                 CancellationTokenSource closeAppToken = new CancellationTokenSource();
                 closeAppToken.Token.Register(t => tunnel.Dispose(), null);
                 var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
                 await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
+                GC.KeepAlive(tunnel);
                 closeAppToken.Cancel();
                 testRunCompleted.TrySetResult(0);
             }

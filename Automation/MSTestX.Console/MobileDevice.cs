@@ -24,7 +24,6 @@ namespace MSTestX.Console
             mobileDeviceProcess.EnableRaisingEvents = true;
             mobileDeviceProcess.OutputDataReceived += MobileDeviceProcess_OutputDataReceived;
             mobileDeviceProcess.Exited += MobileDeviceProcess_Exited;
-            mobileDeviceProcess.BeginOutputReadLine();
         }
 
         private void MobileDeviceProcess_OutputDataReceived(object? sender, DataReceivedEventArgs e)
@@ -43,6 +42,7 @@ namespace MSTestX.Console
 
         private void MobileDeviceProcess_Exited(object? sender, EventArgs e)
         {
+            mobileDeviceProcess = null!;
             tunnelCompletion?.TrySetException(new Exception("MobileDevice exited unexpectedly"));
             Exited?.Invoke(this, mobileDeviceProcess.ExitCode);
         }
@@ -55,7 +55,6 @@ namespace MSTestX.Console
             CancellationTokenSource tcs = new CancellationTokenSource();
             tcs.CancelAfter(5000);
             tcs.Token.Register(() => tunnelCompletion.TrySetException(new TimeoutException()));
-            tunnelCompletion.Task.ContinueWith((t) => Dispose());
             mobileDeviceProcess.Start();
             mobileDeviceProcess.BeginOutputReadLine();
             return tunnelCompletion.Task;
@@ -72,10 +71,10 @@ namespace MSTestX.Console
         {
             if (mobileDeviceProcess != null && !mobileDeviceProcess.HasExited)
             {
-                mobileDeviceProcess.StandardInput.WriteLine("\x3"); // Write CTRL+C to exit
-                mobileDeviceProcess.Close();
+                mobileDeviceProcess.Kill(true);
             }
             mobileDeviceProcess?.Dispose();
+            mobileDeviceProcess = null!;
         }
 
         ~MobileDevice()
