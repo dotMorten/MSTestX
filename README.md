@@ -37,7 +37,7 @@ namespace MyUnitTestApp
 ```
 
 ### Notes
-- Tests in other referenced projects in the same solution will be found as well
+- Tests in other referenced projects in the same solution will be found as well. This is useful if you want to also run the tests outside .NET MAUI in a normal unit test project for instance.
 - if you put your tests in a class library, the iOS app, will need to reference one of the types in the AppDelegate, or the compiler will strip out the unit test DLL (this isn't an issue if you use a shared project with tests).
 - This is not a fork of MSTest. The submodules literally uses the code as-is from TestFX but compiled so it can run and be referenced by a .NET MAUI app.
 
