@@ -15,7 +15,7 @@ This isn't "just another test framework". This is all based on the Microsoft MST
 1. Inside your solution, create a new blank .NET MAUI Project.
 2. Add "MSTestX.UnitTestRunner" NuGet package.
 3. Delete `AppShell.xaml`, `MainPage.xaml` `App.xaml` and their code-behind files.
-4. In `MauiProgram.cs` replace `.UseMauiApp<App>()` with `.UseMauiApp<MSTestX.RunnerApp>()
+4. In `MauiProgram.cs` replace `.UseMauiApp<App>()` with `.UseMauiApp<MSTestX.RunnerApp>()`
 5. Add a unit test class with the following content:
 
 ```cs
