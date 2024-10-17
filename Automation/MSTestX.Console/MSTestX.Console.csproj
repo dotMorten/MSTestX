@@ -11,8 +11,8 @@
     <ToolCommandName>mstestx.console</ToolCommandName>
     <PackageOutputPath>../../nupkg</PackageOutputPath>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    <Version>0.33.0</Version>
-    <LangVersion>7.3</LangVersion>
+    <Version>0.37.0</Version>
+    <LangVersion>9.0</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <Authors>Morten Nielsen</Authors>
@@ -26,9 +26,13 @@
     <PackageTags>MSTest MAUI VSTest Test Unittest</PackageTags>
   </PropertyGroup>
 
+<ItemGroup>
+    <Content Include="mobiledevice">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+</ItemGroup>
   <ItemGroup>
     <PackageReference Include="AndroidXml" Version="1.1.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.1.0" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.1.0" />
     <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.1.0" />

@@ -118,6 +118,10 @@ namespace MSTestX
                             }
                         }
 
+                        if (arguments.ContainsKey("AutoExit") && bool.TryParse(arguments["AutoExit"], out bool exit))
+                        {
+                            testOptions.TerminateAfterExecution = exit;
+                        }
                         if (arguments.ContainsKey("AutoRun") && bool.TryParse(arguments["AutoRun"], out bool result))
                         {
                             testOptions.AutoRun = result;

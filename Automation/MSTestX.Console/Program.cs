@@ -1,5 +1,4 @@
-﻿//using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-//using Newtonsoft.Json;
+﻿#nullable enable
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -21,14 +20,14 @@ namespace MSTestX.Console
 {
     class Program 
     {
-        private static Device device;
-        private static string apk_id = null;
-        private static string activityName = null;
-        private static AdbClient client;
-        private static string outputFilename;
-        private static string settingsXml = null;
-        private static LogCatMonitor monitor;
-        private static CancellationTokenSource processExitCancellationTokenSource;
+        private static Device? device;
+        private static string? apk_id = null;
+        private static string? activityName = null;
+        private static AdbClient? client;
+        private static string? outputFilename;
+        private static string? settingsXml = null;
+        private static LogCatMonitor? monitor;
+        private static CancellationTokenSource? processExitCancellationTokenSource;
         private static TaskCompletionSource<int> testRunCompleted = new TaskCompletionSource<int>();
 
         static async Task Main(string[] args)
@@ -57,20 +56,24 @@ Android specific (ignored if using remoteIp):
     -apkid <id>                         Package ID of the test app (if not provided, auto-discovered from manifest)
     -activity <activity id>             Activity to launch (if not provided, auto-discovered from manifest)
     -pin <pin code>                     Pin to use to unlock your phone (or empty to just unlock phone with no pin)
+
+iOs specific (MacOS only):
+    -apppath <file path>                Path to app to install and launch
+    -device <uuid|ecid|serial_number|udid|name|dns_name> The identifier, ECID, serial number, UDID, user-provided name, or DNS name of the device.
 ");
         }
 
-        static async Task RunTest(Dictionary<string, string> arguments)
+        static async Task RunTest(Dictionary<string, string?> arguments)
         {
             processExitCancellationTokenSource = new CancellationTokenSource();
 
             if (arguments.ContainsKey("settings") && File.Exists(arguments["settings"]))
             {
-                settingsXml = File.ReadAllText(arguments["settings"]);
+                settingsXml = File.ReadAllText(arguments["settings"]!);
             }
 
 
-            System.Net.IPEndPoint testAdapterEndpoint = null;
+            System.Net.IPEndPoint? testAdapterEndpoint = null;
             if (arguments.ContainsKey("waitForRemote"))
             {
                 var pingTask = new TaskCompletionSource<bool>();
@@ -94,7 +97,7 @@ Android specific (ignored if using remoteIp):
                 try
                 {
                     var pingTaskResult = await pingListener.AcceptTcpClientAsync(cts.Token);
-                    testAdapterEndpoint = pingTaskResult.Client.RemoteEndPoint as System.Net.IPEndPoint;
+                    testAdapterEndpoint = (System.Net.IPEndPoint)pingTaskResult.Client.RemoteEndPoint!;
                     if (testAdapterEndpoint != null)
                     {
                         testAdapterEndpoint.Port = 38300;
@@ -115,7 +118,7 @@ Android specific (ignored if using remoteIp):
             if (arguments.ContainsKey("remoteIp"))
             {
                 var val = arguments["remoteIp"];
-                if (val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress ip) && int.TryParse(val.Split(':')[1], out int port))
+                if (val is not null && val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress? ip) && int.TryParse(val.Split(':')[1], out int port))
                 {
                     testAdapterEndpoint = new System.Net.IPEndPoint(ip, port);
                 }
@@ -137,6 +140,83 @@ Android specific (ignored if using remoteIp):
                     outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
                 }
                 await OnApplicationLaunched(testAdapterEndpoint);
+            }
+            if(arguments.ContainsKey("apppath")) // iOS app
+            {
+                if (!OperatingSystem.IsMacOS())
+                {
+                    System.Console.WriteLine("iOS apps much be launch from a Mac");
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                var devices = await devicectl.GetConnectedAppleDevicesAsync();
+#if DEBUG
+                System.Console.WriteLine("Connected devices: ");
+                foreach (var d in devices.Result.Devices)
+                {
+                    System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
+                }
+#endif
+                string? device = arguments.ContainsKey("device") ? arguments["device"] : null;
+                if (device is null && devices.Result.Devices.Length == 1)
+                {
+                    device = devices.Result.Devices[0].Identifier;
+                }
+                if (string.IsNullOrEmpty(device))
+                {
+                    if (devices.Result.Devices.Length == 0)
+                        System.Console.WriteLine("No devices found");
+                    else
+                    {
+                        System.Console.WriteLine("Device parameter '-device <uuid>' missing and multiple devices connected:");
+                        foreach (var d in devices.Result.Devices)
+                        {
+                            System.Console.WriteLine($"    - {d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
+                        }
+                    }
+
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                var details = await devicectl.GetDeviceDetails(device);
+                var apppath = arguments["apppath"];
+                if (!Directory.Exists(apppath) && !File.Exists(apppath))
+                {
+                    System.Console.WriteLine("File not found: " + apppath);
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                System.Console.WriteLine("Installing app...");
+                var bundleId = await devicectl.InstallApp(device, apppath);
+                System.Console.WriteLine($"App {bundleId} installed");
+
+                if (string.IsNullOrEmpty(outputFilename))
+                {
+                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                }
+
+                // Set up port forwarding using "mobiledevice"
+                MobileDevice tunnel;
+                try
+                {
+                    tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                }
+                catch (System.Exception ex)
+                {
+                    System.Console.WriteLine("Failed to open tunnel: " + ex.Message);
+                    testRunCompleted.TrySetResult(1);
+                    return;
+                }
+                tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
+
+                CancellationTokenSource closeAppToken = new CancellationTokenSource();
+                closeAppToken.Token.Register(t => tunnel.Dispose(), null);
+                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
+                await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
+                GC.KeepAlive(tunnel);
+                closeAppToken.Cancel();
+                testRunCompleted.TrySetResult(0);
             }
             else
             {
@@ -219,7 +299,7 @@ Android specific (ignored if using remoteIp):
                 {
                     if (arguments.ContainsKey("pin"))
                     {
-                        string pin = null;
+                        string? pin = null;
                         if (int.TryParse(arguments["pin"], out int numericPin)) //Ensures it's numeric
                         {
                             pin = arguments["pin"];
@@ -281,7 +361,7 @@ Android specific (ignored if using remoteIp):
                     {
                         launched = true;
                         System.Console.WriteLine($"Test Host Launched. Process ID '{pid}'");
-                        OnApplicationLaunched();
+                        _ = OnApplicationLaunched();
                         break;
                     }
                     else
@@ -296,6 +376,7 @@ Android specific (ignored if using remoteIp):
 
         private static async Task ShutdownApp()
         {
+            if (device is null) return;
             var id = await device.GetProcessId(apk_id);
             if (id > 0)
             {
@@ -310,7 +391,7 @@ Android specific (ignored if using remoteIp):
 
         private static bool appLaunchDetected;
 
-        private static async Task OnApplicationLaunched(System.Net.IPEndPoint endpoint = null)
+        private static async Task OnApplicationLaunched(System.Net.IPEndPoint? endpoint = null)
         {
             if (appLaunchDetected)
                 return;
@@ -320,7 +401,7 @@ Android specific (ignored if using remoteIp):
             try
             {
                 await Task.Delay(5000); //Give app some time to start up
-                await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource.Token);
+                await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource?.Token ?? CancellationToken.None);
             }
             catch(System.Exception ex)
             {
@@ -349,7 +430,7 @@ Android specific (ignored if using remoteIp):
 
         private static int processID = -1;
         
-        private static void Monitor_LogReceived(object sender, LogCatMonitor.LogEntry e)
+        private static void Monitor_LogReceived(object? sender, LogCatMonitor.LogEntry e)
         {
             var msg = e.DataString;
             if (msg == null) return;
@@ -389,14 +470,14 @@ Android specific (ignored if using remoteIp):
             }
             if (e.Tag == "ActivityManager" && msg.StartsWith($"Displayed {apk_id}/{activityName}"))
             {
-                OnApplicationLaunched(); //Detect app launched and start VSTest connection
+                _ = OnApplicationLaunched(); //Detect app launched and start VSTest connection
                 return;
             }
             if (processID > 0 && e.Tag == "ActivityManager" && msg == $"Process {apk_id} (pid {processID}) has died.")
             {
                 // Application died
                 System.Console.WriteLine($"{Environment.NewLine}Android application process has died. Exiting...");
-                processExitCancellationTokenSource.Cancel();
+                processExitCancellationTokenSource?.Cancel();
                 //OnTestRunAborted("Android application process has died");
                 //testRunCompleted.TrySetResult(1);
                 return;
@@ -415,14 +496,14 @@ Android specific (ignored if using remoteIp):
                 if (msg.StartsWith("Successfully killed process") && msg.Contains($" pid {processID}")) 
                 {
                     //App likely exited. Check if it's still alive
-                    var _ = device.GetProcessId(apk_id).ContinueWith(t => 
+                    var _ = device!.GetProcessId(apk_id).ContinueWith(t => 
                     {
                         if (t.IsCompletedSuccessfully)
                         {
                             if (t.Result == 0)
                             {
                                 System.Console.WriteLine($"{Environment.NewLine}Android application process killed. Exiting...");
-                                processExitCancellationTokenSource.Cancel();
+                                processExitCancellationTokenSource?.Cancel();
                             }
                         }
                     });
@@ -431,13 +512,13 @@ Android specific (ignored if using remoteIp):
             }
         }
 
-        private static Dictionary<string, string> ParseArguments(string[] args)
+        private static Dictionary<string, string?> ParseArguments(string[] args)
         {
-            var result = new Dictionary<string, string>();
+            var result = new Dictionary<string, string?>();
             for (int i = 0; i < args.Length; i++)
             {
-                string key = null;
-                string value = null;
+                string? key = null;
+                string? value = null;
                 if (args[i].StartsWith("-"))
                 {
                     key = args[i].Substring(1);
