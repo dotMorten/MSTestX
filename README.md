@@ -22,17 +22,14 @@ This isn't "just another test framework". This is all based on the Microsoft MST
 	{
 		var builder = MauiApp.CreateBuilder();
 		builder
-			.UseMauiCommunityToolkit() // This project uses CommunityToolkit, so you need to startup it here
+			.UseMauiCommunityToolkit() // If you don't want to init here, you can disable the MCT analyzer.
 			.UseTestApp(config =>
 			{
 				config.TestAssemblies = [typeof(MauiProgram).Assembly];
 				return config;
 			})
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-			});
+			// rest of builder configuration
+
 
 		return builder.Build();
 	}
