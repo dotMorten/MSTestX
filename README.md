@@ -22,7 +22,6 @@ This isn't "just another test framework". This is all based on the Microsoft MST
 	{
 		var builder = MauiApp.CreateBuilder();
 		builder
-			.UseMauiCommunityToolkit() // If you don't want to init here, you can disable the MCT analyzer.
 			.UseTestApp(config =>
 			{
 				config.TestAssemblies = [typeof(MauiProgram).Assembly];
