@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -115,14 +112,7 @@ public class TestMethodInfo : ITestMethod
             watch.Start();
             try
             {
-                if (IsTimeoutSet)
-                {
-                    result = ExecuteInternalWithTimeout(arguments);
-                }
-                else
-                {
-                    result = ExecuteInternal(arguments);
-                }
+                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
             }
             finally
             {
@@ -216,14 +206,9 @@ public class TestMethodInfo : ITestMethod
         {
             // If this is the params parameters, set it to an empty
             // array of that type as DefaultValue is DBNull
-            if (hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1)
-            {
-                newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0);
-            }
-            else
-            {
-                newParameters[parameterNotProvidedIndex] = parametersInfo[parameterNotProvidedIndex].DefaultValue;
-            }
+            newParameters[parameterNotProvidedIndex] = hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1
+                ? Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0)
+                : parametersInfo[parameterNotProvidedIndex].DefaultValue;
         }
 
         return newParameters;
@@ -268,31 +253,32 @@ public class TestMethodInfo : ITestMethod
             catch (Exception ex)
             {
                 isExceptionThrown = true;
+                Exception realException = GetRealException(ex);
 
-                if (IsExpectedException(ex, result))
+                if (realException is MissingMethodException)
                 {
-                    // Expected Exception was thrown, so Pass the test
-                    result.Outcome = UTF.UnitTestOutcome.Passed;
+                    result.Outcome = UTF.UnitTestOutcome.NotFound;
+                    result.TestFailureException = realException;
                 }
                 else
                 {
-                    // This block should not throw. If it needs to throw, then handling of
-                    // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                    result.TestFailureException ??= HandleMethodException(
-                        ex,
-                        TestClassName,
-                        TestMethodName);
-                }
-
-                if (result.Outcome != UTF.UnitTestOutcome.Passed)
-                {
-                    if (ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException)
+                    if (IsExpectedException(realException, result))
                     {
-                        result.Outcome = UTF.UnitTestOutcome.Inconclusive;
+                        // Expected Exception was thrown, so Pass the test
+                        result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                     else
                     {
-                        result.Outcome = UTF.UnitTestOutcome.Failed;
+                        // This block should not throw. If it needs to throw, then handling of
+                        // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
+                        result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
+                    }
+
+                    if (result.Outcome != UTF.UnitTestOutcome.Passed)
+                    {
+                        result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
+                            ? UTF.UnitTestOutcome.Inconclusive
+                            : UTF.UnitTestOutcome.Failed;
                     }
                 }
             }
@@ -326,19 +312,12 @@ public class TestMethodInfo : ITestMethod
             RunTestCleanupMethod(classInstance, result);
         }
 
-        if (testRunnerException != null)
-        {
-            throw testRunnerException;
-        }
-
-        return result;
+        return testRunnerException != null ? throw testRunnerException : result;
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool IsExpectedException(Exception ex, TestResult result)
     {
-        Exception realException = GetRealException(ex);
-
         // if the user specified an expected exception, we need to check if this
         // exception was thrown. If it was thrown, we should pass the test. In
         // case a different exception was thrown, the test is seen as failure
@@ -352,7 +331,7 @@ public class TestMethodInfo : ITestMethod
         {
             // If the expected exception attribute's Verify method returns, then it
             // considers this exception as expected, so the test passed
-            TestMethodOptions.ExpectedException.Verify(realException);
+            TestMethodOptions.ExpectedException.Verify(ex);
             return true;
         }
         catch (Exception verifyEx)
@@ -379,7 +358,7 @@ public class TestMethodInfo : ITestMethod
                 ? ObjectModelUnitTestOutcome.Inconclusive
                 : ObjectModelUnitTestOutcome.Failed,
             exceptionFromVerify.TryGetMessage(),
-            realException.TryGetStackTraceInformation());
+            ex.TryGetStackTraceInformation());
         return false;
     }
 
@@ -407,7 +386,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
-    private static Exception HandleMethodException(Exception ex, string className, string methodName)
+    private static TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
@@ -419,7 +398,6 @@ public class TestMethodInfo : ITestMethod
         }
 
         // Get the real exception thrown by the test method
-        Exception realException = GetRealException(ex);
         if (realException.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
         {
             return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);

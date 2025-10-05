@@ -2,10 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -14,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 public class MSTestAdapterSettings
 {
     private bool _isAssemblyResolutionSet;
@@ -26,7 +24,7 @@ public class MSTestAdapterSettings
         DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
         DeploymentEnabled = true;
         DeployTestSourceDependencies = true;
-        SearchDirectories = new List<RecursiveDirectoryPath>();
+        SearchDirectories = [];
     }
 
     /// <summary>
@@ -166,7 +164,7 @@ public class MSTestAdapterSettings
     /// <returns>RecursiveDirectoryPath information.</returns>
     public List<RecursiveDirectoryPath> GetDirectoryListWithRecursiveProperty(string baseDirectory)
     {
-        List<RecursiveDirectoryPath> directoriesList = new();
+        List<RecursiveDirectoryPath> directoriesList = [];
 
         foreach (RecursiveDirectoryPath recPath in SearchDirectories)
         {
@@ -212,7 +210,7 @@ public class MSTestAdapterSettings
             }
             else
             {
-                warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, "This is not an absolute path. A base directory should be provided for this to be used as a relative path.");
+                warningMessage = $"The Directory: {path}, has following problem: {"This is not an absolute path. A base directory should be provided for this to be used as a relative path."}";
 
                 if (EqtTrace.IsWarningEnabled)
                 {
@@ -237,7 +235,7 @@ public class MSTestAdapterSettings
 
         if (!StringEx.IsNullOrEmpty(warningMessage))
         {
-            warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, warningMessage);
+            warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
 
             if (EqtTrace.IsWarningEnabled)
             {
@@ -253,7 +251,7 @@ public class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, string.Format("The Directory: {0}, does not exist.", path));
+        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, $"The Directory: {path}, does not exist.");
 
         return null;
     }

@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
+#endif
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,7 +25,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// List of result files associated with the test.
     /// </summary>
-    private readonly IList<string> _testResultFiles;
+    private readonly List<string> _testResultFiles;
 
     /// <summary>
     /// Writer on which the messages given by the user should be written.
@@ -41,14 +39,14 @@ public class TestContextImplementation : TestContext, ITestContext
     private readonly ITestMethod _testMethod;
 
     /// <summary>
-    /// Specifies whether the writer is disposed or not.
-    /// </summary>
-    private bool _stringWriterDisposed = false;
-
-    /// <summary>
     /// Properties.
     /// </summary>
-    private IDictionary<string, object?> _properties;
+    private readonly Dictionary<string, object?> _properties;
+
+    /// <summary>
+    /// Specifies whether the writer is disposed or not.
+    /// </summary>
+    private bool _stringWriterDisposed;
 
     /// <summary>
     /// Unit test outcome.
@@ -95,7 +93,7 @@ public class TestContextImplementation : TestContext, ITestContext
             [nameof(ManagedMethod)] = _testMethod.ManagedMethodName,
             [nameof(TestName)] = _testMethod.Name,
         };
-        _testResultFiles = new List<string>();
+        _testResultFiles = [];
     }
 
     #region TestContext impl
@@ -112,7 +110,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => (IDictionary)_properties;
+    public override IDictionary Properties => _properties;
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
@@ -316,7 +314,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (!_testResultFiles.Any())
+        if (_testResultFiles.Count == 0)
         {
             return null;
         }
