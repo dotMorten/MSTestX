@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,7 +14,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -26,17 +24,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class TestContextImplementation : TestContext, ITestContext
 {
-#if !WINDOWS_UWP
     /// <summary>
     /// List of result files associated with the test.
     /// </summary>
     private readonly IList<string> _testResultFiles;
-#endif
 
     /// <summary>
     /// Writer on which the messages given by the user should be written.
     /// </summary>
-    private readonly ThreadSafeStringWriter _threadSafeStringWriter;
+    private readonly StringWriter _stringWriter;
+    private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
 
     /// <summary>
     /// Test Method.
@@ -56,7 +53,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// Unit test outcome.
     /// </summary>
-    private UTF.UnitTestOutcome _outcome;
+    private UnitTestOutcome _outcome;
 
 #if NETFRAMEWORK
     /// <summary>
@@ -85,12 +82,11 @@ public class TestContextImplementation : TestContext, ITestContext
         DebugEx.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
-        DebugEx.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
-
         _testMethod = testMethod;
+        _stringWriter = stringWriter;
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
-        _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
+        _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
         _properties = new Dictionary<string, object?>(properties)
         {
             [nameof(FullyQualifiedTestClassName)] = _testMethod.FullClassName,
@@ -98,22 +94,13 @@ public class TestContextImplementation : TestContext, ITestContext
             [nameof(ManagedMethod)] = _testMethod.ManagedMethodName,
             [nameof(TestName)] = _testMethod.Name,
         };
-
-#if !WINDOWS_UWP
         _testResultFiles = new List<string>();
-#endif
     }
 
     #region TestContext impl
 
     /// <inheritdoc/>
-    public override UTF.UnitTestOutcome CurrentTestOutcome
-    {
-        get
-        {
-            return _outcome;
-        }
-    }
+    public override UnitTestOutcome CurrentTestOutcome => _outcome;
 
 #if NETFRAMEWORK
     /// <inheritdoc/>
@@ -143,15 +130,6 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string? TestResultsDirectory => base.TestResultsDirectory;
 
     /// <inheritdoc/>
-    public override string? TestDir => base.TestDir;
-
-    /// <inheritdoc/>
-    public override string? TestDeploymentDir => base.TestDeploymentDir;
-
-    /// <inheritdoc/>
-    public override string? TestLogsDir => base.TestLogsDir;
-
-    /// <inheritdoc/>
     public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
 
 #if NETFRAMEWORK
@@ -166,36 +144,18 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string TestName => base.TestName!;
 #endif
 
-    public UTF.TestContext Context => this;
+    public TestContext Context => this;
 
     /// <inheritdoc/>
     public override void AddResultFile(string fileName)
     {
-#if !WINDOWS_UWP && !WIN_UI
         if (StringEx.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
         _testResultFiles.Add(Path.GetFullPath(fileName));
-#endif
     }
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void BeginTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void EndTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-#endif
 
     /// <summary>
     /// When overridden in a derived class, used to write trace messages while the
@@ -212,7 +172,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            _threadSafeStringWriter.Write(msg);
+            _stringWriter.Write(msg);
         }
         catch (ObjectDisposedException)
         {
@@ -236,7 +196,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _threadSafeStringWriter.Write(message);
+            _stringWriter.Write(message);
         }
         catch (ObjectDisposedException)
         {
@@ -259,7 +219,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            _threadSafeStringWriter.WriteLine(msg);
+            _stringWriter.WriteLine(msg);
         }
         catch (ObjectDisposedException)
         {
@@ -283,7 +243,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _threadSafeStringWriter.WriteLine(message);
+            _stringWriter.WriteLine(message);
         }
         catch (ObjectDisposedException)
         {
@@ -295,13 +255,9 @@ public class TestContextImplementation : TestContext, ITestContext
     /// Set the unit-test outcome.
     /// </summary>
     /// <param name="outcome">The test outcome.</param>
-    public void SetOutcome(UTF.UnitTestOutcome outcome)
+    public void SetOutcome(UnitTestOutcome outcome)
     {
-#if NETFRAMEWORK
-        _outcome = ToUTF(outcome);
-#else
         _outcome = outcome;
-#endif
     }
 
     /// <summary>
@@ -359,7 +315,6 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-#if !WINDOWS_UWP && !WIN_UI
         if (!_testResultFiles.Any())
         {
             return null;
@@ -371,10 +326,6 @@ public class TestContextImplementation : TestContext, ITestContext
         _testResultFiles.Clear();
 
         return results;
-#else
-        // Returns null as this feature is not supported in ASP .net and UWP
-        return null;
-#endif
     }
 
     /// <summary>
@@ -383,7 +334,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>The test context messages added so far.</returns>
     public string? GetDiagnosticMessages()
     {
-        return _threadSafeStringWriter.ToString();
+        return _stringWriter.ToString();
     }
 
     /// <summary>
@@ -391,33 +342,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     public void ClearDiagnosticMessages()
     {
-        _threadSafeStringWriter.ToStringAndClear();
+        _threadSafeStringWriter?.ToStringAndClear();
     }
 
     #endregion
-
-#if NETFRAMEWORK
-    /// <summary>
-    /// Converts the parameter outcome to UTF outcome.
-    /// </summary>
-    /// <param name="outcome">The UTF outcome.</param>
-    /// <returns>test outcome.</returns>
-    private static UTF.UnitTestOutcome ToUTF(UTF.UnitTestOutcome outcome)
-    {
-        switch (outcome)
-        {
-            case UnitTestOutcome.Error:
-            case UnitTestOutcome.Failed:
-            case UnitTestOutcome.Inconclusive:
-            case UnitTestOutcome.Passed:
-            case UnitTestOutcome.Timeout:
-            case UnitTestOutcome.InProgress:
-                return outcome;
-
-            default:
-                Debug.Fail("Unknown outcome " + outcome);
-                return UnitTestOutcome.Unknown;
-        }
-    }
-#endif
 }
