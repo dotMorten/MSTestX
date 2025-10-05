@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public static void Verify(this ExpectedExceptionBaseAttribute attr, Exception realException)
         {
             var method = typeof(ExpectedExceptionBaseAttribute).GetMethod("Verify", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            method.Invoke(attr, new object[] { realException });
+            method?.Invoke(attr, new object[] { realException });
         }
     }
 }

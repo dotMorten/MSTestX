@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
         }
 
-        public bool Deploy(IEnumerable<TestCase> testCases, IRunContext runContext, IFrameworkHandle frameworkHandle)
+        public bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle)
         {
             return false;
         }
