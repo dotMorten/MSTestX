@@ -37,10 +37,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <summary>
     /// Reset the settings to its default.
     /// </summary>
-    public static void Reset()
-    {
-        s_settings = null;
-    }
+    public static void Reset() => s_settings = null;
 #endif
 
     /// <summary>

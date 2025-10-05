@@ -170,7 +170,7 @@ public class TestContextImplementation : TestContext, ITestContext
 
         try
         {
-            var msg = message?.Replace("\0", "\\0");
+            string? msg = message?.Replace("\0", "\\0");
             _stringWriter.Write(msg);
         }
         catch (ObjectDisposedException)
@@ -217,7 +217,7 @@ public class TestContextImplementation : TestContext, ITestContext
 
         try
         {
-            var msg = message?.Replace("\0", "\\0");
+            string? msg = message?.Replace("\0", "\\0");
             _stringWriter.WriteLine(msg);
         }
         catch (ObjectDisposedException)
@@ -255,9 +255,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     /// <param name="outcome">The test outcome.</param>
     public void SetOutcome(UnitTestOutcome outcome)
-    {
-        _outcome = outcome;
-    }
+        => _outcome = outcome;
 
     /// <summary>
     /// Set data row for particular run of TestMethod.
@@ -266,7 +264,9 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetDataRow(object? dataRow)
     {
 #if NETFRAMEWORK
+#pragma warning disable IDE0022 // Use expression body for method
         _dataRow = dataRow as DataRow;
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -277,7 +277,9 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetDataConnection(object? dbConnection)
     {
 #if NETFRAMEWORK
+#pragma warning disable IDE0022 // Use expression body for method
         _dbConnection = dbConnection as DbConnection;
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -304,9 +306,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
-    {
-        _properties.Add(propertyName, propertyValue);
-    }
+        => _properties.Add(propertyName, propertyValue);
 
     /// <summary>
     /// Result files attached.
@@ -319,7 +319,7 @@ public class TestContextImplementation : TestContext, ITestContext
             return null;
         }
 
-        List<string> results = _testResultFiles.ToList();
+        var results = _testResultFiles.ToList();
 
         // clear the result files to handle data driven tests
         _testResultFiles.Clear();
@@ -332,17 +332,13 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
     public string? GetDiagnosticMessages()
-    {
-        return _stringWriter.ToString();
-    }
+        => _stringWriter.ToString();
 
     /// <summary>
     /// Clears the previous testContext writeline messages.
     /// </summary>
     public void ClearDiagnosticMessages()
-    {
-        _threadSafeStringWriter?.ToStringAndClear();
-    }
+        => _threadSafeStringWriter?.ToStringAndClear();
 
     #endregion
 }

@@ -6,5 +6,5 @@
 /// </summary>
 internal static class MSTestVersion
 {
-    public const string SemanticVersion = "3.3.0";
+    public const string SemanticVersion = "3.4.0";
 }
