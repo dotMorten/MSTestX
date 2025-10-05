@@ -66,6 +66,8 @@
       <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
 
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\MSTestAdapterSettings.cs" />
+
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\SettingsProvider.cs" />
 
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\TestContextImplementation.cs" />

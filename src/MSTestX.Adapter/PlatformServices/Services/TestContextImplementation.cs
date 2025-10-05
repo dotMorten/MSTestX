@@ -89,6 +89,7 @@ public class TestContextImplementation : TestContext, ITestContext
         _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
         _properties = new Dictionary<string, object?>(properties)
         {
+        	// MSTESTX EDIT: HARDCODED STRINGS
             [nameof(FullyQualifiedTestClassName)] = _testMethod.FullClassName,
             [nameof(ManagedType)] = _testMethod.ManagedTypeName,
             [nameof(ManagedMethod)] = _testMethod.ManagedMethodName,

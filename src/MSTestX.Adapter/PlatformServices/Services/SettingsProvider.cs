@@ -56,6 +56,7 @@ public class MSTestSettingsProvider : ISettingsProvider
 
     public IDictionary<string, object> GetProperties(string source)
     {
+		// MSTESTX EDIT - DELETED CODE
         return new Dictionary<string, object>();
     }
 }
