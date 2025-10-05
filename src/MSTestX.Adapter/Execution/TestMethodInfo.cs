@@ -83,12 +83,11 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
+    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? Array.Empty<TAttributeType>();
+        => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -105,27 +104,25 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
+        using LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces);
+        watch.Start();
+        try
         {
-            watch.Start();
-            try
-            {
-                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
-            }
-            finally
-            {
-                // Handle logs & debug traces.
-                watch.Stop();
+            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
 
-                if (result != null)
-                {
-                    result.Duration = watch.Elapsed;
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
-                }
+            if (result != null)
+            {
+                result.Duration = watch.Elapsed;
+                result.DebugTrace = listener.GetAndClearDebugTrace();
+                result.LogOutput = listener.GetAndClearStandardOutput();
+                result.LogError = listener.GetAndClearStandardError();
+                result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
             }
         }
 
@@ -178,7 +175,7 @@ public class TestMethodInfo : ITestMethod
                 // If this is the params parameter, instantiate a new object of that type
                 if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
                     newParameters[argumentIndex] = paramsValues;
                 }
 
@@ -260,31 +257,23 @@ public class TestMethodInfo : ITestMethod
                 isExceptionThrown = true;
                 Exception realException = GetRealException(ex);
 
-                if (realException is MissingMethodException)
+                if (IsExpectedException(realException, result))
                 {
-                    result.Outcome = UTF.UnitTestOutcome.NotFound;
-                    result.TestFailureException = realException;
+                    // Expected Exception was thrown, so Pass the test
+                    result.Outcome = UTF.UnitTestOutcome.Passed;
                 }
                 else
                 {
-                    if (IsExpectedException(realException, result))
-                    {
-                        // Expected Exception was thrown, so Pass the test
-                        result.Outcome = UTF.UnitTestOutcome.Passed;
-                    }
-                    else
-                    {
-                        // This block should not throw. If it needs to throw, then handling of
-                        // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                        result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
-                    }
+                    // This block should not throw. If it needs to throw, then handling of
+                    // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
+                    result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
+                }
 
-                    if (result.Outcome != UTF.UnitTestOutcome.Passed)
-                    {
-                        result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
-                            ? UTF.UnitTestOutcome.Inconclusive
-                            : UTF.UnitTestOutcome.Failed;
-                    }
+                if (result.Outcome != UTF.UnitTestOutcome.Passed)
+                {
+                    result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
+                        ? UTF.UnitTestOutcome.Inconclusive
+                        : UTF.UnitTestOutcome.Failed;
                 }
             }
 
@@ -407,6 +396,19 @@ public class TestMethodInfo : ITestMethod
             return testFailedException;
         }
 
+        // If we are in hot reload context and the exception is a MissingMethodException and the first line of the stack
+        // trace contains the method name then it's likely that the current method was removed and the test is failing.
+        // For cases where the content of the test would throw a MissingMethodException, the first line of the stack trace
+        // would not be the test method name, so we can safely assume this is a proper test failure.
+        if (ex is MissingMethodException missingMethodException
+            && RuntimeContext.IsHotReloadEnabled
+            && missingMethodException.StackTrace?.IndexOf(Environment.NewLine, StringComparison.Ordinal) is { } lineReturnIndex
+            && lineReturnIndex >= 0
+            && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))
+        {
+            return new TestFailedException(ObjectModelUnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
+        }
+
         // Get the real exception thrown by the test method
         if (realException.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out StackTraceInformation? exceptionStackTraceInfo))
         {
@@ -466,9 +468,7 @@ public class TestMethodInfo : ITestMethod
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null
-                        ? InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count)
-                        : null;
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count);
                 }
             }
             finally
@@ -652,7 +652,7 @@ public class TestMethodInfo : ITestMethod
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            new CancellationTokenSource(),
+            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType),
@@ -670,7 +670,7 @@ public class TestMethodInfo : ITestMethod
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            new CancellationTokenSource(),
+            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType, remainingCleanupCount),
@@ -801,7 +801,7 @@ public class TestMethodInfo : ITestMethod
             }
         }
 
-        CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource!.Token;
+        CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
         if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
