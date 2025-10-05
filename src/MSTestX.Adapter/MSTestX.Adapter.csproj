@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
     <PackageId>MSTestX.TestAdapter</PackageId>
@@ -20,43 +20,78 @@
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageOutputPath>./../../nupkg</PackageOutputPath>
     <Description>The cross-platform adapter to discover and execute MSTest Framework based tests. This is a .NET Standard 2.0 compilation of the MSTest.TestAdapter for reusing the test adapter on other platforms, like Xamarin Android and iOS.</Description>
-    <LangVersion>10</LangVersion>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.5.0" />
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="17.5.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" PrivateAssets="Analyzers" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.11.0" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="17.11.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.0" PrivateAssets="Analyzers" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="1.4.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\testfx\src\Adapter\MSTest.CoreAdapter\**\*.cs">
+    <Compile Include="..\..\testfx\src\Adapter\MSTest.TestAdapter\**\*.cs">
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Discovery\AssemblyEnumerator.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Discovery\UnitTestDiscoverer.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Execution\TestContextImpl.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Execution\TestMethodInfo.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\GlobalAssemblyInfo.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Properties\AssemblyInfo.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\MSTest.CoreAdapter\obj\**\*.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\Discovery\AssemblyEnumerator.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\Execution\TestContextImpl.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\Execution\TestMethodInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\Execution\TimeoutInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\GlobalAssemblyInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\Properties\AssemblyInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTest.TestAdapter\obj\**\*.cs" />
 
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Interface\**\*.cs">
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Interfaces\**\*.cs">
+      <Link>PlatformServices\Interfaces\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\*.cs">
+      <Link>PlatformServices\Services\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Constants.cs">
       <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Interface\GlobalAssemblyInfo.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Interface\Properties\AssemblyInfo.cs" />
-    <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Interface\obj\**\*.cs" />
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\RecursiveDirectoryPath.cs">
+      <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\TestFramework\TestFramework\Internal\*.cs">
+      <Link>TestFramework\Internal\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\*.cs">
+      <Link>PlatformServices\Utilities\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\AssemblyResolver.cs">
+      <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.Designer.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\GlobalAssemblyInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Properties\AssemblyInfo.cs" />
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\obj\**\*.cs" />
 
     <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\**\*.cs">
       <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\SettingsProvider.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\TestContextImplementation.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\TestDeployment.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentItemUtility.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentUtility.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentUtilityBase.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\FileUtility.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Condition="'$(TargetFramework)'=='net6.0'" />
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.NetCore\Services\NetCoreTestContextImplementation.cs"  Condition="'$(TargetFramework)'=='net6.0'">
-      <Link>PlatformServices\Services\%(Filename)%(Extension)</Link>
-    </Compile>
 
   </ItemGroup>
 
@@ -64,32 +99,36 @@
       <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" />
       <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" />
       <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" />
-      <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" />
-      <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs" />
       <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" />
       <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" />
       </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="PlatformServices\Services\ns10ThreadOperations.cs" />
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs" Link="PlatformServices\Services\ns10ThreadSafeStringWriter.cs" />
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="PlatformServices\Services\ns13TraceListener.cs" />
-    <Compile Include="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="PlatformServices\Services\ns13TraceListenerManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Resources\Resource.resx">
+    <EmbeddedResource Include="..\..\testfx\src\Adapter\MSTest.TestAdapter\Resources\Resource.resx">
       <Link>Resources\Resource.resx</Link>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Update="..\..\testfx\src\Adapter\MSTest.CoreAdapter\Resources\Resource.Designer.cs">
+    <Compile Update="..\..\testfx\src\Adapter\MSTest.TestAdapter\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.resx">
+      <Link>PlatformServices\Resources\Resource.resx</Link>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Update="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.Designer.cs">
+      <Link>PlatformServices\Resources\Resource.Designer.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
-
 </Project>

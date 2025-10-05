@@ -3,6 +3,10 @@
     "MSTestX.Console.Android": {
       "commandName": "Project",
       "commandLineArgs": "-apkpath ../../../../src/TestAppRunner/TestAppRunner.Android/bin/Debug/com.mstestx.TestAppRunner-Signed.apk -settings ../../testsettings.runsettings"
+    },
+    "MSTestX.Console.Windows": {
+      "commandName": "Project",
+      "commandLineArgs": "-remoteIp 127.0.0.1:38300 -settings ../../testsettings.runsettings - logFileName result.trx"
     }
   }
 }
