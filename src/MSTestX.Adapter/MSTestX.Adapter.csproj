@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.13.0" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="17.13.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" PrivateAssets="Analyzers" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.3.0" PrivateAssets="Analyzers" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
     <PackageReference Include="Microsoft.Testing.Platform" Version="1.5.0" />
@@ -60,6 +60,13 @@
     <Compile Include="..\..\testfx\src\TestFramework\TestFramework\Internal\*.cs">
       <Link>TestFramework\Internal\%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\*.cs">
+      <Link>PlatformServices\Utilities\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\AssemblyResolver.cs">
+      <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.Designer.cs" />
 
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\GlobalAssemblyInfo.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Properties\AssemblyInfo.cs" />
@@ -69,13 +76,19 @@
       <Link>PlatformServices\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
 
-    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\MSTestAdapterSettings.cs" />
-
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\SettingsProvider.cs" />
 
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\TestContextImplementation.cs" />
 
     <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Services\TestDeployment.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentItemUtility.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentUtility.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\DeploymentUtilityBase.cs" />
+
+    <Compile Remove="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Utilities\FileUtility.cs" />
     <Compile Remove="..\..\testfx\src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Condition="'$(TargetFramework)'=='net6.0'" />
 
   </ItemGroup>
@@ -102,6 +115,18 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.resx">
+      <Link>PlatformServices\Resources\Resource.resx</Link>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Update="..\..\testfx\src\Adapter\MSTestAdapter.PlatformServices\Resources\Resource.Designer.cs">
+      <Link>PlatformServices\Resources\Resource.Designer.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
-
 </Project>

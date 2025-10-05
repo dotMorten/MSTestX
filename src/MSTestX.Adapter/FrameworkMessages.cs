@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter2
 {
     internal static class FrameworkMessages
     {
