@@ -5,7 +5,7 @@
     <RootNamespace>MSTestX.Console</RootNamespace>
     <AssemblyName>MSTestX.Console</AssemblyName>
     <PackageId>MSTestX.Console</PackageId>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RollForward>Major</RollForward>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mstestx.console</ToolCommandName>
@@ -25,17 +25,9 @@
     <RepositoryUrl>https://github.com/dotMorten/MSTestX</RepositoryUrl>
     <PackageTags>MSTest MAUI VSTest Test Unittest</PackageTags>
   </PropertyGroup>
-
-<ItemGroup>
-    <Content Include="mobiledevice">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-</ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AndroidXml" Version="1.1.2" />
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.11.0" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.11.0" />
-    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.11.0" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MSTestX.Remote\MSTestX.Remote.csproj" />
   </ItemGroup>
 </Project>

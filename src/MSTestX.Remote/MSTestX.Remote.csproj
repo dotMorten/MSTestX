@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="mobiledevice">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AndroidXml" Version="1.1.2" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.11.0" />
+    <PackageReference Include="Microsoft.TestPlatform.Extensions.TrxLogger" Version="17.11.0" />
+  </ItemGroup>
+
+</Project>

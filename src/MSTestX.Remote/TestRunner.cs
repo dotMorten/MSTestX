@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using MSTestX.Remote;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,9 +19,11 @@ namespace MSTestX.Console
     {
         private SocketCommunicationManager socket;
         private System.Net.IPEndPoint _endpoint;
+        private ILog logger;
 
-        public TestRunner(System.Net.IPEndPoint endpoint = null)
+        public TestRunner(ILog logger, System.Net.IPEndPoint endpoint = null)
         {
+            this.logger = logger;
             _endpoint = endpoint;
         }
 
@@ -66,7 +69,7 @@ namespace MSTestX.Console
                     }
                     else
                     {
-                        System.Console.WriteLine($"Retrying connection.... ({i} of 10)");
+                        logger.LogInfo($"Retrying connection.... ({i} of 10)");
                         continue;
                     }
                 }
@@ -80,7 +83,7 @@ namespace MSTestX.Console
             {
                 var version = JsonDataSerializer.Instance.DeserializePayload<int>(msg);
                 var success = version == 1;
-                System.Console.WriteLine("Connected to test adapter");
+                logger.LogInfo("Connected to test adapter");
             }
             else
             {
@@ -111,17 +114,17 @@ namespace MSTestX.Console
                 {
                     var thl = JsonDataSerializer.Instance.DeserializePayload<TestHostLaunchedPayload>(msg);
                     pid = thl.ProcessId;
-                    System.Console.WriteLine($"Test Host Launched. Process ID '{pid}'");
+                    logger.LogInfo($"Test Host Launched. Process ID '{pid}'");
                 }
                 else if (msg.MessageType == MessageType.DiscoveryInitialize)
                 {
-                    System.Console.Write("Discovering tests...");
+                    logger.LogInfo("Discovering tests...", true);
                     loggerEvents?.OnDiscoveryStart(new DiscoveryStartEventArgs(new DiscoveryCriteria()));
                 }
                 else if (msg.MessageType == MessageType.DiscoveryComplete)
                 {
                     var dcp = JsonDataSerializer.Instance.DeserializePayload<DiscoveryCompletePayload>(msg);
-                    System.Console.WriteLine($"Discovered {dcp.TotalTests} tests");
+                    logger.LogInfo($"Discovered {dcp.TotalTests} tests");
 
                     loggerEvents?.OnDiscoveryComplete(new DiscoveryCompleteEventArgs(dcp.TotalTests, false));
                     loggerEvents?.OnDiscoveredTests(new DiscoveredTestsEventArgs(dcp.LastDiscoveredTests));
@@ -138,7 +141,7 @@ namespace MSTestX.Console
                         var testName = tcs.TestCaseName;
                         if (string.IsNullOrEmpty(testName))
                             testName = tcs.TestElement.DisplayName;
-                        System.Console.Write($"    {testName}");
+                        logger.LogInfo($"    {testName}", true);
                     }
                 }
                 else if (msg.MessageType == MessageType.DataCollectionTestEnd)
@@ -177,58 +180,58 @@ namespace MSTestX.Console
                         switch(outcome)
                         {
                             case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed:
-                                System.Console.ForegroundColor = ConsoleColor.Green;
-                                System.Console.Write("  √ ");
+                                // System.Console.ForegroundColor = ConsoleColor.Green;
+                                // System.Console.Write("  √ ");
+                                logger.LogOk("  √ ", true);
                                 break;
                             case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped:
-                                System.Console.ForegroundColor = ConsoleColor.Yellow;
-                                System.Console.Write("  ! ");
+                                //System.Console.ForegroundColor = ConsoleColor.Yellow;
+                                logger.LogWarning("  ! ", true);
                                 break;
                             case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed:
-                                System.Console.ForegroundColor = ConsoleColor.Red;
-                                System.Console.Write("  X ");
+                                //System.Console.ForegroundColor = ConsoleColor.Red;
+                                logger.LogError("  X ", true);
                                 break;
                             default:
-                                System.Console.Write("    "); break;
+                                logger.LogInfo("    ", true); break;
                         }
                         System.Console.ResetColor();
-                        System.Console.Write(testName);
+                        logger.LogInfo(testName, true);
                         var d = tr.TestResult.Duration;
                         if (d.TotalMilliseconds < 1)
-                            System.Console.WriteLine(" [< 1ms]");
+                            logger.LogInfo(" [< 1ms]");
                         else if (d.TotalSeconds < 1)
-                            System.Console.WriteLine($" [{d.Milliseconds}ms]");
+                            logger.LogInfo($" [{d.Milliseconds}ms]");
                         else if (d.TotalMinutes < 1)
-                            System.Console.WriteLine($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                            logger.LogInfo($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
                         else if (d.TotalHours < 1)
-                            System.Console.WriteLine($" [{d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                            logger.LogInfo($" [{d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
                         else if (d.TotalDays < 1)
-                            System.Console.WriteLine($" [{d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
+                            logger.LogInfo($" [{d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
                         else
-                            System.Console.WriteLine($" [{Math.Floor(d.TotalDays)}d {d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]"); // I sure hope your tests won't ever need this line of code
+                            logger.LogInfo($" [{Math.Floor(d.TotalDays)}d {d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]"); // I sure hope your tests won't ever need this line of code
                         if (!string.IsNullOrEmpty(testMessage))
                         {
                             System.Console.ForegroundColor = ConsoleColor.Red;
-                            System.Console.WriteLine("  Error Message:");
-                            System.Console.WriteLine("   " + testMessage);
+                            logger.LogError("  Error Message:\n", true);
+                            logger.LogError("   " + testMessage + "\n", true);
                             if (!string.IsNullOrEmpty(tr.TestResult.ErrorStackTrace))
                             {
-                                System.Console.WriteLine("  Stack Trace:");
-                                System.Console.WriteLine("   " + tr.TestResult.ErrorStackTrace);
+                                logger.LogError("  Stack Trace:\n", true);
+                                logger.LogError("   " + tr.TestResult.ErrorStackTrace + "\n", true);
                             }
-                            System.Console.ResetColor();
-                            System.Console.WriteLine();
+                            logger.LogError("", true);
                             // If test failed, also output messages, if any
                             if (tr.TestResult.Messages?.Any() == true)
                             {
-                                System.Console.WriteLine("  Standard Output Messages:");
+                                logger.LogError("  Standard Output Messages:", true);
                                 foreach (var message in tr.TestResult.Messages)
                                 {
-                                    System.Console.WriteLine(message.Text);
+                                    logger.LogError(message.Text, true);
                                 }
-                                System.Console.WriteLine();
                             }
-                        }                        
+                            logger.LogError("");
+                        }
                     }
 
 
@@ -340,7 +343,7 @@ namespace MSTestX.Console
                     }
                     catch (System.Exception ex)
                     {
-                        System.Console.WriteLine("Failed to receive message : " + ex.Message);
+                        logger.LogError("Failed to receive message : " + ex.Message);
                         continue;
                     }
                 }

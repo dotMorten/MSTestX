@@ -2,7 +2,7 @@
   "profiles": {
     "MSTestX.Console.Android": {
       "commandName": "Project",
-      "commandLineArgs": "-apkpath ../../../../src/TestAppRunner/TestAppRunner.Android/bin/Debug/com.mstestx.TestAppRunner-Signed.apk -settings ../../testsettings.runsettings"
+      "commandLineArgs": "-apkpath ../../../../src/TestAppRunner/TestAppRunner.Maui/bin/Debug/net10.0-android/com.companyname.testapprunner.maui-Signed.apk -settings ../../testsettings.runsettings"
     },
     "MSTestX.Console.Windows": {
       "commandName": "Project",

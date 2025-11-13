@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="Test" DependsOnTargets="Build">
+  
+    <PropertyGroup>
+	   <DeviceName Condition="'$(DeviceName)'==''">$(_DeviceName)</DeviceName>
+	</PropertyGroup>
+	
+	<!-- Windows -->
+    <CallTarget Targets="Build" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'"/>
+	  <ExecAsync Command="$(RunCommand)" Arguments="$(RunArguments) -AutoExit True"
+		           Condition="$([MSBuild]::IsOSPlatform('windows'))"/>
+    <RunTestsTask RemoteIp="127.0.0.1:38300" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'"/>
+	  
+    <!-- Android -->
+    <CallTarget Targets="PackageForAndroid" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"/>
+    <CallTarget Targets="signandroidpackage" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"/>
+    <RunTestsTask ApkPath="$(ApkPath)" Pin="$(Pin)" DeviceName="$(DeviceName)" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"/>
+  
+    <!-- iOS -->
+    <Error Text="Running tests on iOS is only supported from MacOS" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' AND '$([MSBuild]::IsOSPlatform(&quot;macos&quot;))'!='true'"/>
+    <Error Text="No 'DeviceName' parameter specified. Please specify device UUID using &quot;-p DeviceName=[DEVICENAME]&quot;." Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' AND '$(DeviceName)'==''" />
+    <CallTarget Targets="Build" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'"/>
+    <RunTestsTask IosAppPath="$(IpaPackageDir)" DeviceName="$(DeviceName)" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'"/>
+
+  </Target>
+
+  <UsingTask TaskName="MSTestX.BuildTasks.RunTestsTask"
+           AssemblyFile="$(MSBuildThisFileDirectory)\..\tools\MSTestX.BuildTasks.dll" />
+
+  <UsingTask TaskName="ExecAsync" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Command ParameterType="System.String" Required="true" />
+      <Arguments ParameterType="System.String" Required="false" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+  string name = System.IO.Path.GetFileNameWithoutExtension(Command);
+  System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo(Command, Arguments);
+  processStartInfo.UseShellExecute = true;
+  System.Diagnostics.Process.Start(processStartInfo);
+  ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+
+</Project>

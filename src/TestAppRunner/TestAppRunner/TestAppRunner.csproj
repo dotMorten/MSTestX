@@ -1,8 +1,8 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.23">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0-ios;net8.0-android;net8.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net9.0-ios;net9.0-android;net9.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <PackageId>MSTestX.UnitTestRunner</PackageId>
     <AssemblyName>MSTestX.UnitTestRunner</AssemblyName>
@@ -16,8 +16,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageTags>Unit Test, Xamarin, Android, iOS, Test, Testing, MSTest, VSTest, TestFX, TRX, MAUI</PackageTags>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <Version>$(MSTextXRunnerVersion)</Version>
     <Description>A .NET MAUI-based UnitTest Runner to execute MSTests on Android, iOS and MacCatalyst. The app supports custom test logging, and has built-in support for outputting a TRX test report and being remote controlled from commandline.</Description>
     <IncludeSymbols>true</IncludeSymbols>
@@ -55,11 +55,18 @@
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Serialization\**\*.cs">
       <Link>CommunicationUtilities\Serialization\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <None Remove="build\MSTestX.UnitTestRunner.targets" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\ICommunicationManager.cs" Link="CommunicationUtilities\Interfaces\ICommunicationManager.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\Interfaces\IDataSerializer.cs" Link="CommunicationUtilities\Interfaces\IDataSerializer.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\JsonDataSerializer.cs" Link="CommunicationUtilities\JsonDataSerializer.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketCommunicationManager.cs" Link="CommunicationUtilities\SocketCommunicationManager.cs" />
     <Compile Include="..\..\..\vstest\src\Microsoft.TestPlatform.CommunicationUtilities\SocketConstants.cs" Link="CommunicationUtilities\SocketConstants.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\MSTestX.BuildTasks\bin\$(Configuration)\net8.0\*.dll" Link="tools\%(RecursiveDir)%(Filename)%(Extension)" Pack="True" PackagePath="tools" />
+    <None Include="..\..\MSTestX.BuildTasks\bin\$(Configuration)\net8.0\*.json" Link="tools\%(RecursiveDir)%(Filename)%(Extension)" Pack="True" PackagePath="tools" />
+    <None Include="..\..\MSTestX.BuildTasks\bin\$(Configuration)\net8.0\mobiledevice" Link="tools\%(RecursiveDir)%(Filename)%(Extension)" Pack="True" PackagePath="tools" />
+    <None Include="build\MSTestX.UnitTestRunner.targets" Pack="True" PackagePath="build;buildTransitive" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace MSTestX.Console
 {
-    internal static class ApkHelper
+    public static class ApkHelper
     {
         public static void GetAPKInfo(string path, out string apk_id, out string activity)
         {

@@ -1,18 +1,8 @@
 ﻿#nullable enable
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using MSTestX.Console.Adb;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,16 +10,6 @@ namespace MSTestX.Console
 {
     class Program 
     {
-        private static Device? device;
-        private static string? apk_id = null;
-        private static string? activityName = null;
-        private static AdbClient? client;
-        private static string? outputFilename;
-        private static string? settingsXml = null;
-        private static LogCatMonitor? monitor;
-        private static CancellationTokenSource? processExitCancellationTokenSource;
-        private static TaskCompletionSource<int> testRunCompleted = new TaskCompletionSource<int>();
-
         static async Task Main(string[] args)
         {
             if (args.Length == 0 || args[0] == "/?" || args[0] == "-?" || args[0] == "?")
@@ -37,8 +17,7 @@ namespace MSTestX.Console
                 PrintUsage();
                 return;
             }
-            await RunTest(ParseArguments(args));
-            var exitCode = await testRunCompleted.Task;
+            var exitCode = await RunTest(ParseArguments(args));
             Environment.Exit(exitCode);
         }
 
@@ -63,453 +42,51 @@ iOs specific (MacOS only):
 ");
         }
 
-        static async Task RunTest(Dictionary<string, string?> arguments)
+        static async Task<int> RunTest(Dictionary<string, string?> arguments)
         {
-            processExitCancellationTokenSource = new CancellationTokenSource();
-
+            var args = new Remote.RunSettings();
             if (arguments.ContainsKey("settings") && File.Exists(arguments["settings"]))
             {
-                settingsXml = File.ReadAllText(arguments["settings"]!);
+                args.SettingsXml = File.ReadAllText(arguments["settings"]!);
             }
 
-
-            System.Net.IPEndPoint? testAdapterEndpoint = null;
             if (arguments.ContainsKey("waitForRemote"))
             {
-                var pingTask = new TaskCompletionSource<bool>();
-                var pingListener = new TcpListener(System.Net.IPAddress.Any, 38302);
-                pingListener.Start();
-                System.Console.WriteLine("Waiting for remote ping...");
-                CancellationTokenSource cts = new CancellationTokenSource();
+                args.WaitForRemote = true;
                 if (arguments.ContainsKey("waitForRemoteTimeout"))
                 {
-                    if(int.TryParse(arguments["waitForRemoteTimeout"], out int timeoutSeconds))
-                        cts.CancelAfter(timeoutSeconds * 1000);
+                    if (int.TryParse(arguments["waitForRemoteTimeout"], out int timeoutSeconds))
+                    {
+                        args.WaitForRemoteTimeout = timeoutSeconds;
+                    }
                     else
                     {
                         System.Console.WriteLine($"Invalid timeout value '{arguments["waitForRemoteTimeout"]}'.");
-                        Environment.Exit(1);
-                        return;
+                        return 1;
                     }
-                }
-                else
-                    cts.CancelAfter(10 * 60 * 5); // default 5 minute timeout
-                try
-                {
-                    var pingTaskResult = await pingListener.AcceptTcpClientAsync(cts.Token);
-                    testAdapterEndpoint = (System.Net.IPEndPoint)pingTaskResult.Client.RemoteEndPoint!;
-                    if (testAdapterEndpoint != null)
-                    {
-                        testAdapterEndpoint.Port = 38300;
-                        pingListener.Stop();
-                        System.Console.WriteLine($"Remote device connected from {testAdapterEndpoint}. Starting test run...");
-                    }
-                    else return;
-                }
-                catch (OperationCanceledException)
-                {
-                    cts.Dispose();
-                    System.Console.WriteLine("Timeout waiting for remote device to connect");
-                    Environment.Exit(1);
-                    return;
                 }
             }
 
             if (arguments.ContainsKey("remoteIp"))
-            {
-                var val = arguments["remoteIp"];
-                if (val is not null && val.Contains(":") && System.Net.IPAddress.TryParse(val.Split(':')[0], out System.Net.IPAddress? ip) && int.TryParse(val.Split(':')[1], out int port))
-                {
-                    testAdapterEndpoint = new System.Net.IPEndPoint(ip, port);
-                }
-                else
-                {
-                    System.Console.WriteLine("Invalid remote ip and/or port");
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-            }
+                args.RemoteIp = arguments["remoteIp"];
             if (arguments.ContainsKey("logFileName"))
-                outputFilename = arguments["logFileName"];
+                args.OutputFilename = arguments["logFileName"];
 
-            if (testAdapterEndpoint != null)
-            {
-                if (string.IsNullOrEmpty(outputFilename))
-                {
-                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
-                }
-                await OnApplicationLaunched(testAdapterEndpoint);
-            }
-            if(arguments.ContainsKey("apppath")) // iOS app
-            {
-                if (!OperatingSystem.IsMacOS())
-                {
-                    System.Console.WriteLine("iOS apps much be launch from a Mac");
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                var devices = await devicectl.GetConnectedAppleDevicesAsync();
-#if DEBUG
-                System.Console.WriteLine("Connected devices: ");
-                foreach (var d in devices.Result.Devices)
-                {
-                    System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
-                }
-#endif
-                string? device = arguments.ContainsKey("device") ? arguments["device"] : null;
-                if (device is null && devices.Result.Devices.Length == 1)
-                {
-                    device = devices.Result.Devices[0].Identifier;
-                }
-                if (string.IsNullOrEmpty(device))
-                {
-                    if (devices.Result.Devices.Length == 0)
-                        System.Console.WriteLine("No devices found");
-                    else
-                    {
-                        System.Console.WriteLine("Device parameter '-device <uuid>' missing and multiple devices connected:");
-                        foreach (var d in devices.Result.Devices)
-                        {
-                            System.Console.WriteLine($"    - {d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
-                        }
-                    }
+            if (arguments.ContainsKey("apppath")) // iOS app
+                args.IosAppPath = arguments["apppath"];
+            args.DeviceName = arguments.ContainsKey("device") ? arguments["device"] : null;
+            if (arguments.ContainsKey("deviceid"))
+                args.DeviceName = arguments["deviceid"];
+            if (arguments.ContainsKey("apkid"))
+                args.ApkId = arguments["apkid"];
+            if (arguments.ContainsKey("activity"))
+                args.ActivityName = arguments["activity"];
 
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                var details = await devicectl.GetDeviceDetails(device);
-                var apppath = arguments["apppath"];
-                if (!Directory.Exists(apppath) && !File.Exists(apppath))
-                {
-                    System.Console.WriteLine("File not found: " + apppath);
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                System.Console.WriteLine("Installing app...");
-                var bundleId = await devicectl.InstallApp(device, apppath);
-                System.Console.WriteLine($"App {bundleId} installed");
-
-                if (string.IsNullOrEmpty(outputFilename))
-                {
-                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
-                }
-
-                // Set up port forwarding using "mobiledevice"
-                MobileDevice tunnel;
-                try
-                {
-                    tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
-                }
-                catch (System.Exception ex)
-                {
-                    System.Console.WriteLine("Failed to open tunnel: " + ex.Message);
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
-
-                CancellationTokenSource closeAppToken = new CancellationTokenSource();
-                closeAppToken.Token.Register(t => tunnel.Dispose(), null);
-                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
-                await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
-                GC.KeepAlive(tunnel);
-                closeAppToken.Cancel();
-                testRunCompleted.TrySetResult(0);
-            }
-            else
-            {
-                // Launch Android android app
-                client = new AdbClient();
-                var devices = await client.GetDevicesAsync();
-                if (!devices.Any())
-                {
-                    System.Console.WriteLine("No devices connected to ADB");
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                if (arguments.ContainsKey("deviceid"))
-                {
-                    device = devices.Where(d => d.Serial == arguments["deviceid"]).FirstOrDefault();
-                    if (device == null)
-                    {
-                        System.Console.WriteLine($"ERROR Device '{arguments["deviceid"]}' not found");
-                        testRunCompleted.TrySetResult(1);
-                        return;
-                    }
-                }
-                if (device == null)
-                {
-                    if (devices.Count() > 1)
-                    {
-                        System.Console.WriteLine($"ERROR. Multiple devices connected. Please specify -deviceId <deviceid>");
-                        foreach (var d in devices)
-                        {
-                            System.Console.WriteLine($"\t{d.Serial}\t{d.Name}\t{d.Model}\t{d.Product}\t{d.State}");
-                        }
-                        testRunCompleted.TrySetResult(1);
-                        return;
-                    }
-                    device = devices.First();
-                }
-                if (arguments.ContainsKey("apkid"))
-                    apk_id = arguments["apkid"];
-                if (arguments.ContainsKey("activity"))
-                    activityName = arguments["activity"];
-
-                await ShutdownApp();
-
-                if (arguments.ContainsKey("apkpath"))
-                {
-                    var path = arguments["apkpath"];
-                    if (!File.Exists(path))
-                    {
-                        System.Console.WriteLine("ERROR. APK Not Found: " + path);
-                        testRunCompleted.TrySetResult(1);
-                    }
-                    if(apk_id == null || activityName == null)
-                    {
-                        string id;
-                        string name;
-                        ApkHelper.GetAPKInfo(path, out id, out name);
-                        if (apk_id == null)
-                            apk_id = id;
-                        if (activityName == null)
-                            activityName = name;
-                    }
-                    System.Console.WriteLine("Installing app...");
-                    await device.InstallApk(path);
-                }
-
-                // Get unlock state
-                var state = await device.GetPowerState();
-                if (!state.IsDisplayOn)
-                {
-                    await device.TurnOnDisplayAsync();
-
-                    while (!state.IsDisplayOn)
-                    {
-                        await Task.Delay(500);
-                        state = await device.GetPowerState();
-                    }
-                }
-
-                if (state.DisplayState == Device.DisplayState.OnAndLocked)
-                {
-                    if (arguments.ContainsKey("pin"))
-                    {
-                        string? pin = null;
-                        if (int.TryParse(arguments["pin"], out int numericPin)) //Ensures it's numeric
-                        {
-                            pin = arguments["pin"];
-                        }
-                        System.Console.WriteLine("Unlocking phone...");
-                        await device.UnlockAsync(pin);
-                    }
-                    else
-                    {
-                        System.Console.WriteLine("Device appears to be locked. Please unlock your device");
-                    //    System.Console.ReadKey();
-                    }
-                }
-                if (File.Exists("RunLog.txt"))
-                    File.Delete("RunLog.txt");
-
-                if (string.IsNullOrEmpty(outputFilename))
-                {
-                    string defaultFilename = device.Serial + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
-                    if (apk_id != null)
-                        defaultFilename += "_" + apk_id;
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
-                }
-
-                monitor = new LogCatMonitor(device.Serial);
-                // Connecting to logcat...                                
-                await client.SendDeviceCommandAsync("shell:logcat -b all -c", device.Serial); //Configure logcat
-                bool result;
-                if (device.ApiLevel > 22)
-                    result = await monitor.OpenAsync($"{apk_id} -T 1");
-                else
-                    result = await monitor.OpenAsync($"");
-                if (result)
-                {
-                    System.Console.WriteLine("Connected logcat to " + device.Serial);
-                }
-                else
-                {
-                    System.Console.WriteLine("Failed to connect to LogCat");
-                    return;
-                }
-                monitor.LogReceived += Monitor_LogReceived;
-
-                await device.SetPortForward(38300, 38300);  //Set up port forwarding for socket communication
-                
-                System.Console.WriteLine($"Launching app {apk_id}/{activityName} on device " + device.Serial + "...");
-
-                await device.LaunchApp(apk_id, activityName, new Dictionary<string, object>() { { "TestAdapterPort", 38300 } });
-               
-                // Keep looking for process starting up
-                bool launched = false;
-                while (!launched)
-                {
-                    await Task.Delay(1000);
-                    var pid = await device.GetProcessId(apk_id);
-                    if (appLaunchDetected)
-                        break;
-                    if (pid > 0)
-                    {
-                        launched = true;
-                        System.Console.WriteLine($"Test Host Launched. Process ID '{pid}'");
-                        _ = OnApplicationLaunched();
-                        break;
-                    }
-                    else
-                    {
-                        //Keep retrying. Doesn't always launch the first time
-                        await device.LaunchApp(apk_id, activityName, new Dictionary<string, object>() { { "TestAdapterPort", 38300 } });
-                    }
-                }
-                
-            }
-        }
-
-        private static async Task ShutdownApp()
-        {
-            if (device is null) return;
-            var id = await device.GetProcessId(apk_id);
-            if (id > 0)
-            {
-                System.Console.WriteLine($"Application '{apk_id}' already running. Shutting down...");
-                await device.StopApp(apk_id); //Ensure app isn't already running
-                while (await device.GetProcessId(apk_id) > 0)
-                {
-                    await Task.Delay(100);
-                }
-            }
-        }
-
-        private static bool appLaunchDetected;
-
-        private static async Task OnApplicationLaunched(System.Net.IPEndPoint? endpoint = null)
-        {
-            if (appLaunchDetected)
-                return;
-            appLaunchDetected = true;
-            int result = 0;
-            var runner = new TestRunner(endpoint);
-            try
-            {
-                await Task.Delay(5000); //Give app some time to start up
-                await runner.RunTests(outputFilename, settingsXml, processExitCancellationTokenSource?.Token ?? CancellationToken.None);
-            }
-            catch(System.Exception ex)
-            {
-                System.Console.WriteLine(ex.Message);
-                result = 1;
-            }
-            finally
-            {
-                await KillProcess();
-            }
-            testRunCompleted.TrySetResult(result);
-        }
-
-        private static async Task KillProcess()
-        {
-            if (monitor != null)
-            {
-                monitor.LogReceived -= Monitor_LogReceived;
-            }
-            if (device != null)
-            {
-                await device.StopApp(apk_id);
-            }
-            monitor?.Close();
-        }
-
-        private static int processID = -1;
-        
-        private static void Monitor_LogReceived(object? sender, LogCatMonitor.LogEntry e)
-        {
-            var msg = e.DataString;
-            if (msg == null) return;
-            //Log anything from logcat for the process or it the APK ID is in the message
-            if (processID > 0 && e.ProcessId == processID || apk_id != null && msg.Contains(apk_id))
-            {
-                File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\t{e.Type}\t{e.Tag}\t{e.DataString}{Environment.NewLine}");
-            }
-
-            if (processID < 0)
-            {
-                if(e.Tag == "ActivityManager" && 
-                        msg.StartsWith("Start proc ") &&
-                        msg.Contains($":{apk_id}") &&
-                        msg.Contains($" for activity {apk_id}/{activityName}")
-                        && !msg.Contains(" for backup "))
-                {
-                    string processIDStr = msg.Substring(11, msg.IndexOf(":") - 11);
-                    if (!int.TryParse(processIDStr, out processID))
-                        return;
-                    else
-                    {
-                        File.AppendAllText("RunLog.txt", $"{Environment.NewLine}====================================={Environment.NewLine}Application launched with Process ID {processID}{Environment.NewLine}");
-                        System.Console.WriteLine($"Application launched with Process ID {processID}");
-                    }
-                }
-            }
-
-            //Log anything from logcat for the process or it the APK ID is in the message
-            if (processID > 0 && e.ProcessId == processID || apk_id != null && msg.Contains(apk_id))
-            {
-                File.AppendAllText("RunLog.txt", $"{e.TimeStamp}\r{e.Type}\r{e.Tag}\t{e.DataString}{Environment.NewLine}");
-            }
-            if(e.Tag == "ActivityManager")
-            {
-
-            }
-            if (e.Tag == "ActivityManager" && msg.StartsWith($"Displayed {apk_id}/{activityName}"))
-            {
-                _ = OnApplicationLaunched(); //Detect app launched and start VSTest connection
-                return;
-            }
-            if (processID > 0 && e.Tag == "ActivityManager" && msg == $"Process {apk_id} (pid {processID}) has died.")
-            {
-                // Application died
-                System.Console.WriteLine($"{Environment.NewLine}Android application process has died. Exiting...");
-                processExitCancellationTokenSource?.Cancel();
-                //OnTestRunAborted("Android application process has died");
-                //testRunCompleted.TrySetResult(1);
-                return;
-            }
-            if (processID > 0 && e.ProcessId == processID)
-            {
-                if (e.Tag == "AndroidRuntime" && e.Type == LogCatMonitor.LogEntry.LogType.Error)
-                {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-                    System.Console.WriteLine(Environment.NewLine + "ERROR: " + e.DataString);
-                    System.Console.ResetColor();
-                }
-            }
-            else if (e.Tag == "libprocessgroup")
-            {
-                if (msg.StartsWith("Successfully killed process") && msg.Contains($" pid {processID}")) 
-                {
-                    //App likely exited. Check if it's still alive
-                    var _ = device!.GetProcessId(apk_id).ContinueWith(t => 
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            if (t.Result == 0)
-                            {
-                                System.Console.WriteLine($"{Environment.NewLine}Android application process killed. Exiting...");
-                                processExitCancellationTokenSource?.Cancel();
-                            }
-                        }
-                    });
-
-                }
-            }
+            if (arguments.ContainsKey("apkpath"))
+                args.ApkPath = arguments["apkpath"];
+            if (arguments.ContainsKey("pin"))
+                args.Pin = arguments["pin"];
+            return await Remote.Remote.RunTests(args, new Remote.ConsoleLogger());
         }
 
         private static Dictionary<string, string?> ParseArguments(string[] args)

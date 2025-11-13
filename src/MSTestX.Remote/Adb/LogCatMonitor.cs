@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console.Adb
 {
-    internal class LogCatMonitor : IDisposable
+    public class LogCatMonitor : IDisposable
     {
         private Socket s;
         private string deviceId;

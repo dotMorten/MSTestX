@@ -163,9 +163,37 @@ namespace MSTestX
                     events.AddWindows(win => win.OnLaunched((app, eventArgs) =>
                     {
                         TestOptions testOptions = new TestOptions();
-                        //TODO: Parse eventArgs.Arguments
+                        var arguments = ParseArguments(eventArgs.Arguments.Split(new char[' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+                        arguments = ParseArguments(Environment.GetCommandLineArgs());
+                        if (arguments.ContainsKey("AutoExit") && bool.TryParse(arguments["AutoExit"], out bool exit))
+                        {
+                            testOptions.TerminateAfterExecution = exit;
+                        }
+
                         configureTestOptions?.Invoke(testOptions);
                         ((RunnerApp)RunnerApp.Current!).Initialize(testOptions);
+
+                        Dictionary<string, string?> ParseArguments(string[] args)
+                        {
+                            var result = new Dictionary<string, string?>();
+                            for (int i = 0; i < args.Length; i++)
+                            {
+                                string? key = null;
+                                string? value = null;
+                                if (args[i].StartsWith("-"))
+                                {
+                                    key = args[i].Substring(1);
+                                    if (i < args.Length - 1 && !args[i + 1].StartsWith("-"))
+                                    {
+                                        i++;
+                                        value = args[i];
+                                    }
+                                }
+                                if (key != null)
+                                    result[key] = value;
+                            }
+                            return result;
+                        }
                     }));
 #endif
                 });

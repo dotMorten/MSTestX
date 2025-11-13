@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console
 {
-    internal static class devicectl
+    public static class devicectl
     {
         public static async Task<bool> IsDeviceCtlInstalled()
         {

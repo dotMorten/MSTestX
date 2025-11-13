@@ -14,7 +14,7 @@ namespace MSTestX.Console.Adb
 {
     // Good command-reference overview here: https://android.googlesource.com/platform/packages/modules/adb/+/HEAD/SERVICES.TXT
     // ADB Source and overview: https://android.googlesource.com/platform/packages/modules/adb/
-    internal class AdbClient
+    public class AdbClient
     {
         private int port;
 

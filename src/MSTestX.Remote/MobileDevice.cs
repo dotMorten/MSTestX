@@ -10,7 +10,7 @@ namespace MSTestX.Console
     /// <summary>
     /// Helper for calling into https://github.com/imkira/mobiledevice
     /// </summary>
-    internal sealed class MobileDevice : IDisposable
+    public sealed class MobileDevice : IDisposable
     {
         private Process mobileDeviceProcess;
         private TaskCompletionSource? tunnelCompletion;
