@@ -32,6 +32,7 @@ namespace TestAppRunner.ViewModels
         private System.IO.StreamWriter logOutput;
         private TrxWriter trxWriter;
         private TestAdapterConnection connection;
+        internal TestAdapterConnection Connection => connection;
 
         private static TestRunnerVM _Instance;
 

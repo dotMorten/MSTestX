@@ -14,14 +14,16 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console
 {
-    public class TestRunner : IDisposable
+    internal class TestRunner : IDisposable
     {
         private SocketCommunicationManager socket;
         private System.Net.IPEndPoint _endpoint;
+        private Adb.AdbClient? _adbClient;
 
-        public TestRunner(System.Net.IPEndPoint endpoint = null)
+        public TestRunner(System.Net.IPEndPoint endpoint = null, Adb.AdbClient adbClient = null)
         {
             _endpoint = endpoint;
+            _adbClient = adbClient;
         }
 
         public async Task RunTests(string outputFilename, string settingsXml, CancellationToken cancellationToken)
@@ -106,8 +108,22 @@ namespace MSTestX.Console
                 {
                     continue;
                 }
-
-                if (msg.MessageType == MessageType.TestHostLaunched)
+                if (msg.MessageType.StartsWith(UIAutomationMessage.AutomationMessageType))
+                {
+                    var uia = UIAutomationMessage.FromMessageType(msg.MessageType, msg.Payload);
+                    if (uia is not null)
+                    {
+                        if (_adbClient is not null)
+                        {
+                            _ = _adbClient.PerformUIAutomationAction(uia);
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("Cannot send UI Automation message to device.");
+                        }
+                    }
+                }
+                else if (msg.MessageType == MessageType.TestHostLaunched)
                 {
                     var thl = JsonDataSerializer.Instance.DeserializePayload<TestHostLaunchedPayload>(msg);
                     pid = thl.ProcessId;

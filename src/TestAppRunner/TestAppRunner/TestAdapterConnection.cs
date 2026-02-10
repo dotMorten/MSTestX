@@ -17,6 +17,8 @@ namespace TestAppRunner
         private int port;
         private System.Threading.Thread? messageLoopThread;
 
+        public bool IsConnected => isConnected;
+
         public TestAdapterConnection(int port)
         {
             this.port = port;
