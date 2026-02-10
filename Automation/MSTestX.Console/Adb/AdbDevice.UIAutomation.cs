@@ -45,6 +45,8 @@ namespace MSTestX.Console.Adb
                     return 62; // KeyEvent.KEYCODE_SPACE
                 case '\n':
                     return 66; // KeyEvent.KEYCODE_ENTER
+                case '\t':
+                    return 61; // KeyEvent.KEYCODE_TAB
                 default:
                     throw new NotSupportedException($"Key '{key}' is not supported.");
             }
