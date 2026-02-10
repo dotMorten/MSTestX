@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console.Adb
 {
-    internal partial class AdbClient
+    internal partial class Device
     {
         // See https://commandmasters.com/commands/input-android/ for reference to ADB input commands.
 
@@ -15,20 +15,20 @@ namespace MSTestX.Console.Adb
             if (message is TapMessage tap)
             {
                 // send a tap command to the device over ADB.
-                await SendShellCommandAsync($"adb shell input tap {tap.X} {tap.Y}", "deviceId");
+                await _client.SendShellCommandAsync($"adb shell input tap {tap.X} {tap.Y}", Serial);
             }
             if (message is SwipeMessage swipe)
             {
                 // send a swipe command to the device over ADB.
-                await SendShellCommandAsync($"adb shell input swipe {swipe.FromX} {swipe.FromY} {swipe.ToX} {swipe.ToY} {swipe.DurationMs}", "deviceId");
+                await _client.SendShellCommandAsync($"adb shell input swipe {swipe.FromX} {swipe.FromY} {swipe.ToX} {swipe.ToY} {swipe.DurationMs}", Serial);
             }
             else if (message is KeyboardMessage keyboard)
             {
                 // TODO: Send modifiers
                 if(keyboard.Key.Length == 1)
-                    await SendShellCommandAsync($"adb shell input keyevent {KeyToKeyEventCode(keyboard.Key[0])}", "deviceId");
+                    await _client.SendShellCommandAsync($"adb shell input keyevent {KeyToKeyEventCode(keyboard.Key[0])}", Serial);
                 else
-                    await SendShellCommandAsync($"adb shell input text \"{keyboard.Key.Replace(" ", "%20")}\"", "deviceId");
+                    await _client.SendShellCommandAsync($"adb shell input text \"{keyboard.Key.Replace(" ", "%20")}\"", Serial);
             }
         }
 

@@ -18,12 +18,12 @@ namespace MSTestX.Console
     {
         private SocketCommunicationManager socket;
         private System.Net.IPEndPoint _endpoint;
-        private Adb.AdbClient? _adbClient;
+        private Adb.Device? _adbdevice;
 
-        public TestRunner(System.Net.IPEndPoint endpoint = null, Adb.AdbClient adbClient = null)
+        public TestRunner(System.Net.IPEndPoint endpoint = null, Adb.Device adbdevice = null)
         {
             _endpoint = endpoint;
-            _adbClient = adbClient;
+            _adbdevice = adbdevice;
         }
 
         public async Task RunTests(string outputFilename, string settingsXml, CancellationToken cancellationToken)
@@ -113,9 +113,9 @@ namespace MSTestX.Console
                     var uia = UIAutomationMessage.FromMessageType(msg.MessageType, msg.Payload);
                     if (uia is not null)
                     {
-                        if (_adbClient is not null)
+                        if (_adbdevice is not null)
                         {
-                            _ = _adbClient.PerformUIAutomationAction(uia);
+                            _ = _adbdevice.PerformUIAutomationAction(uia);
                         }
                         else
                         {
