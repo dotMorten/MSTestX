@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace MSTestX.Console
 {
@@ -49,6 +50,7 @@ namespace MSTestX.Console
     -waitForRemote                      If IP of device isn't known, use waitForRemote to wait for app to ping back on port 38302.
     -logFileName <path>                 TRX Output Filename
     -settings <path>                    MSTest RunSettings xml file
+    -filter, --filter <expression>      MSTest test case filter expression
 
 Android specific (ignored if using remoteIp):
     -deviceid <Device Serial Number>    If more than one device is connected, specifies which device to use
@@ -70,6 +72,11 @@ iOs specific (MacOS only):
             if (arguments.ContainsKey("settings") && File.Exists(arguments["settings"]))
             {
                 settingsXml = File.ReadAllText(arguments["settings"]!);
+            }
+
+            if (arguments.TryGetValue("filter", out var filterExpression) && !string.IsNullOrWhiteSpace(filterExpression))
+            {
+                settingsXml = MergeTestCaseFilter(settingsXml, filterExpression);
             }
 
 
@@ -521,7 +528,7 @@ iOs specific (MacOS only):
                 string? value = null;
                 if (args[i].StartsWith("-"))
                 {
-                    key = args[i].Substring(1);
+                    key = args[i].TrimStart('-');
                     if (i < args.Length - 1 && !args[i + 1].StartsWith("-"))
                     {
                         i++;
@@ -532,6 +539,36 @@ iOs specific (MacOS only):
                     result[key] = value;
             }
             return result;
+        }
+
+        private static string MergeTestCaseFilter(string? existingSettingsXml, string filterExpression)
+        {
+            var xmlDoc = new XmlDocument();
+            if (string.IsNullOrWhiteSpace(existingSettingsXml))
+            {
+                xmlDoc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings />");
+            }
+            else
+            {
+                xmlDoc.LoadXml(existingSettingsXml);
+            }
+
+            var runSettings = xmlDoc.SelectSingleNode("RunSettings") ?? xmlDoc.AppendChild(xmlDoc.CreateElement("RunSettings"));
+            var runConfiguration = runSettings.SelectSingleNode("RunConfiguration") ?? runSettings.AppendChild(xmlDoc.CreateElement("RunConfiguration"));
+            var testCaseFilter = runConfiguration.SelectSingleNode("TestCaseFilter") as XmlElement;
+            if (testCaseFilter == null)
+            {
+                testCaseFilter = xmlDoc.CreateElement("TestCaseFilter");
+                runConfiguration.AppendChild(testCaseFilter);
+            }
+
+            testCaseFilter.InnerText = filterExpression;
+
+            using var sw = new StringWriter();
+            using var xw = XmlWriter.Create(sw, new XmlWriterSettings { OmitXmlDeclaration = false });
+            xmlDoc.Save(xw);
+            xw.Flush();
+            return sw.ToString();
         }
     }
 }
