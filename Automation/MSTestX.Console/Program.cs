@@ -544,15 +544,30 @@ iOs specific (MacOS only):
         private static string MergeTestCaseFilter(string? existingSettingsXml, string filterExpression)
         {
             var xmlDoc = new XmlDocument();
+            const string minimalRunSettings = @"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings />";
+
             if (string.IsNullOrWhiteSpace(existingSettingsXml))
             {
-                xmlDoc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?><RunSettings />");
+                xmlDoc.LoadXml(minimalRunSettings);
             }
             else
             {
-                xmlDoc.LoadXml(existingSettingsXml);
+                try
+                {
+                    xmlDoc.LoadXml(existingSettingsXml);
+                }
+                catch (XmlException ex)
+                {
+                    System.Console.Error.WriteLine("Warning: The specified runsettings content is not valid XML and will be ignored. Details: " + ex.Message);
+                    xmlDoc.LoadXml(minimalRunSettings);
+                }
             }
 
+            if (!string.Equals(xmlDoc.DocumentElement?.Name, "RunSettings", StringComparison.Ordinal))
+            {
+                System.Console.Error.WriteLine("Warning: The specified runsettings content does not have a <RunSettings> root element and will be ignored.");
+                xmlDoc.LoadXml(minimalRunSettings);
+            }
             var runSettings = xmlDoc.SelectSingleNode("RunSettings") ?? xmlDoc.AppendChild(xmlDoc.CreateElement("RunSettings"));
             var runConfiguration = runSettings.SelectSingleNode("RunConfiguration") ?? runSettings.AppendChild(xmlDoc.CreateElement("RunConfiguration"));
             var testCaseFilter = runConfiguration.SelectSingleNode("TestCaseFilter") as XmlElement;
