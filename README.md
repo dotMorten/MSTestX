@@ -73,6 +73,7 @@ MSTestX.Console -remoteIp 127.0.0.1:38300
 ```
 ### Other parameters
  - `-logFileName <path to file>` : The path of the TRX file that gets generated (defaults to current date/time).
+ - `-filter <expression>` or `--filter <expression>` : MSTest test case filter expression, for example `TestCategory=Smoke` or `FullyQualifiedName~MyNamespace`.
  - `-settings <path to file>` : Path to an XML runsettings file. See [Configure unit tests by using a .runsettings file](https://learn.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2022) for details.
  - `-deviceid <Android Device Serial Number>`    Android: If more than one device is connected, specifies which device to use
  - `-device <uuid|ecid|serial_number|udid|name|dns_name>`   iOS: The identifier, ECID, serial number, UDID, user-provided name, or DNS name of the device, if more than one device is connected.
