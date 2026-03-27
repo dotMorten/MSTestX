@@ -28,6 +28,7 @@ jobs:
 
     - name: Build
       run: |
+        dotnet workload restore src/MSTestX.sln
         msbuild /restore /t:Build src/MSTestX.sln /p:Configuration=Release /p:SkipWindows=True
 
     - name: Upload artifacts
