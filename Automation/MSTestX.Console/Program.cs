@@ -31,6 +31,17 @@ namespace MSTestX.Console
         private static CancellationTokenSource? processExitCancellationTokenSource;
         private static TaskCompletionSource<int> testRunCompleted = new TaskCompletionSource<int>();
 
+        internal static LaunchMode GetLaunchMode(Dictionary<string, string?> arguments)
+        {
+            if (arguments.ContainsKey("remoteIp") || arguments.ContainsKey("waitForRemote"))
+                return LaunchMode.RemoteAdapter;
+
+            if (arguments.ContainsKey("apppath"))
+                return LaunchMode.AppleApp;
+
+            return LaunchMode.AndroidAdb;
+        }
+
         static async Task Main(string[] args)
         {
             if (args.Length == 0 || args[0] == "/?" || args[0] == "-?" || args[0] == "?")
@@ -139,97 +150,109 @@ iOs specific (MacOS only):
             if (arguments.ContainsKey("logFileName"))
                 outputFilename = arguments["logFileName"];
 
-            if (testAdapterEndpoint != null)
+            switch (GetLaunchMode(arguments))
             {
-                if (string.IsNullOrEmpty(outputFilename))
+                case LaunchMode.RemoteAdapter:
                 {
-                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
-                }
-                await OnApplicationLaunched(testAdapterEndpoint);
-            }
-            if(arguments.ContainsKey("apppath")) // iOS app
-            {
-                if (!OperatingSystem.IsMacOS())
-                {
-                    System.Console.WriteLine("iOS apps much be launch from a Mac");
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                var devices = await devicectl.GetConnectedAppleDevicesAsync();
-#if DEBUG
-                System.Console.WriteLine("Connected devices: ");
-                foreach (var d in devices.Result.Devices)
-                {
-                    System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
-                }
-#endif
-                string? device = arguments.ContainsKey("device") ? arguments["device"] : null;
-                if (device is null && devices.Result.Devices.Length == 1)
-                {
-                    device = devices.Result.Devices[0].Identifier;
-                }
-                if (string.IsNullOrEmpty(device))
-                {
-                    if (devices.Result.Devices.Length == 0)
-                        System.Console.WriteLine("No devices found");
-                    else
+                    if (testAdapterEndpoint == null)
                     {
-                        System.Console.WriteLine("Device parameter '-device <uuid>' missing and multiple devices connected:");
-                        foreach (var d in devices.Result.Devices)
-                        {
-                            System.Console.WriteLine($"    - {d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
-                        }
+                        testRunCompleted.TrySetResult(1);
+                        return;
                     }
 
-                    testRunCompleted.TrySetResult(1);
+                    if (string.IsNullOrEmpty(outputFilename))
+                    {
+                        string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                        outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                    }
+                    await OnApplicationLaunched(testAdapterEndpoint);
                     return;
                 }
-                var details = await devicectl.GetDeviceDetails(device);
-                var apppath = arguments["apppath"];
-                if (!Directory.Exists(apppath) && !File.Exists(apppath))
+
+                case LaunchMode.AppleApp:
                 {
-                    System.Console.WriteLine("File not found: " + apppath);
-                    testRunCompleted.TrySetResult(1);
+                    if (!OperatingSystem.IsMacOS())
+                    {
+                        System.Console.WriteLine("iOS apps much be launch from a Mac");
+                        testRunCompleted.TrySetResult(1);
+                        return;
+                    }
+                    var devices = await devicectl.GetConnectedAppleDevicesAsync();
+#if DEBUG
+                    System.Console.WriteLine("Connected devices: ");
+                    foreach (var d in devices.Result.Devices)
+                    {
+                        System.Console.WriteLine($"{d.DeviceProperties.Name} ({d.Identifier}) : {d.HardwareProperties.DeviceType} {d.HardwareProperties.CpuType.Name} {d.DeviceProperties.OsVersionNumber}");
+                    }
+#endif
+                    string? device = arguments.ContainsKey("device") ? arguments["device"] : null;
+                    if (device is null && devices.Result.Devices.Length == 1)
+                    {
+                        device = devices.Result.Devices[0].Identifier;
+                    }
+                    if (string.IsNullOrEmpty(device))
+                    {
+                        if (devices.Result.Devices.Length == 0)
+                            System.Console.WriteLine("No devices found");
+                        else
+                        {
+                            System.Console.WriteLine("Device parameter '-device <uuid>' missing and multiple devices connected:");
+                            foreach (var d in devices.Result.Devices)
+                            {
+                                System.Console.WriteLine($"    - {d.Identifier} ({d.DeviceProperties.Name} - {d.HardwareProperties.MarketingName}. OS version: {d.DeviceProperties.OsVersionNumber})");
+                            }
+                        }
+
+                        testRunCompleted.TrySetResult(1);
+                        return;
+                    }
+                    var details = await devicectl.GetDeviceDetails(device);
+                    var apppath = arguments["apppath"];
+                    if (!Directory.Exists(apppath) && !File.Exists(apppath))
+                    {
+                        System.Console.WriteLine("File not found: " + apppath);
+                        testRunCompleted.TrySetResult(1);
+                        return;
+                    }
+                    System.Console.WriteLine("Installing app...");
+                    var bundleId = await devicectl.InstallApp(device, apppath);
+                    System.Console.WriteLine($"App {bundleId} installed");
+
+                    if (string.IsNullOrEmpty(outputFilename))
+                    {
+                        string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
+                        outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
+                    }
+
+                    // Set up port forwarding using "mobiledevice"
+                    MobileDevice tunnel;
+                    try
+                    {
+                        tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Console.WriteLine("Failed to open tunnel: " + ex.Message);
+                        testRunCompleted.TrySetResult(1);
+                        return;
+                    }
+                    tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
+
+                    CancellationTokenSource closeAppToken = new CancellationTokenSource();
+                    closeAppToken.Token.Register(t => tunnel.Dispose(), null);
+                    var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
+                    await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
+                    GC.KeepAlive(tunnel);
+                    closeAppToken.Cancel();
+                    testRunCompleted.TrySetResult(0);
                     return;
                 }
-                System.Console.WriteLine("Installing app...");
-                var bundleId = await devicectl.InstallApp(device, apppath);
-                System.Console.WriteLine($"App {bundleId} installed");
 
-                if (string.IsNullOrEmpty(outputFilename))
+                default:
                 {
-                    string defaultFilename = DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss");
-                    outputFilename = Path.Combine(System.Environment.CurrentDirectory, defaultFilename + ".trx");
-                }
-
-                // Set up port forwarding using "mobiledevice"
-                MobileDevice tunnel;
-                try
-                {
-                    tunnel = await MobileDevice.CreateTunnelAsync(38300, 38300, details.Result.HardwareProperties.Udid);
-                }
-                catch (System.Exception ex)
-                {
-                    System.Console.WriteLine("Failed to open tunnel: " + ex.Message);
-                    testRunCompleted.TrySetResult(1);
-                    return;
-                }
-                tunnel.Exited += (s, e) => { testRunCompleted.TrySetResult(1); System.Console.WriteLine("Tunnel process exited."); };
-
-                CancellationTokenSource closeAppToken = new CancellationTokenSource();
-                closeAppToken.Token.Register(t => tunnel.Dispose(), null);
-                var appTask = devicectl.LaunchApp(device, bundleId, "--TestAdapterPort 38300 --AutoExit True", outputFilename.Replace(".trx", ".log"), closeAppToken.Token);
-                await OnApplicationLaunched(System.Net.IPEndPoint.Parse("127.0.0.1:38300"));
-                GC.KeepAlive(tunnel);
-                closeAppToken.Cancel();
-                testRunCompleted.TrySetResult(0);
-            }
-            else
-            {
-                // Launch Android android app
-                client = new AdbClient();
-                var devices = await client.GetDevicesAsync();
+                    // Launch Android android app
+                    client = new AdbClient();
+                    var devices = await client.GetDevicesAsync();
                 if (!devices.Any())
                 {
                     System.Console.WriteLine("No devices connected to ADB");
@@ -377,7 +400,9 @@ iOs specific (MacOS only):
                         await device.LaunchApp(apk_id, activityName, new Dictionary<string, object>() { { "TestAdapterPort", 38300 } });
                     }
                 }
-                
+
+                    return;
+                }
             }
         }
 
