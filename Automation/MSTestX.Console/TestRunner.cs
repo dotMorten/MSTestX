@@ -19,6 +19,44 @@ namespace MSTestX.Console
         private SocketCommunicationManager socket;
         private System.Net.IPEndPoint _endpoint;
 
+        internal static string GetRedirectedOutcomeLabel(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome outcome)
+        {
+            return outcome switch
+            {
+                Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed => "PASS",
+                Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped => "SKIP",
+                Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed => "FAIL",
+                _ => outcome.ToString().ToUpperInvariant(),
+            };
+        }
+
+        internal static string FormatRedirectedRunningTestLine(string testName)
+        {
+            return $"RUN  {testName}";
+        }
+
+        internal static string FormatRedirectedResultLine(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome outcome, string testName, TimeSpan duration)
+        {
+            return $"{GetRedirectedOutcomeLabel(outcome)} {testName} {duration.FormatDuration()}";
+        }
+
+        internal static bool ShouldWriteTestResult(Guid parentExecId, bool isOutputRedirected)
+        {
+            return !isOutputRedirected || parentExecId == Guid.Empty;
+        }
+
+        internal static bool ShouldWriteRunningTest(Guid parentExecId, bool isOutputRedirected)
+        {
+            // Start events do not reliably carry ParentExecId for child/data-driven executions,
+            // so redirected RUN lines cannot be matched to top-level tests without producing orphans.
+            return !isOutputRedirected;
+        }
+
+        internal static bool ShouldWriteFailureDetails(Guid parentExecId, bool isOutputRedirected, string testMessage)
+        {
+            return ShouldWriteTestResult(parentExecId, isOutputRedirected) && !string.IsNullOrEmpty(testMessage);
+        }
+
         public TestRunner(System.Net.IPEndPoint endpoint = null)
         {
             _endpoint = endpoint;
@@ -132,12 +170,18 @@ namespace MSTestX.Console
                 }
                 else if (msg.MessageType == MessageType.DataCollectionTestStart)
                 {
-                    if (!System.Console.IsOutputRedirected)
+                    var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
+                    var testName = tcs.GetDisplayName();
+                    var parentExecId = tcs.GetParentExecId();
+                    if (System.Console.IsOutputRedirected)
                     {
-                        var tcs = JsonDataSerializer.Instance.DeserializePayload<TestCaseStartEventArgs>(msg);
-                        var testName = tcs.TestCaseName;
-                        if (string.IsNullOrEmpty(testName))
-                            testName = tcs.TestElement.DisplayName;
+                        if (ShouldWriteRunningTest(parentExecId, isOutputRedirected: true))
+                        {
+                            System.Console.WriteLine(FormatRedirectedRunningTestLine(testName));
+                        }
+                    }
+                    else
+                    {
                         System.Console.Write($"    {testName}");
                     }
                 }
@@ -148,14 +192,11 @@ namespace MSTestX.Console
                 else if (msg.MessageType == MessageType.DataCollectionTestEndResult)
                 {
                     var tr = JsonDataSerializer.Instance.DeserializePayload<Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection.TestResultEventArgs>(msg);
-                    var testName = tr.TestResult.DisplayName;
-                    if (string.IsNullOrEmpty(testName))
-                        testName = tr.TestElement.DisplayName;
+                    var testName = tr.GetDisplayName();
 
                     var outcome = tr.TestResult.Outcome;
 
-                    var parentExecId = tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").Any() ?
-                        tr.TestResult.GetPropertyValue<Guid>(tr.TestResult.Properties.Where(t => t.Id == "ParentExecId").First(), Guid.Empty) : Guid.Empty;
+                    var parentExecId = tr.GetParentExecId();
                     if (outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed)
                     {
                     }
@@ -171,42 +212,39 @@ namespace MSTestX.Console
                     {
                         System.Console.SetCursorPosition(0, System.Console.CursorTop);
                     }
+                    var isOutputRedirected = System.Console.IsOutputRedirected;
                     string testMessage = tr.TestResult?.ErrorMessage;
-                    if (parentExecId == Guid.Empty || !System.Console.IsOutputRedirected)
+                    if (ShouldWriteTestResult(parentExecId, isOutputRedirected))
                     {
-                        switch(outcome)
+                        if (isOutputRedirected)
                         {
-                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed:
-                                System.Console.ForegroundColor = ConsoleColor.Green;
-                                System.Console.Write("  √ ");
-                                break;
-                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped:
-                                System.Console.ForegroundColor = ConsoleColor.Yellow;
-                                System.Console.Write("  ! ");
-                                break;
-                            case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed:
-                                System.Console.ForegroundColor = ConsoleColor.Red;
-                                System.Console.Write("  X ");
-                                break;
-                            default:
-                                System.Console.Write("    "); break;
+                            System.Console.WriteLine(FormatRedirectedResultLine(outcome, testName, tr.TestResult.Duration));
                         }
-                        System.Console.ResetColor();
-                        System.Console.Write(testName);
-                        var d = tr.TestResult.Duration;
-                        if (d.TotalMilliseconds < 1)
-                            System.Console.WriteLine(" [< 1ms]");
-                        else if (d.TotalSeconds < 1)
-                            System.Console.WriteLine($" [{d.Milliseconds}ms]");
-                        else if (d.TotalMinutes < 1)
-                            System.Console.WriteLine($" [{d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
-                        else if (d.TotalHours < 1)
-                            System.Console.WriteLine($" [{d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
-                        else if (d.TotalDays < 1)
-                            System.Console.WriteLine($" [{d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]");
                         else
-                            System.Console.WriteLine($" [{Math.Floor(d.TotalDays)}d {d.Hours}h {d.Minutes}m {d.Seconds}s {d.Milliseconds.ToString("0")}ms]"); // I sure hope your tests won't ever need this line of code
-                        if (!string.IsNullOrEmpty(testMessage))
+                        {
+                            switch(outcome)
+                            {
+                                case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed:
+                                    System.Console.ForegroundColor = ConsoleColor.Green;
+                                    System.Console.Write("  √ ");
+                                    break;
+                                case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Skipped:
+                                    System.Console.ForegroundColor = ConsoleColor.Yellow;
+                                    System.Console.Write("  ! ");
+                                    break;
+                                case Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Failed:
+                                    System.Console.ForegroundColor = ConsoleColor.Red;
+                                    System.Console.Write("  X ");
+                                    break;
+                                default:
+                                    System.Console.Write("    "); break;
+                            }
+                            System.Console.ResetColor();
+                            System.Console.Write(testName);
+                            System.Console.WriteLine($" {tr.TestResult.Duration.FormatDuration()}");
+                        }
+
+                        if (ShouldWriteFailureDetails(parentExecId, isOutputRedirected, testMessage))
                         {
                             System.Console.ForegroundColor = ConsoleColor.Red;
                             System.Console.WriteLine("  Error Message:");
