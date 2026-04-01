@@ -429,7 +429,7 @@ iOs specific (MacOS only):
                 return;
             appLaunchDetected = true;
             int result = 0;
-            var runner = new TestRunner(endpoint);
+            var runner = new TestRunner(endpoint, device);
             try
             {
                 await Task.Delay(5000); //Give app some time to start up

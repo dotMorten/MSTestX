@@ -173,5 +173,5 @@ namespace MSTestX.Console.Adb
             }
             System.Diagnostics.Debug.WriteLine($"OKAY");
         }
-    }
+    }   
 }

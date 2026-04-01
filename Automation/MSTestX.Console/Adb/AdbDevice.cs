@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MSTestX.Console.Adb
 {
-    public class Device
+    internal partial class Device
     {
         private AdbClient _client;
         internal Device(AdbClient client) { _client = client; }
