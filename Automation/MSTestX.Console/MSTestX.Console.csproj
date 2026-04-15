@@ -12,7 +12,6 @@
     <PackageOutputPath>../../nupkg</PackageOutputPath>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <Version>0.41.0</Version>
-    <LangVersion>9.0</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <Authors>Morten Nielsen</Authors>
