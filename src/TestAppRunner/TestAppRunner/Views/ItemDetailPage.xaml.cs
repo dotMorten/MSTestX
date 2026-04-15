@@ -29,13 +29,43 @@ namespace TestAppRunner.Views
 		{
             this.BindingContext = vm;
             InitializeComponent();
+            loopIterationLabel.BindingContext = TestRunnerVM.Instance;
+            runUntilFailureButton.BindingContext = TestRunnerVM.Instance;
 		}
 
-        private void Button_Clicked(object sender, EventArgs e)
+        private async void Button_Clicked(object sender, EventArgs e)
         {
-            if (!TestRunnerVM.Instance.IsRunning)
+            if (!TestRunnerVM.Instance.IsBusy)
             {
-                var _ = TestRunnerVM.Instance.Run(new[] { ((TestResultVM)BindingContext).Test });
+                try
+                {
+                    await TestRunnerVM.Instance.Run(new[] { ((TestResultVM)BindingContext).Test });
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Run command failed: {ex}");
+                    await DisplayAlert("Test Run Error", ex.Message, "OK");
+                }
+            }
+        }
+
+        private async void RunUntilFailureButton_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsBusy)
+            {
+                TestRunnerVM.Instance.Cancel();
+            }
+            else
+            {
+                try
+                {
+                    await TestRunnerVM.Instance.RunUntilFailure(new[] { ((TestResultVM)BindingContext).Test });
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Run-until-failure command failed: {ex}");
+                    await DisplayAlert("Test Run Error", ex.Message, "OK");
+                }
             }
         }
 

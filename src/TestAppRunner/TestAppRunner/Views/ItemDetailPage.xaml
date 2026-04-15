@@ -29,6 +29,12 @@
 
                     <Label Text="{Binding ClassName}" TextColor="{DynamicResource foregroundColor}" />
                     <ActivityIndicator IsRunning="{Binding IsInProgress}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
+                    <Label x:Name="loopIterationLabel"
+                           Margin="0,0,0,10"
+                           FontAttributes="Bold"
+                           IsVisible="{Binding IsLoopingUntilFailure, Mode=OneWay}"
+                           Text="{Binding LoopIterationText}"
+                           TextColor="{DynamicResource accentColor}" />
                     <StackLayout Orientation="Horizontal" IsVisible="{Binding ChildResults, Converter={StaticResource nullToFalseConverter}, ConverterParameter=reverse}">
                         <Label Text="Elapsed time: " FontAttributes="Bold" TextColor="{DynamicResource foregroundColor}" />
                         <Label Text="{Binding Duration}" TextColor="{DynamicResource foregroundColor}" />
@@ -80,7 +86,10 @@
                 </StackLayout>
 
             </ScrollView>
-            <Button Text="Run Test" Grid.Row="2" Clicked="Button_Clicked" />
+            <VerticalStackLayout Grid.Row="2" Spacing="10" Padding="10,0,10,10">
+                <Button Text="Run Test" Clicked="Button_Clicked" />
+                <Button Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" Clicked="RunUntilFailureButton_Clicked" IsEnabled="{Binding CanInteractWithRunActions}" />
+            </VerticalStackLayout>
         </Grid>
     </ContentPage.Content>
 </ContentPage>

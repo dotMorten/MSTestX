@@ -38,6 +38,12 @@
                     <ActivityIndicator IsRunning="{Binding CurrentTestRunning, Converter={StaticResource nullToFalseConverter}, Mode=OneWay}" HeightRequest="15" WidthRequest="15" Color="{DynamicResource accentColor}" />
                     <Label Text="{Binding CurrentTestRunning.Test.FullyQualifiedName, Mode=OneWay}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{DynamicResource foregroundColor}" VerticalOptions="Start"/>
                 </StackLayout>
+                <Label x:Name="loopIterationLabel"
+                       Margin="20,0,20,10"
+                       FontAttributes="Bold"
+                       IsVisible="{Binding IsLoopingUntilFailure, Mode=OneWay}"
+                       Text="{Binding LoopIterationText}"
+                       TextColor="{DynamicResource accentColor}" />
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
             </StackLayout>
             <CollectionView x:Name="list" SelectionChanged="list_ItemSelected" Grid.Row="1" SelectionMode="Single">
@@ -62,7 +68,10 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="2" />
+            <VerticalStackLayout Grid.Row="2" Spacing="10" Padding="10,0,10,10">
+                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
+                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanInteractWithRunActions}" />
+            </VerticalStackLayout>
         </Grid>
     </ContentPage.Content>
 </ContentPage>

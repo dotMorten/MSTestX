@@ -83,6 +83,16 @@ namespace TestAppRunner.ViewModels
             OnPropertyChanged(nameof(Outcome));
             OnPropertyChanged(nameof(IsInProgress));
         }
+
+        internal void ClearInProgress()
+        {
+            if (!inProgress)
+                return;
+
+            inProgress = false;
+            OnPropertyChanged(nameof(Outcome));
+            OnPropertyChanged(nameof(IsInProgress));
+        }
         public Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome Outcome
         {
             get

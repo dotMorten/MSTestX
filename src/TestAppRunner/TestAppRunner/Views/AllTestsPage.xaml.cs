@@ -57,7 +57,7 @@ namespace TestAppRunner.Views
 
         private async void Button_Clicked(object sender, EventArgs e)
         {
-            if (TestRunnerVM.Instance.IsRunning)
+            if (TestRunnerVM.Instance.IsBusy)
                 TestRunnerVM.Instance.Cancel();
             else
             {
@@ -65,7 +65,28 @@ namespace TestAppRunner.Views
                 {
                     await TestRunnerVM.Instance.Run();
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Run command failed: {ex}");
+                }
+            }
+        }
+
+        private async void RunUntilFailureButton_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsBusy)
+            {
+                TestRunnerVM.Instance.Cancel();
+                return;
+            }
+
+            try
+            {
+                await TestRunnerVM.Instance.RunUntilFailure(TestRunnerVM.Instance.Tests.Select(t => t.Test));
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Run-until-failure command failed: {ex}");
             }
         }
 
@@ -99,13 +120,13 @@ namespace TestAppRunner.Views
 
         private void RunRemaining_Clicked()
         {
-            if (TestRunnerVM.Instance.IsRunning) return;
+            if (TestRunnerVM.Instance.IsBusy) return;
             TestRunnerVM.Instance.RunRemainingTests();
         }
 
         private void RunFailed_Clicked()
         {
-            if (TestRunnerVM.Instance.IsRunning) return;
+            if (TestRunnerVM.Instance.IsBusy) return;
             TestRunnerVM.Instance.RunFailedTests();
         }
 
@@ -179,7 +200,7 @@ namespace TestAppRunner.Views
         }
         private void StopRun_Clicked()
         {
-            if (TestRunnerVM.Instance.IsRunning)
+            if (TestRunnerVM.Instance.IsBusy)
             {
                 TestRunnerVM.Instance.Cancel();
             }
