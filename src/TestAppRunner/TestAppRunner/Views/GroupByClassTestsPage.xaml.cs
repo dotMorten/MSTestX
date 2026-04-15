@@ -30,18 +30,48 @@ namespace TestAppRunner.Views
             this.tests = tests;
             list.ItemsSource = new List<TestResultGroup>(tests.GroupBy(t => t.ClassName).Select((g, t) => new TestResultGroup(g.Key.StartsWith(tests.Group + ".") ? g.Key.Substring(tests.Group.Length + 1) : g.Key, g)).OrderBy(g=>g.Group));
             currentTestView.BindingContext = TestRunnerVM.Instance;
+            loopIterationLabel.BindingContext = TestRunnerVM.Instance;
+            runUntilFailureButton.BindingContext = TestRunnerVM.Instance;
             this.BindingContext = tests;
         }
 
-        private void Button_Clicked(object sender, EventArgs e)
+        private async void Button_Clicked(object sender, EventArgs e)
         {
-            if (TestRunnerVM.Instance.IsRunning)
+            if (TestRunnerVM.Instance.IsBusy)
             {
                 TestRunnerVM.Instance.Cancel();
             }
             else
             {
-                var _ = TestRunnerVM.Instance.Run(tests.Select(t => t.Test));
+                try
+                {
+                    await TestRunnerVM.Instance.Run(tests.Select(t => t.Test));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Run command failed: {ex}");
+                    await DisplayAlert("Test Run Error", ex.Message, "OK");
+                }
+            }
+        }
+
+        private async void RunUntilFailureButton_Clicked(object sender, EventArgs e)
+        {
+            if (TestRunnerVM.Instance.IsBusy)
+            {
+                TestRunnerVM.Instance.Cancel();
+            }
+            else
+            {
+                try
+                {
+                    await TestRunnerVM.Instance.RunUntilFailure(tests.Select(t => t.Test));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Run-until-failure command failed: {ex}");
+                    await DisplayAlert("Test Run Error", ex.Message, "OK");
+                }
             }
         }
 

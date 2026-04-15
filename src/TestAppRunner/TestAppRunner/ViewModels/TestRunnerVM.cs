@@ -32,6 +32,11 @@ namespace TestAppRunner.ViewModels
         private System.IO.StreamWriter logOutput;
         private TrxWriter trxWriter;
         private TestAdapterConnection connection;
+        private CancellationTokenSource loopTcs;
+        private bool isLoopingUntilFailure;
+        private bool showStopAction;
+        private bool isStopRequested;
+        private int currentIteration;
 
         private static TestRunnerVM _Instance;
 
@@ -161,7 +166,10 @@ namespace TestAppRunner.ViewModels
                             OnPropertyChanged(nameof(SkippedTests));
                         }
                     }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Logger.Log($"Failed to restore previous test progress: {ex}");
+                        }
                     }
 
 
@@ -226,7 +234,10 @@ namespace TestAppRunner.ViewModels
                     conn.DropTable<TestProgress>();
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Log($"Failed to clear saved test progress: {ex}");
+            }
         }
 
         public void DeleteProgress(IEnumerable<TestCase> tests)
@@ -292,12 +303,42 @@ namespace TestAppRunner.ViewModels
 
         private CancellationTokenSource tcs;
 
+        public bool IsLoopingUntilFailure => isLoopingUntilFailure;
+
+        public int CurrentIteration => currentIteration;
+
+        public bool IsBusy => IsRunning || IsLoopingUntilFailure;
+
+        public string RunUntilFailureActionText => showStopAction ? "Stop" : "Run until failure";
+
+        public string LoopIterationText => $"Running until failure · iteration {CurrentIteration}";
+
+        public bool CanInteractWithRunActions => IsInitialized && !isStopRequested;
+
         public event EventHandler<Exception> OnTestRunException;
 
         public void Cancel()
         {
-            tcs?.Cancel();
-            tcs = null;
+            isStopRequested = true;
+            showStopAction = false;
+            OnPropertiesChanged(nameof(CanInteractWithRunActions), nameof(RunUntilFailureActionText));
+            CancelTokenSource(loopTcs);
+            CancelTokenSource(tcs);
+        }
+
+        private static void CancelTokenSource(CancellationTokenSource cancellationTokenSource)
+        {
+            if (cancellationTokenSource is null)
+                return;
+
+            try
+            {
+                cancellationTokenSource.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The run finished and disposed the token source while the UI was handling a stop click.
+            }
         }
 
         public Task<IEnumerable<TestResult>> Run()
@@ -330,11 +371,12 @@ namespace TestAppRunner.ViewModels
 
         public async Task<IEnumerable<TestResult>> Run(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
         {
-            if (IsRunning)
+            if (IsBusy)
                 throw new InvalidOperationException("Can't begin a test run while another is in progress");
             try
             {
-                return await Run_Internal(testCollection, runSettings);
+                var runOutcome = await Run_Internal(testCollection, runSettings, CancellationToken.None);
+                return runOutcome.Results;
             }
             catch(System.Exception ex)
             {
@@ -344,15 +386,105 @@ namespace TestAppRunner.ViewModels
             }
         }
 
-        private async Task<IEnumerable<TestResult>> Run_Internal(IEnumerable<TestCase> testCollection, IRunSettings runSettings)
+        public async Task<IEnumerable<TestResult>> RunUntilFailure(IEnumerable<TestCase> testCollection, IRunSettings runSettings, CancellationToken cancellationToken)
         {
+            if (IsBusy)
+                throw new InvalidOperationException("Can't begin a test run while another is in progress");
+
+            var selectedTests = testCollection?.OrderBy(t => t.FullyQualifiedName).ToArray() ?? Array.Empty<TestCase>();
+            if (!selectedTests.Any())
+                return Enumerable.Empty<TestResult>();
+
+            try
+            {
+                isLoopingUntilFailure = true;
+                currentIteration = 0;
+                loopTcs = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                showStopAction = true;
+                OnPropertyChanged(nameof(IsLoopingUntilFailure));
+                OnPropertyChanged(nameof(CurrentIteration));
+                OnPropertyChanged(nameof(RunUntilFailureActionText));
+                OnPropertyChanged(nameof(LoopIterationText));
+                OnPropertyChanged(nameof(CanInteractWithRunActions));
+
+                List<TestResult> lastResults = new();
+                while (!loopTcs.IsCancellationRequested)
+                {
+                    currentIteration++;
+                    Status = $"Running iteration {currentIteration} until failure...";
+                    OnPropertyChanged(nameof(Status));
+                    OnPropertyChanged(nameof(CurrentIteration));
+                    OnPropertyChanged(nameof(LoopIterationText));
+
+                    var iterationOutcome = await Run_Internal(selectedTests, runSettings ?? Settings, loopTcs.Token, allowTerminate: false);
+                    var iterationResults = iterationOutcome.Results.ToList();
+                    lastResults = iterationResults;
+
+                    if (loopTcs.IsCancellationRequested)
+                    {
+                        Status = $"Run until failure canceled during iteration {currentIteration}.";
+                        OnPropertyChanged(nameof(Status));
+                        break;
+                    }
+
+                    if (iterationOutcome.ExecutionFailed)
+                    {
+                        Status = $"Run until failure stopped after iteration {currentIteration} due to an execution error.";
+                        OnPropertyChanged(nameof(Status));
+                        break;
+                    }
+
+                    var childResults = iterationResults.Where(tt => GetProperty<int>("InnerResultsCount", tt, 0) == 0);
+                    if (childResults.Any(result => result.Outcome == TestOutcome.Failed))
+                    {
+                        Status = $"Run until failure stopped after iteration {currentIteration}.";
+                        OnPropertyChanged(nameof(Status));
+                        break;
+                    }
+                }
+
+                if (Settings.TerminateAfterExecution)
+                {
+                    Terminate();
+                }
+
+                return lastResults;
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Log($"Run until failure failed: {ex.Message}\nStack trace: {ex.StackTrace}");
+                OnTestRunException?.Invoke(this, ex);
+                throw;
+            }
+            finally
+            {
+                loopTcs?.Dispose();
+                loopTcs = null;
+                isLoopingUntilFailure = false;
+                isStopRequested = false;
+                showStopAction = false;
+                OnPropertyChanged(nameof(IsLoopingUntilFailure));
+                OnPropertyChanged(nameof(RunUntilFailureActionText));
+                OnPropertyChanged(nameof(LoopIterationText));
+                OnPropertyChanged(nameof(CanInteractWithRunActions));
+            }
+        }
+
+        public Task<IEnumerable<TestResult>> RunUntilFailure(IEnumerable<TestCase> testCollection, IRunSettings runSettings = null)
+            => RunUntilFailure(testCollection, runSettings ?? Settings, CancellationToken.None);
+
+        private async Task<(IEnumerable<TestResult> Results, bool ExecutionFailed)> Run_Internal(IEnumerable<TestCase> testCollection, IRunSettings runSettings, CancellationToken cancellationToken, bool allowTerminate = true)
+        {
+            var selectedTests = testCollection.OrderBy(tst => tst.FullyQualifiedName).ToArray();
             HostApp?.RaiseTestRunStarted(testCollection);
-            var t = tcs = new CancellationTokenSource();
+            var t = tcs = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            isStopRequested = false;
+            var executionFailed = false;
             Status = $"Running tests...";
             OnPropertyChanged(nameof(Status));
             DiagnosticsInfo = "";
             OnPropertyChanged(nameof(DiagnosticsInfo));
-            foreach (var item in testCollection)
+            foreach (var item in selectedTests)
             {
                 tests[item.Id].Result = null;
             }
@@ -378,14 +510,16 @@ namespace TestAppRunner.ViewModels
                 trxWriter = new TrxWriter(Settings.TrxOutputPath);
             }
             
-            if (testCollection.Count() == Tests.Count())
+            if (selectedTests.Length == Tests.Count())
                 DeleteProgress();
             else
-                DeleteProgress(testCollection);
+                DeleteProgress(selectedTests);
             DateTime start = DateTime.Now;
-            Logger.Log($"STARTING TESTRUN {testCollection.Count()} Tests");
-            var task = testRunner.Run(testCollection.OrderBy(tst => tst.FullyQualifiedName), runSettings, t.Token);
+            Logger.Log($"STARTING TESTRUN {selectedTests.Length} Tests");
+            var task = testRunner.Run(selectedTests, runSettings, t.Token);
+            showStopAction = true;
             OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(RunUntilFailureActionText));
             try
             {
                 await task;
@@ -401,9 +535,18 @@ namespace TestAppRunner.ViewModels
             }
             catch (System.Exception ex)
             {
+                executionFailed = true;
                 Status = $"Test run failed to run: {ex.Message}";
             }
             DateTime end = DateTime.Now;
+            foreach (var item in selectedTests)
+            {
+                var vmTest = tests[item.Id];
+                if (vmTest.Result is null)
+                {
+                    vmTest.ClearInProgress();
+                }
+            }
             CurrentTestRunning = null;
             OnPropertyChanged(nameof(CurrentTestRunning));
             if (logOutput != null)
@@ -445,16 +588,22 @@ namespace TestAppRunner.ViewModels
             if (Settings.ProgressLogPath != null) DiagnosticsInfo += $"\nLog: {Settings.ProgressLogPath}";
             if (Settings.TrxOutputPath != null) DiagnosticsInfo += $"\nTRX Report: {Settings.TrxOutputPath}";
             OnPropertyChanged(nameof(DiagnosticsInfo));
+            showStopAction = false;
+            isStopRequested = false;
             OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(RunUntilFailureActionText));
+            OnPropertyChanged(nameof(CanInteractWithRunActions));
             OnPropertyChanged(nameof(Status));
             HostApp?.RaiseTestRunCompleted(results);
 
             Logger.Log($"COMPLETED TESTRUN Total:{childResults.Count()} Failed:{childResults.Where(a => a.Outcome == TestOutcome.Failed).Count()} Passed:{childResults.Where(a => a.Outcome == TestOutcome.Passed).Count()}  Skipped:{childResults.Where(a => a.Outcome == TestOutcome.Skipped).Count()}");
-            if (Settings.TerminateAfterExecution)
+            if (allowTerminate && Settings.TerminateAfterExecution)
             {
                 Terminate();
             }
-            return results;
+            tcs.Dispose();
+            tcs = null;
+            return (results, executionFailed);
         }
 
         private void Terminate()

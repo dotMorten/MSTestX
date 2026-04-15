@@ -25,7 +25,10 @@ namespace TestAppRunner.ViewModels
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"PropertyChanged notification failed for '{propertyName}': {ex}");
+                }
             });
         }
 
@@ -38,7 +41,10 @@ namespace TestAppRunner.ViewModels
                     foreach (var propertyName in propertyNames)
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"PropertyChanged notification failed: {ex}");
+                }
             });
         }
     }

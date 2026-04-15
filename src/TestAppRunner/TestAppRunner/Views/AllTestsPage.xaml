@@ -42,6 +42,11 @@
                         <Label Text="{Binding CurrentTestRunning.Test.FullyQualifiedName, Mode=OneWay}" LineBreakMode="MiddleTruncation" FontAttributes="Bold" TextColor="{DynamicResource foregroundColor}" VerticalOptions="Start"/>
                     </StackLayout>
                 </Grid>
+                <Label Text="{Binding LoopIterationText}"
+                       IsVisible="{Binding IsLoopingUntilFailure, Mode=OneWay}"
+                       Margin="20,0,20,10"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource accentColor}" />
                 <Grid BackgroundColor="Gray" HeightRequest="1" />
 
                 <Picker x:Name="picker" SelectedIndexChanged="picker_SelectedIndexChanged" Title="Group By" />
@@ -72,7 +77,10 @@
                 </CollectionView.Footer>
             </CollectionView>
 
-            <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" Grid.Row="3" IsEnabled="{Binding IsInitialized, Mode=OneWay}" />
+            <VerticalStackLayout Grid.Row="3" Spacing="10" Padding="10,0,10,10">
+                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" IsEnabled="{Binding CanInteractWithRunActions, Mode=OneWay}" />
+                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanInteractWithRunActions, Mode=OneWay}" />
+            </VerticalStackLayout>
 
             <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"
                   IsVisible="False" BorderColor="{DynamicResource foregroundColor}">

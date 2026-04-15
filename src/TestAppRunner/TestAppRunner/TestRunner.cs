@@ -42,9 +42,16 @@ namespace TestAppRunner
                 cancellationToken.Register(() => token.Cancel());
             settings = runSettings;
             MSTestSettings.PopulateSettings(this);
+            var currentToken = token;
             return System.Threading.Tasks.Task.Run(() => {
-                new TestExecutionManager().RunTests(tests, this, this, token);
-                token = null;
+                try
+                {
+                    new TestExecutionManager().RunTests(tests, this, this, currentToken);
+                }
+                finally
+                {
+                    token = null;
+                }
             });
         }
 

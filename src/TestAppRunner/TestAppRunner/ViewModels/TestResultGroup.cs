@@ -46,7 +46,10 @@ namespace TestAppRunner.ViewModels
                     foreach (var p in propertyNames)
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"TestResultGroup property notification failed: {ex}");
+                }
             });
         }
 
