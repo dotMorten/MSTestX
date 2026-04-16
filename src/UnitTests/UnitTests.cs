@@ -45,6 +45,18 @@ namespace UnitTests
 
         [TestMethod]
         [TestCategory("Synchronous tests")]
+        [Description("Sample test with multiple log lines for message selection")]
+        public void TestWithSelectableMessagesSample()
+        {
+            Assert.IsNotNull(TestContext);
+            TestContext.WriteLine("Selectable message sample line 1.");
+            TestContext.WriteLine("Selectable message sample line 2: 1234567890.");
+            TestContext.WriteLine("Selectable message sample line 3 with symbols !@#$%^&*().");
+            TestContext.WriteLine("Selectable message sample line 4.");
+        }
+
+        [TestMethod]
+        [TestCategory("Synchronous tests")]
         [Description("This test writes out one message then fails")]
         public void TestFailWithMessages()
         {

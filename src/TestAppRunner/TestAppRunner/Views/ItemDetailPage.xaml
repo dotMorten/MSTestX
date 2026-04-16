@@ -44,7 +44,13 @@
                     <Label Text="{Binding Properties}" IsVisible="{Binding HasProperties}" TextColor="{DynamicResource foregroundColor}" />
 
                     <Label Text="Messages:" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
-                    <Label Text="{Binding Messages}" LineBreakMode="WordWrap" IsVisible="{Binding HasMessages}" TextColor="{DynamicResource foregroundColor}" />
+                    <Editor Text="{Binding Messages}"
+                            IsEnabled="False"
+                            IsSpellCheckEnabled="False"
+                            AutoSize="TextChanges"
+                            Margin="0"
+                            IsVisible="{Binding HasMessages}"
+                            TextColor="{DynamicResource foregroundColor}" />
 
                     <Label Text="
                            :" FontAttributes="Bold" FontSize="18" IsVisible="{Binding HasError}" TextColor="{DynamicResource foregroundColor}" />
