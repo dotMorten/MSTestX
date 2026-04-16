@@ -30,6 +30,7 @@ namespace TestAppRunner.Views
             this.BindingContext = vm;
             InitializeComponent();
             loopIterationLabel.BindingContext = TestRunnerVM.Instance;
+            startStopButton.BindingContext = TestRunnerVM.Instance;
             runUntilFailureButton.BindingContext = TestRunnerVM.Instance;
 		}
 

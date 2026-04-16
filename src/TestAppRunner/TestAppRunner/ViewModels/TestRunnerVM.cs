@@ -191,6 +191,7 @@ namespace TestAppRunner.ViewModels
             Status = $"{tests.Count} tests found.";
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(IsInitialized));
+            OnRunActionStateChanged();
         }
 
         private readonly string progressPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unittest_progress.bin");
@@ -307,13 +308,18 @@ namespace TestAppRunner.ViewModels
 
         public int CurrentIteration => currentIteration;
 
-        public bool IsBusy => IsRunning || IsLoopingUntilFailure;
+        public bool IsBusy => tcs != null || IsLoopingUntilFailure;
 
         public string RunUntilFailureActionText => showStopAction ? "Stop" : "Run until failure";
 
         public string LoopIterationText => $"Running until failure · iteration {CurrentIteration}";
 
-        public bool CanInteractWithRunActions => IsInitialized && !isStopRequested;
+        public bool CanRunTests => IsInitialized && !IsBusy && !isStopRequested;
+
+        public bool CanRunUntilFailure =>
+            IsInitialized &&
+            !isStopRequested &&
+            (!IsBusy || (IsLoopingUntilFailure && showStopAction));
 
         public event EventHandler<Exception> OnTestRunException;
 
@@ -321,9 +327,18 @@ namespace TestAppRunner.ViewModels
         {
             isStopRequested = true;
             showStopAction = false;
-            OnPropertiesChanged(nameof(CanInteractWithRunActions), nameof(RunUntilFailureActionText));
+            OnRunActionStateChanged();
             CancelTokenSource(loopTcs);
             CancelTokenSource(tcs);
+        }
+
+        private void OnRunActionStateChanged()
+        {
+            OnPropertiesChanged(
+                nameof(IsBusy),
+                nameof(CanRunTests),
+                nameof(CanRunUntilFailure),
+                nameof(RunUntilFailureActionText));
         }
 
         private static void CancelTokenSource(CancellationTokenSource cancellationTokenSource)
@@ -403,9 +418,8 @@ namespace TestAppRunner.ViewModels
                 showStopAction = true;
                 OnPropertyChanged(nameof(IsLoopingUntilFailure));
                 OnPropertyChanged(nameof(CurrentIteration));
-                OnPropertyChanged(nameof(RunUntilFailureActionText));
                 OnPropertyChanged(nameof(LoopIterationText));
-                OnPropertyChanged(nameof(CanInteractWithRunActions));
+                OnRunActionStateChanged();
 
                 List<TestResult> lastResults = new();
                 while (!loopTcs.IsCancellationRequested)
@@ -464,9 +478,8 @@ namespace TestAppRunner.ViewModels
                 isStopRequested = false;
                 showStopAction = false;
                 OnPropertyChanged(nameof(IsLoopingUntilFailure));
-                OnPropertyChanged(nameof(RunUntilFailureActionText));
                 OnPropertyChanged(nameof(LoopIterationText));
-                OnPropertyChanged(nameof(CanInteractWithRunActions));
+                OnRunActionStateChanged();
             }
         }
 
@@ -517,9 +530,8 @@ namespace TestAppRunner.ViewModels
             DateTime start = DateTime.Now;
             Logger.Log($"STARTING TESTRUN {selectedTests.Length} Tests");
             var task = testRunner.Run(selectedTests, runSettings, t.Token);
-            showStopAction = true;
             OnPropertyChanged(nameof(IsRunning));
-            OnPropertyChanged(nameof(RunUntilFailureActionText));
+            OnRunActionStateChanged();
             try
             {
                 await task;
@@ -588,11 +600,9 @@ namespace TestAppRunner.ViewModels
             if (Settings.ProgressLogPath != null) DiagnosticsInfo += $"\nLog: {Settings.ProgressLogPath}";
             if (Settings.TrxOutputPath != null) DiagnosticsInfo += $"\nTRX Report: {Settings.TrxOutputPath}";
             OnPropertyChanged(nameof(DiagnosticsInfo));
-            showStopAction = false;
             isStopRequested = false;
             OnPropertyChanged(nameof(IsRunning));
-            OnPropertyChanged(nameof(RunUntilFailureActionText));
-            OnPropertyChanged(nameof(CanInteractWithRunActions));
+            OnRunActionStateChanged();
             OnPropertyChanged(nameof(Status));
             HostApp?.RaiseTestRunCompleted(results);
 

@@ -31,6 +31,7 @@ namespace TestAppRunner.Views
             list.ItemsSource = new List<TestResultGroup>(tests.GroupBy(t => t.ClassName).Select((g, t) => new TestResultGroup(g.Key.StartsWith(tests.Group + ".") ? g.Key.Substring(tests.Group.Length + 1) : g.Key, g)).OrderBy(g=>g.Group));
             currentTestView.BindingContext = TestRunnerVM.Instance;
             loopIterationLabel.BindingContext = TestRunnerVM.Instance;
+            startStopButton.BindingContext = TestRunnerVM.Instance;
             runUntilFailureButton.BindingContext = TestRunnerVM.Instance;
             this.BindingContext = tests;
         }
