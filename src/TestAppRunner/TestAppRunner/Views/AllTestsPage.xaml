@@ -78,8 +78,8 @@
             </CollectionView>
 
             <VerticalStackLayout Grid.Row="3" Spacing="10" Padding="10,0,10,10">
-                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" IsEnabled="{Binding CanInteractWithRunActions, Mode=OneWay}" />
-                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanInteractWithRunActions, Mode=OneWay}" />
+                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" IsEnabled="{Binding CanRunTests, Mode=OneWay}" />
+                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanRunUntilFailure, Mode=OneWay}" />
             </VerticalStackLayout>
 
             <Frame x:Name="ErrorPanel" Grid.RowSpan="4" HorizontalOptions="Center" VerticalOptions="Fill"

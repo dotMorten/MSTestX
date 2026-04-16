@@ -87,8 +87,8 @@
 
             </ScrollView>
             <VerticalStackLayout Grid.Row="2" Spacing="10" Padding="10,0,10,10">
-                <Button Text="Run Test" Clicked="Button_Clicked" />
-                <Button Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" Clicked="RunUntilFailureButton_Clicked" IsEnabled="{Binding CanInteractWithRunActions}" />
+                <Button Text="Run Test" x:Name="startStopButton" Clicked="Button_Clicked" IsEnabled="{Binding CanRunTests}" />
+                <Button Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" Clicked="RunUntilFailureButton_Clicked" IsEnabled="{Binding CanRunUntilFailure}" />
             </VerticalStackLayout>
         </Grid>
     </ContentPage.Content>

@@ -69,8 +69,8 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
             <VerticalStackLayout Grid.Row="2" Spacing="10" Padding="10,0,10,10">
-                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" />
-                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanInteractWithRunActions}" />
+                <Button Clicked="Button_Clicked" Text="Run tests" x:Name="startStopButton" IsEnabled="{Binding CanRunTests}" />
+                <Button Clicked="RunUntilFailureButton_Clicked" Text="{Binding RunUntilFailureActionText}" x:Name="runUntilFailureButton" IsEnabled="{Binding CanRunUntilFailure}" />
             </VerticalStackLayout>
         </Grid>
     </ContentPage.Content>

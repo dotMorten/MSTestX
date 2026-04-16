@@ -14,6 +14,7 @@ namespace TestAppRunner.Views
 			InitializeComponent();
             currentTestView.BindingContext = TestRunnerVM.Instance;
             loopIterationLabel.BindingContext = TestRunnerVM.Instance;
+            startStopButton.BindingContext = TestRunnerVM.Instance;
             runUntilFailureButton.BindingContext = TestRunnerVM.Instance;
             this.BindingContext = testCases;
         }
